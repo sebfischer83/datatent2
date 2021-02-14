@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Files\JEOPARDY_CSV.csv" />
+    <None Remove="Files\words.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Files\JEOPARDY_CSV.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Files\words.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Advanced.Algorithms" Version="0.0.470-beta" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+    <PackageReference Include="BenchmarkDotNet.Annotations" Version="0.12.1" />
+    <PackageReference Include="CsvHelper" Version="22.1.2" />
+    <PackageReference Include="HPCsharp" Version="3.15.0" />
+    <PackageReference Include="K4os.Compression.LZ4" Version="1.2.10-beta" />
+    <PackageReference Include="System.Data.HashFunction.Blake2" Version="2.0.0" />
+    <PackageReference Include="System.Data.HashFunction.CityHash" Version="2.0.0" />
+    <PackageReference Include="System.Data.HashFunction.FNV" Version="2.0.0" />
+    <PackageReference Include="System.Data.HashFunction.HashAlgorithm" Version="2.0.0" />
+    <PackageReference Include="System.Data.HashFunction.Jenkins" Version="2.0.0" />
+    <PackageReference Include="System.Data.HashFunction.MurmurHash" Version="2.0.0" />
+    <PackageReference Include="System.Data.HashFunction.Pearson" Version="2.0.0" />
+    <PackageReference Include="System.Data.HashFunction.xxHash" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Files\JEOPARDY_CSV.csv" />
+  </ItemGroup>
+
+</Project>

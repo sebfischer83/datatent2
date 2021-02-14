@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <NullableContextOptions>enable</NullableContextOptions>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Advanced.Algorithms" Version="0.0.470-beta" />
+    <PackageReference Include="Bogus" Version="33.0.1" />
+    <PackageReference Include="Bogus.Text" Version="33.0.1" />
+    <PackageReference Include="Dawn.Guard" Version="1.12.0" />
+    <PackageReference Include="HPCsharp" Version="3.15.0" />
+    <PackageReference Include="K4os.Compression.LZ4" Version="1.2.10-beta" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
+    <PackageReference Include="ObjectLayoutInspector" Version="0.1.2" />
+    <PackageReference Include="System.Data.HashFunction.Blake2" Version="2.0.0" />
+    <PackageReference Include="System.Data.HashFunction.CityHash" Version="2.0.0" />
+    <PackageReference Include="System.Data.HashFunction.FNV" Version="2.0.0" />
+    <PackageReference Include="System.Data.HashFunction.HashAlgorithm" Version="2.0.0" />
+    <PackageReference Include="System.Data.HashFunction.Jenkins" Version="2.0.0" />
+    <PackageReference Include="System.Data.HashFunction.MurmurHash" Version="2.0.0" />
+    <PackageReference Include="System.Data.HashFunction.Pearson" Version="2.0.0" />
+    <PackageReference Include="System.Data.HashFunction.xxHash" Version="2.0.0" />
+    <PackageReference Include="System.Runtime.Handles" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
+    <PackageReference Include="TrieNet.Core" Version="1.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="IO\" />
+    <Folder Include="Pager\" />
+  </ItemGroup>
+
+</Project>
