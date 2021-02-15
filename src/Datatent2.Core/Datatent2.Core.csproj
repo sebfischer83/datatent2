@@ -19,6 +19,14 @@
     <PackageReference Include="Bogus" Version="33.0.1" />
     <PackageReference Include="Bogus.Text" Version="33.0.1" />
     <PackageReference Include="Dawn.Guard" Version="1.12.0" />
+    <PackageReference Include="ErrorProne.NET.CoreAnalyzers" Version="0.3.0-beta.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="ErrorProne.NET.Structs" Version="0.3.0-beta.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="HPCsharp" Version="3.15.0" />
     <PackageReference Include="K4os.Compression.LZ4" Version="1.2.10-beta" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />

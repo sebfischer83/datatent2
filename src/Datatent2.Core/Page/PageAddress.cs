@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -36,11 +37,23 @@ namespace Datatent2.Core.Page
             return MemoryMarshal.Read<PageAddress>(span);
         }
 
+        public static PageAddress FromBuffer(Span<byte> span, int offset)
+        {
+            Guard.Argument(offset).GreaterThan(0);
+            return FromBuffer(span.Slice(offset));
+        }
+
         public void ToBuffer(Span<byte> span)
         {
             Guard.Argument(span.Length + 1).GreaterThan(Constants.PAGE_ADDRESS_SIZE);
             PageAddress a = this;
             MemoryMarshal.Write(span, ref a);
+        }
+
+        public void ToBuffer(Span<byte> span, int offset)
+        {
+            Guard.Argument(offset).GreaterThan(0);
+            ToBuffer(span.Slice(offset));
         }
     }
 }
