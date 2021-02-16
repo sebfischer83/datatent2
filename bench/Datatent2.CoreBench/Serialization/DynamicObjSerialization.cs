@@ -124,7 +124,7 @@ namespace Datatent2.CoreBench.Serialization
 }
 
 /*
- BenchmarkDotNet=v0.12.1, OS=Windows 10.0.19042
+BenchmarkDotNet=v0.12.1, OS=Windows 10.0.19042
 AMD Ryzen 7 3700X, 1 CPU, 16 logical and 8 physical cores
 .NET Core SDK=5.0.200-preview.21079.7
   [Host]    : .NET Core 5.0.3 (CoreCLR 5.0.321.7212, CoreFX 5.0.321.7212), X64 RyuJIT
@@ -133,20 +133,19 @@ AMD Ryzen 7 3700X, 1 CPU, 16 logical and 8 physical cores
 Job=MediumRun  IterationCount=15  LaunchCount=2
 WarmupCount=10
 
-|              Method | Size |         Mean |     Error |    StdDev |       Median | Kurtosis | Skewness | Rank | Baseline |     Gen 0 |   Gen 1 | Gen 2 |  Allocated |
-|-------------------- |----- |-------------:|----------:|----------:|-------------:|---------:|---------:|-----:|--------- |----------:|--------:|------:|-----------:|
-|      DeserializeJil |  128 |           NA |        NA |        NA |           NA |       NA |       NA |    ? |       No |         - |       - |     - |          - |
-|      DeserializeJil | 1024 |           NA |        NA |        NA |           NA |       NA |       NA |    ? |       No |         - |       - |     - |          - |
-|      DeserializeJil | 8096 |           NA |        NA |        NA |           NA |       NA |       NA |    ? |       No |         - |       - |     - |          - |
-|        SerializeJil |  128 |     696.8 us |   3.58 us |   4.78 us |     697.7 us |   2.7610 |  -0.2609 |    1 |       No |  138.6719 |  1.9531 |     - |  1164768 B |
-|   SerializeUtf8Json |  128 |     701.2 us |   7.04 us |  10.32 us |     705.3 us |   1.9145 |  -0.6772 |    1 |       No |  139.6484 |  1.9531 |     - |  1170768 B |
-| DeserializeUtf8Json |  128 |   2,658.5 us |  11.61 us |  17.02 us |   2,657.1 us |   2.2265 |   0.1537 |    2 |       No |   82.0313 |       - |     - |   713009 B |
-|        SerializeJil | 1024 |   5,584.9 us |  15.00 us |  21.51 us |   5,580.5 us |   3.2200 |   0.8048 |    3 |       No | 1109.3750 | 15.6250 |     - |  9337434 B |
-|   SerializeUtf8Json | 1024 |   6,043.8 us | 322.62 us | 462.69 us |   6,024.5 us |   0.9506 |   0.0117 |    3 |       No | 1109.3750 | 15.6250 |     - |  9339066 B |
-| DeserializeUtf8Json | 1024 |  21,314.1 us | 114.04 us | 163.56 us |  21,323.3 us |   1.6568 |   0.1160 |    4 |       No |  656.2500 |       - |     - |  5708073 B |
-|        SerializeJil | 8096 |  45,361.6 us | 594.58 us | 871.52 us |  45,741.8 us |   1.2273 |   0.0538 |    5 |       No | 8818.1818 | 90.9091 |     - | 73842482 B |
-|   SerializeUtf8Json | 8096 |  46,365.4 us | 414.34 us | 620.16 us |  46,200.4 us |   3.7778 |   1.1868 |    5 |       No | 8818.1818 | 90.9091 |     - | 73823314 B |
-| DeserializeUtf8Json | 8096 | 170,343.5 us | 658.54 us | 965.28 us | 170,356.3 us |   3.0002 |  -0.2912 |    6 |       No | 5333.3333 |       - |     - | 45137928 B | 
-
+|                 Method | Size |         Mean |       Error |      StdDev |       Median | Kurtosis | Skewness | Rank | Baseline |     Gen 0 |    Gen 1 | Gen 2 |   Allocated |
+|----------------------- |----- |-------------:|------------:|------------:|-------------:|---------:|---------:|-----:|--------- |----------:|---------:|------:|------------:|
+|   SerializeMessagePack |  128 |     244.2 us |     2.13 us |     3.13 us |     243.5 us |    2.578 |   0.7941 |    1 |       No |   18.5547 |        - |     - |   152.97 KB |
+| DeserializeMessagePack |  128 |     474.1 us |     4.84 us |     7.10 us |     473.9 us |    2.178 |   0.2250 |    2 |       No |   62.0117 |   0.4883 |     - |   507.53 KB |
+|      SerializeUtf8Json |  128 |     693.5 us |     9.53 us |    13.67 us |     691.2 us |    2.872 |   0.6298 |    3 |       No |  138.6719 |   1.9531 |     - |  1138.84 KB |
+|   SerializeMessagePack | 1024 |   2,001.6 us |    14.03 us |    20.56 us |   1,996.6 us |    3.053 |   0.9084 |    4 |       No |  148.4375 |        - |     - |  1223.79 KB |
+|    DeserializeUtf8Json |  128 |   2,687.6 us |    11.74 us |    16.83 us |   2,686.6 us |    2.236 |   0.0494 |    5 |       No |   82.0313 |        - |     - |   696.73 KB |
+| DeserializeMessagePack | 1024 |   3,996.2 us |    40.02 us |    58.66 us |   4,000.0 us |    2.633 |   0.2503 |    6 |       No |  492.1875 |        - |     - |  4071.61 KB |
+|      SerializeUtf8Json | 1024 |   5,700.1 us |    78.82 us |   117.97 us |   5,657.2 us |    2.230 |   0.5764 |    7 |       No | 1109.3750 |  15.6250 |     - |   9119.4 KB |
+|   SerializeMessagePack | 8096 |  17,839.6 us |   129.80 us |   181.97 us |  17,828.5 us |    4.419 |   0.8939 |    8 |       No | 1156.2500 |        - |     - |   9670.8 KB |
+|    DeserializeUtf8Json | 1024 |  21,958.2 us |    84.39 us |   121.03 us |  21,967.0 us |    2.164 |  -0.1596 |    9 |       No |  656.2500 |        - |     - |  5575.15 KB |
+| DeserializeMessagePack | 8096 |  31,145.9 us |   349.84 us |   512.79 us |  31,016.0 us |    2.628 |   0.6797 |   10 |       No | 3937.5000 |        - |     - | 32176.29 KB |
+|      SerializeUtf8Json | 8096 |  48,994.6 us | 1,890.73 us | 2,771.41 us |  49,843.5 us |    1.342 |  -0.0856 |   11 |       No | 8800.0000 | 100.0000 |     - | 72055.58 KB |
+|    DeserializeUtf8Json | 8096 | 171,733.0 us |   927.08 us | 1,387.62 us | 171,814.6 us |    1.837 |   0.1423 |   12 |       No | 5333.3333 |        - |     - | 44075.88 KB |
 
 */
