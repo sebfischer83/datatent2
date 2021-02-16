@@ -9,9 +9,14 @@ using System.Threading.Tasks;
 
 namespace Datatent2.Core.Memory
 {
+    /// <summary>
+    /// Buffer always a complete page, only dispose when not in use anymore
+    /// </summary>
     internal class BufferSegment : IMemoryOwner<byte>
     {
         private byte[]? _rental;
+
+        public uint Length => (uint)(_rental?.Length ?? 0);
 
         public BufferSegment(int minBufferSize)
         {

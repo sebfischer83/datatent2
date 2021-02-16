@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -16,20 +17,27 @@ namespace Datatent2.Core.Page
         public readonly uint PageId;
 
         [FieldOffset(PA_BLOCK)]
-        public readonly ushort Block;
+        public readonly byte BlockIndex;
 
         [FieldOffset(PA_IS_EXTENSION_BLOCK)]
         public readonly bool IsExtensionBlock;
 
         private const int PA_PAGE_ID = 0; // 0-3 uint
-        private const int PA_BLOCK = 4; // 4-5 ushort
-        private const int PA_IS_EXTENSION_BLOCK = 6; // 6 bool (byte)
+        private const int PA_BLOCK = 4; // 4 ushort
+        private const int PA_IS_EXTENSION_BLOCK = 5; // 5 bool (byte)
 
-        public PageAddress(uint pageId, ushort block, bool isExtensionBlock)
+        public static PageAddress Empty { get; } = new PageAddress(uint.MaxValue, byte.MaxValue, false);
+
+        public PageAddress(uint pageId, byte blockIndex, bool isExtensionBlock)
         {
             PageId = pageId;
-            Block = block;
+            BlockIndex = blockIndex;
             IsExtensionBlock = isExtensionBlock;
+        }
+
+        public bool IsEmpty()
+        {
+            return IsExtensionBlock == false && PageId == 0 && PageId == uint.MaxValue && BlockIndex == byte.MaxValue;
         }
 
         public static PageAddress FromBuffer(Span<byte> span)

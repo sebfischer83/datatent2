@@ -44,10 +44,10 @@ namespace Datatent2.Core.Page
         public readonly ushort UsedBytes;
 
         [FieldOffset(PAGE_NUMBER_OF_ITEMS)]
-        public readonly ushort ItemCount;
+        public readonly byte ItemCount;
         
-        [FieldOffset(PAGE_NEXT_FREE_INDEX)]
-        public readonly ushort NextFreeIndex;
+        [FieldOffset(PAGE_NEXT_FREE_POSITION)]
+        public readonly ushort NextFreePosition;
 
         [FieldOffset(PAGE_UNALIGNED_FREE_BYTES)]
         public readonly ushort UnalignedFreeBytes;
@@ -57,11 +57,11 @@ namespace Datatent2.Core.Page
         private const int PAGE_PREV_ID = 5; // 5-8 uint 
         private const int PAGE_NEXT_ID = 9; // 9-12 uint
         private const int PAGE_USED_BYTES = 13; // 13-14 ushort
-        private const int PAGE_NUMBER_OF_ITEMS = 13; // 13-14 ushort
-        private const int PAGE_NEXT_FREE_INDEX = 17; // 15-16 ushort
-        private const int PAGE_UNALIGNED_FREE_BYTES = 17; // 17-18 ushort
+        private const int PAGE_NUMBER_OF_ITEMS = 13; // 13 byte
+        private const int PAGE_NEXT_FREE_POSITION = 14; // 14-15 ushort
+        private const int PAGE_UNALIGNED_FREE_BYTES = 16; // 16-17 ushort
 
-        public PageHeader(uint pageId, PageType type, uint prevPageId, uint nextPageId, ushort usedBytes, ushort itemCount, ushort nextFreeIndex, ushort unalignedFreeBytes)
+        public PageHeader(uint pageId, PageType type, uint prevPageId, uint nextPageId, ushort usedBytes, byte itemCount, ushort nextFreePosition, ushort unalignedFreeBytes)
         {
             PageId = pageId;
             Type = type;
@@ -69,7 +69,7 @@ namespace Datatent2.Core.Page
             NextPageId = nextPageId;
             UsedBytes = usedBytes;
             ItemCount = itemCount;
-            NextFreeIndex = nextFreeIndex;
+            NextFreePosition = nextFreePosition;
             UnalignedFreeBytes = unalignedFreeBytes;
         }
 
@@ -81,7 +81,7 @@ namespace Datatent2.Core.Page
             NextPageId = ushort.MaxValue;
             UsedBytes = 0;
             ItemCount = 0;
-            NextFreeIndex = 0;
+            NextFreePosition = Constants.PAGE_HEADER_SIZE;
             UnalignedFreeBytes = 0;
         }
 

@@ -34,7 +34,7 @@ namespace Datatent2.CoreBench.Page
             Random random = new Random();
             for (int i = 0; i < Count; i++)
             {
-                PageAddress address = new PageAddress((uint) random.Next(0, int.MaxValue), (ushort)random.Next(0, ushort.MaxValue), false);
+                PageAddress address = new PageAddress((uint) random.Next(0, int.MaxValue), (byte)random.Next(0, byte.MaxValue), false);
                 _pageAddresses[i] = address;
                 MemoryMarshal.Write(array.Slice((i * Constants.PAGE_ADDRESS_SIZE)), ref address);
             }
@@ -49,7 +49,7 @@ namespace Datatent2.CoreBench.Page
             for (int i = 0; i < Count; i++)
             {
                 var page = PageAddress.FromBuffer(new Span<byte>(_array).Slice(i * Constants.PAGE_ADDRESS_SIZE));
-                a += page.Block;
+                a += page.BlockIndex;
             }
 
             return a;
@@ -63,7 +63,7 @@ namespace Datatent2.CoreBench.Page
             {
                 ref var address = ref _pageAddresses[i];
                 address.ToBuffer(new Span<byte>(_array).Slice(i * Constants.PAGE_ADDRESS_SIZE));
-                a += address.Block;
+                a += address.BlockIndex;
             }
 
             return a;

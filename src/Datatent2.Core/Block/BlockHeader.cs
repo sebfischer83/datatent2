@@ -12,19 +12,14 @@ namespace Datatent2.Core.Block
     [StructLayout(LayoutKind.Explicit, Size = Constants.BLOCK_HEADER_SIZE)]
     internal readonly struct BlockHeader
     {
-        [FieldOffset(B_PAGE_ADDRESS)]
-        public readonly PageAddress Address;
+        [FieldOffset(BH_PAGE_ADDRESS)]
+        public readonly PageAddress NextBlockAddress;
 
-        [FieldOffset(B_PAGE_DATA_LENTGH)]
-        public readonly ushort DataLength;
+        private const int BH_PAGE_ADDRESS = 0; // 0-7 PageAddress 8 byte
 
-        private const int B_PAGE_ADDRESS = 0; // 0-7 PageAddress 8 byte
-        private const int B_PAGE_DATA_LENTGH = Constants.PAGE_ADDRESS_SIZE; // 8-9
-
-        public BlockHeader(PageAddress pageAddress, ushort dataLength)
+        public BlockHeader(PageAddress pageAddress)
         {
-            Address = pageAddress;
-            DataLength = dataLength;
+            NextBlockAddress = pageAddress;
         }
 
         public static BlockHeader FromBuffer(Span<byte> span)
