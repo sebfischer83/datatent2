@@ -97,13 +97,26 @@ namespace Datatent2.Core.Page
 
             var entry = GetNextDirectoryEntry(length, out entryIndex);
             var entryPos = PageDirectoryEntry.GetEntryPosition(entryIndex);
+            var nextFreePos = Header.NextFreePosition;
+            var unalignedBytes = Header.UnalignedFreeBytes;
 
-            if (entryIndex > Header.HighestEntryId) HighestDirectoryEntryId = entryIndex;
+            // adding at the end
+            if (entryIndex > Header.HighestEntryId)
+            {
+                HighestDirectoryEntryId = entryIndex;
+                nextFreePos += length;
+            }
+            else
+            {
+                // adding between already existing blocks
+                unalignedBytes -= length;
+            }
 
             entry.ToBuffer(Buffer.Span, entryPos);
+            
             var pageHeader = new PageHeader(Header.PageId, Header.Type, Header.PrevPageId, Header.NextPageId,
                 (ushort)(Header.UsedBytes + length),
-                (byte)(Header.ItemCount + 1), (ushort)(Header.NextFreePosition + length), Header.UnalignedFreeBytes, HighestDirectoryEntryId);
+                (byte)(Header.ItemCount + 1), nextFreePos, unalignedBytes, HighestDirectoryEntryId);
             pageHeader.ToBuffer(Buffer.Span, 0);
             Header = pageHeader;
             return Buffer.Span.Slice(entry.DataOffset, entry.DataLength);
@@ -176,20 +189,19 @@ namespace Datatent2.Core.Page
                 return new PageDirectoryEntry(Header.NextFreePosition, length);
             }
 
-            for (byte i = 1; i <= Header.HighestEntryId; i++)
+            if (length <= Constants.PAGE_SIZE - Header.NextFreePosition)
             {
-                var pos = PageDirectoryEntry.GetEntryPosition(i);
-                if (PageDirectoryEntry.IsEmpty(Buffer.Span, pos))
-                {
-                    var entry = PageDirectoryEntry.FromBuffer(Buffer.Span, pos);
-                    return entry;
-                }
-            }
-            if (Header.HighestEntryId == byte.MaxValue)
-                throw new Exception("Full");
+                if (Header.HighestEntryId == byte.MaxValue)
+                    throw new Exception("Full");
 
-            index = (byte)(HighestDirectoryEntryId + 1);
-            return new PageDirectoryEntry(Header.NextFreePosition, length);
+                index = (byte) (HighestDirectoryEntryId + 1);
+                return new PageDirectoryEntry(Header.NextFreePosition, length);
+            }
+
+            var res = FindFreeSpaceBetween(length);
+            index = (byte) (res.Index1 + 1);
+            var pos = PageDirectoryEntry.GetEntryPosition(index);
+            return new PageDirectoryEntry(pos, length);
         }
 
         protected virtual string GenerateLayoutString()
