@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using ConsoleTableExt;
 using Dawn;
 using ObjectLayoutInspector;
 
@@ -52,16 +53,20 @@ namespace Datatent2.Core.Page
         [FieldOffset(PAGE_UNALIGNED_FREE_BYTES)]
         public readonly ushort UnalignedFreeBytes;
 
+        [FieldOffset(PAGE_HIGHEST_ENTRY_ID)]
+        public readonly byte HighestEntryId;
+
         private const int PAGE_ID = 0; // 0-3 uint
         private const int PAGE_TYPE = 4; // 4 byte (enum PageType)
         private const int PAGE_PREV_ID = 5; // 5-8 uint 
         private const int PAGE_NEXT_ID = 9; // 9-12 uint
         private const int PAGE_USED_BYTES = 13; // 13-14 ushort
-        private const int PAGE_NUMBER_OF_ITEMS = 13; // 13 byte
-        private const int PAGE_NEXT_FREE_POSITION = 14; // 14-15 ushort
-        private const int PAGE_UNALIGNED_FREE_BYTES = 16; // 16-17 ushort
+        private const int PAGE_NUMBER_OF_ITEMS = 15; // 15 byte
+        private const int PAGE_NEXT_FREE_POSITION = 16; // 16-17 ushort
+        private const int PAGE_UNALIGNED_FREE_BYTES = 18; // 18-19 ushort
+        private const int PAGE_HIGHEST_ENTRY_ID = 20; // 20 byte
 
-        public PageHeader(uint pageId, PageType type, uint prevPageId, uint nextPageId, ushort usedBytes, byte itemCount, ushort nextFreePosition, ushort unalignedFreeBytes)
+        public PageHeader(uint pageId, PageType type, uint prevPageId, uint nextPageId, ushort usedBytes, byte itemCount, ushort nextFreePosition, ushort unalignedFreeBytes, byte highestEntryId)
         {
             PageId = pageId;
             Type = type;
@@ -71,6 +76,7 @@ namespace Datatent2.Core.Page
             ItemCount = itemCount;
             NextFreePosition = nextFreePosition;
             UnalignedFreeBytes = unalignedFreeBytes;
+            HighestEntryId = highestEntryId;
         }
 
         public PageHeader(uint pageId, PageType type)
@@ -83,6 +89,7 @@ namespace Datatent2.Core.Page
             ItemCount = 0;
             NextFreePosition = Constants.PAGE_HEADER_SIZE;
             UnalignedFreeBytes = 0;
+            HighestEntryId = 0;
         }
 
         public static PageHeader FromBuffer(Span<byte> span)
@@ -92,21 +99,34 @@ namespace Datatent2.Core.Page
 
         public static PageHeader FromBuffer(Span<byte> span, int offset)
         {
-            Guard.Argument(offset).GreaterThan(0);
+            Guard.Argument(offset).Min(0);
             return FromBuffer(span.Slice(offset));
         }
 
         public void ToBuffer(Span<byte> span)
         {
-            Guard.Argument(span.Length + 1).GreaterThan(Constants.PAGE_HEADER_SIZE);
+            Guard.Argument(span.Length).Min(Constants.PAGE_HEADER_SIZE);
             PageHeader a = this;
             MemoryMarshal.Write(span, ref a);
         }
 
         public void ToBuffer(Span<byte> span, int offset)
         {
-            Guard.Argument(offset).GreaterThan(0);
+            Guard.Argument(offset).Min(0);
             ToBuffer(span.Slice(offset));
+        }
+
+        public override string ToString()
+        {
+            var tableData = new List<List<object>>()
+            {
+                new List<object>{nameof(ItemCount), ItemCount}
+            };
+
+            return ConsoleTableBuilder
+                .From(tableData)
+                .WithTitle($"{Enum.GetName(typeof(PageType), Type)}:{PageId}", ConsoleColor.Yellow, ConsoleColor.DarkGray)
+                .WithColumn("Property", "Value").Export().ToString();
         }
     }
 
@@ -114,6 +134,7 @@ namespace Datatent2.Core.Page
     {
         Header = 1,
         Data = 2,
-        Index = 3
+        Index = 3,
+        Directory
     }
 }

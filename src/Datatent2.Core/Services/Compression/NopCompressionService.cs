@@ -13,7 +13,7 @@ namespace Datatent2.Core.Services.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public Span<byte> Compress(Span<byte> bytes, Span<byte> target)
         {
-            Unsafe.CopyBlockUnaligned(ref target[0], ref bytes[0], (uint)bytes.Length);
+            Unsafe.CopyBlock(ref target[0], ref bytes[0], (uint)bytes.Length);
             return target.Slice(0, bytes.Length);
         }
 

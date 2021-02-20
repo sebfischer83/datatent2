@@ -11,7 +11,7 @@ using Utf8Json;
 namespace Datatent2.CoreBench.Serialization
 {
     [HtmlExporter, CsvExporter(), CsvMeasurementsExporter(),
-     RankColumn(), KurtosisColumn, SkewnessColumn, StdDevColumn, MeanColumn, MedianColumn, BaselineColumn, MediumRunJob, MemoryDiagnoser, Orderer(SummaryOrderPolicy.FastestToSlowest, MethodOrderPolicy.Declared)]
+     RankColumn(), KurtosisColumn, SkewnessColumn, StdDevColumn, MeanColumn, MedianColumn, BaselineColumn, MediumRunJob, MemoryDiagnoser]
     public class DynamicObjSerialization
     {
         public class MyTestClass
@@ -135,17 +135,17 @@ WarmupCount=10
 
 |                 Method | Size |         Mean |       Error |      StdDev |       Median | Kurtosis | Skewness | Rank | Baseline |     Gen 0 |    Gen 1 | Gen 2 |   Allocated |
 |----------------------- |----- |-------------:|------------:|------------:|-------------:|---------:|---------:|-----:|--------- |----------:|---------:|------:|------------:|
-|   SerializeMessagePack |  128 |     244.2 us |     2.13 us |     3.13 us |     243.5 us |    2.578 |   0.7941 |    1 |       No |   18.5547 |        - |     - |   152.97 KB |
-| DeserializeMessagePack |  128 |     474.1 us |     4.84 us |     7.10 us |     473.9 us |    2.178 |   0.2250 |    2 |       No |   62.0117 |   0.4883 |     - |   507.53 KB |
-|      SerializeUtf8Json |  128 |     693.5 us |     9.53 us |    13.67 us |     691.2 us |    2.872 |   0.6298 |    3 |       No |  138.6719 |   1.9531 |     - |  1138.84 KB |
-|   SerializeMessagePack | 1024 |   2,001.6 us |    14.03 us |    20.56 us |   1,996.6 us |    3.053 |   0.9084 |    4 |       No |  148.4375 |        - |     - |  1223.79 KB |
-|    DeserializeUtf8Json |  128 |   2,687.6 us |    11.74 us |    16.83 us |   2,686.6 us |    2.236 |   0.0494 |    5 |       No |   82.0313 |        - |     - |   696.73 KB |
-| DeserializeMessagePack | 1024 |   3,996.2 us |    40.02 us |    58.66 us |   4,000.0 us |    2.633 |   0.2503 |    6 |       No |  492.1875 |        - |     - |  4071.61 KB |
-|      SerializeUtf8Json | 1024 |   5,700.1 us |    78.82 us |   117.97 us |   5,657.2 us |    2.230 |   0.5764 |    7 |       No | 1109.3750 |  15.6250 |     - |   9119.4 KB |
-|   SerializeMessagePack | 8096 |  17,839.6 us |   129.80 us |   181.97 us |  17,828.5 us |    4.419 |   0.8939 |    8 |       No | 1156.2500 |        - |     - |   9670.8 KB |
-|    DeserializeUtf8Json | 1024 |  21,958.2 us |    84.39 us |   121.03 us |  21,967.0 us |    2.164 |  -0.1596 |    9 |       No |  656.2500 |        - |     - |  5575.15 KB |
-| DeserializeMessagePack | 8096 |  31,145.9 us |   349.84 us |   512.79 us |  31,016.0 us |    2.628 |   0.6797 |   10 |       No | 3937.5000 |        - |     - | 32176.29 KB |
-|      SerializeUtf8Json | 8096 |  48,994.6 us | 1,890.73 us | 2,771.41 us |  49,843.5 us |    1.342 |  -0.0856 |   11 |       No | 8800.0000 | 100.0000 |     - | 72055.58 KB |
-|    DeserializeUtf8Json | 8096 | 171,733.0 us |   927.08 us | 1,387.62 us | 171,814.6 us |    1.837 |   0.1423 |   12 |       No | 5333.3333 |        - |     - | 44075.88 KB |
+|   SerializeMessagePack |  128 |     240.7 us |     0.72 us |     1.05 us |     240.7 us |    2.204 |   0.2046 |    1 |       No |   18.5547 |        - |     - |    152.4 KB |
+|      SerializeUtf8Json |  128 |     745.4 us |    25.10 us |    35.19 us |     724.8 us |    1.082 |   0.1121 |    3 |       No |  139.6484 |   1.9531 |     - |  1142.42 KB |
+| DeserializeMessagePack |  128 |     479.1 us |     8.48 us |    12.44 us |     475.8 us |    2.432 |   0.5899 |    2 |       No |   62.0117 |   0.4883 |     - |    507.3 KB |
+|    DeserializeUtf8Json |  128 |   2,756.3 us |    26.85 us |    37.63 us |   2,754.6 us |    1.721 |   0.2348 |    5 |       No |   82.0313 |        - |     - |   696.37 KB |
+|   SerializeMessagePack | 1024 |   2,007.7 us |    24.27 us |    34.02 us |   2,008.5 us |    1.786 |   0.3025 |    4 |       No |  148.4375 |        - |     - |  1228.11 KB |
+|      SerializeUtf8Json | 1024 |   6,045.1 us |   269.34 us |   394.79 us |   5,813.9 us |    1.324 |   0.1502 |    7 |       No | 1109.3750 |  15.6250 |     - |  9121.99 KB |
+| DeserializeMessagePack | 1024 |   3,950.3 us |    82.58 us |   118.44 us |   4,006.4 us |    1.520 |  -0.3927 |    6 |       No |  492.1875 |        - |     - |  4070.88 KB |
+|    DeserializeUtf8Json | 1024 |  22,273.4 us |   353.40 us |   518.01 us |  22,130.4 us |    2.722 |   0.7961 |    9 |       No |  656.2500 |        - |     - |  5578.12 KB |
+|   SerializeMessagePack | 8096 |  17,884.2 us |   295.97 us |   414.90 us |  17,735.9 us |    2.325 |   0.6955 |    8 |       No | 1156.2500 |        - |     - |  9671.68 KB |
+|      SerializeUtf8Json | 8096 |  54,029.0 us | 1,184.84 us | 1,699.26 us |  53,517.4 us |    4.109 |   1.3444 |   11 |       No | 8777.7778 | 111.1111 |     - | 72089.28 KB |
+| DeserializeMessagePack | 8096 |  30,872.3 us |   428.20 us |   640.91 us |  30,984.8 us |    1.863 |  -0.4604 |   10 |       No | 3937.5000 |  31.2500 |     - | 32178.24 KB |
+|    DeserializeUtf8Json | 8096 | 174,806.5 us | 1,138.83 us | 1,596.48 us | 175,017.2 us |    1.701 |  -0.2298 |   12 |       No | 5333.3333 |        - |     - | 44071.32 KB |
 
 */

@@ -19,7 +19,7 @@ namespace Datatent2.Core.Services.Compression
         {
             var result = LZ4Pickler.Pickle(bytes);
             Guard.Argument(result.Length).LessThan(target.Length);
-            Unsafe.CopyBlockUnaligned(ref target[0], ref result[0], (uint) result.Length);
+            Unsafe.CopyBlock(ref target[0], ref result[0], (uint) result.Length);
             return target.Slice(0, result.Length);
         }
 

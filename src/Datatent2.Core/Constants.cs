@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,13 +25,16 @@ namespace Datatent2.Core
         /// <summary>
         /// The header of a page take this amount of bytes
         /// </summary>
-        public const int PAGE_HEADER_SIZE = 64;
+        public const int PAGE_HEADER_SIZE = 32;
 
         public const int PAGE_ADDRESS_SIZE = 6;
 
         public const int BLOCK_HEADER_SIZE = 8;
 
         public const int PAGE_DIRECTORY_ENTRY_SIZE = 4;
+
+        // ReSharper disable once InconsistentNaming
+        public static readonly BigInteger MAX_DATABASE_SIZE = new BigInteger(PAGE_SIZE) * uint.MaxValue;
 
         /// <summary>
         /// The amount of bytes that can be used without the header and minimum of one block header and footer

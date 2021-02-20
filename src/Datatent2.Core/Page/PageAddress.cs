@@ -17,27 +17,27 @@ namespace Datatent2.Core.Page
         public readonly uint PageId;
 
         [FieldOffset(PA_BLOCK)]
-        public readonly byte BlockIndex;
+        public readonly byte DirectoryEntryId;
 
         [FieldOffset(PA_IS_EXTENSION_BLOCK)]
         public readonly bool IsExtensionBlock;
 
         private const int PA_PAGE_ID = 0; // 0-3 uint
-        private const int PA_BLOCK = 4; // 4 ushort
+        private const int PA_BLOCK = 4; // 4 byte
         private const int PA_IS_EXTENSION_BLOCK = 5; // 5 bool (byte)
 
         public static PageAddress Empty { get; } = new PageAddress(uint.MaxValue, byte.MaxValue, false);
 
-        public PageAddress(uint pageId, byte blockIndex, bool isExtensionBlock)
+        public PageAddress(uint pageId, byte dicDirectoryEntryId, bool isExtensionBlock)
         {
             PageId = pageId;
-            BlockIndex = blockIndex;
+            DirectoryEntryId = dicDirectoryEntryId;
             IsExtensionBlock = isExtensionBlock;
         }
 
         public bool IsEmpty()
         {
-            return IsExtensionBlock == false && PageId == 0 && PageId == uint.MaxValue && BlockIndex == byte.MaxValue;
+            return IsExtensionBlock == false && PageId == 0 && PageId == uint.MaxValue && DirectoryEntryId == byte.MaxValue;
         }
 
         public static PageAddress FromBuffer(Span<byte> span)
@@ -53,7 +53,7 @@ namespace Datatent2.Core.Page
 
         public void ToBuffer(Span<byte> span)
         {
-            Guard.Argument(span.Length + 1).GreaterThan(Constants.PAGE_ADDRESS_SIZE);
+            Guard.Argument(span.Length).Min(Constants.PAGE_ADDRESS_SIZE);
             PageAddress a = this;
             MemoryMarshal.Write(span, ref a);
         }
