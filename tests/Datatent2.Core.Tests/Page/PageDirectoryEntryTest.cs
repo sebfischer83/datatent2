@@ -63,9 +63,9 @@ namespace Datatent2.Core.Tests.Page
         [Fact]
         public void GetEntryPositionTest()
         {
-            PageDirectoryEntry.GetEntryPosition(1).ShouldBe((ushort)(Constants.PAGE_SIZE - Constants.PAGE_DIRECTORY_ENTRY_SIZE));
-            PageDirectoryEntry.GetEntryPosition(10).ShouldBe((ushort)(Constants.PAGE_SIZE - Constants.PAGE_DIRECTORY_ENTRY_SIZE * 10));
-            PageDirectoryEntry.GetEntryPosition(3).ShouldBe((ushort)(Constants.PAGE_SIZE - Constants.PAGE_DIRECTORY_ENTRY_SIZE * 3));
+            PageDirectoryEntry.GetEntryPosition(1).ShouldBe((ushort)(Constants.PAGE_SIZE - Constants.PAGE_DIRECTORY_ENTRY_SIZE - 1));
+            PageDirectoryEntry.GetEntryPosition(10).ShouldBe((ushort)(Constants.PAGE_SIZE - Constants.PAGE_DIRECTORY_ENTRY_SIZE * 10 - 1));
+            PageDirectoryEntry.GetEntryPosition(3).ShouldBe((ushort)(Constants.PAGE_SIZE - Constants.PAGE_DIRECTORY_ENTRY_SIZE * 3 - 1));
         }
     }
 }

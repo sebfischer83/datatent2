@@ -39,7 +39,7 @@ namespace Datatent2.Core
         /// <summary>
         /// The amount of bytes that can be used without the header and minimum of one block header and footer
         /// </summary>
-        public const int MAX_USABLE_BYTES_IN_PAGE = PAGE_SIZE - PAGE_HEADER_SIZE - BLOCK_HEADER_SIZE - PAGE_DIRECTORY_ENTRY_SIZE;
+        public const int MAX_USABLE_BYTES_IN_PAGE = PAGE_SIZE - PAGE_HEADER_SIZE - PAGE_DIRECTORY_ENTRY_SIZE;
 
         public const int VERSION = 1;
 

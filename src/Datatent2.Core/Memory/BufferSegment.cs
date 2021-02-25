@@ -52,7 +52,7 @@ namespace Datatent2.Core.Memory
         public void Dispose()
         {
             if (_rental != null)
-                ArrayPool<byte>.Shared.Return(_rental);
+                ArrayPool<byte>.Shared.Return(_rental, true);
             _rental = null;
         }
     }

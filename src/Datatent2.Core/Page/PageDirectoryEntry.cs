@@ -49,8 +49,9 @@ namespace Datatent2.Core.Page
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsEmpty(Span<byte> span, int offset)
         {
-            var b = span[offset];
-            return b == 0x00;
+            var i = MemoryMarshal.Read<int>(span.Slice(offset));
+
+            return i == 0;
         }
 
         public static PageDirectoryEntry FromBuffer(Span<byte> span, int offset)

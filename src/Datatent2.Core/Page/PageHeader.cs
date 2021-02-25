@@ -56,6 +56,9 @@ namespace Datatent2.Core.Page
         [FieldOffset(PAGE_HIGHEST_ENTRY_ID)]
         public readonly byte HighestEntryId;
 
+        [FieldOffset(32)]
+        public readonly byte End;
+
         private const int PAGE_ID = 0; // 0-3 uint
         private const int PAGE_TYPE = 4; // 4 byte (enum PageType)
         private const int PAGE_PREV_ID = 5; // 5-8 uint 
@@ -77,6 +80,7 @@ namespace Datatent2.Core.Page
             NextFreePosition = nextFreePosition;
             UnalignedFreeBytes = unalignedFreeBytes;
             HighestEntryId = highestEntryId;
+            End = 0xFF;
         }
 
         public PageHeader(uint pageId, PageType type)
@@ -90,6 +94,7 @@ namespace Datatent2.Core.Page
             NextFreePosition = Constants.PAGE_HEADER_SIZE;
             UnalignedFreeBytes = 0;
             HighestEntryId = 0;
+            End = 0xFF;
         }
 
         public static PageHeader FromBuffer(Span<byte> span)
@@ -120,7 +125,10 @@ namespace Datatent2.Core.Page
         {
             var tableData = new List<List<object>>()
             {
-                new List<object>{nameof(ItemCount), ItemCount}
+                new List<object>{nameof(ItemCount), ItemCount},
+                new List<object>{nameof(UsedBytes), UsedBytes },
+                new List<object>{nameof(UnalignedFreeBytes), UnalignedFreeBytes },
+                new List<object>{nameof(NextFreePosition), NextFreePosition },
             };
 
             return ConsoleTableBuilder
