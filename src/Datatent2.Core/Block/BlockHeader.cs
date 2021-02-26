@@ -15,7 +15,7 @@ namespace Datatent2.Core.Block
         [FieldOffset(BH_PAGE_ADDRESS)]
         public readonly PageAddress NextBlockAddress;
 
-        private const int BH_PAGE_ADDRESS = 0; // 0-7 PageAddress 8 byte
+        private const int BH_PAGE_ADDRESS = 0; // 0-5 PageAddress 6 byte
 
         public BlockHeader(PageAddress pageAddress)
         {

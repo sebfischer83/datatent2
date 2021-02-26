@@ -8,6 +8,7 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Order;
 using Bogus;
 using Datatent2.Core.Scripting;
+using Datatent2.Core.Scripting.Csharp;
 
 namespace Datatent2.CoreBench.Scripting
 {

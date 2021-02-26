@@ -21,12 +21,12 @@ namespace Datatent2.Core.Tests.Page
             var bogus = new Bogus.Randomizer();
 
             byte[] toInsert = Encoding.UTF8.GetBytes("Hello World!");
-            ushort insertLength = (ushort) toInsert.Length;
+            ushort insertLength = (ushort)toInsert.Length;
             using BufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
             PageHeader header = new PageHeader(1, PageType.Data);
 
             header.ToBuffer(bufferSegment.Span, 0);
-            
+
             DataPage dataPage = new DataPage(bufferSegment);
             dataPage.IsFull.ShouldBeFalse();
             var ins = dataPage.Insert(insertLength, out var index);
@@ -42,6 +42,83 @@ namespace Datatent2.Core.Tests.Page
             ins.WriteBytes(0, toInsert);
             dataPage.FreeContinuousBytes.ShouldBe((ushort)(Constants.MAX_USABLE_BYTES_IN_PAGE - 4 - insertLength * 2));
             bufferSegment.Span.Slice(Constants.PAGE_HEADER_SIZE + insertLength, insertLength).ToArray().ShouldBe(toInsert);
+        }
+
+        [Fact]
+        public void InsertTest_MaxCount()
+        {
+            var bogus = new Bogus.Randomizer();
+
+            byte[] toInsert = TestHelper.GenerateByteArray(4, 0x0F);
+            ushort insertLength = (ushort)toInsert.Length;
+            using BufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
+            PageHeader header = new PageHeader(1, PageType.Data);
+
+            header.ToBuffer(bufferSegment.Span, 0);
+
+            DataPage dataPage = new DataPage(bufferSegment);
+            dataPage.IsFull.ShouldBeFalse();
+            byte index = 0;
+            for (int i = 0; i < 255; i++)
+            {
+                var ins = dataPage.Insert(insertLength, out index);
+                ins.WriteBytes(0, toInsert);
+            }
+
+            dataPage.IsInsertPossible(1).ShouldBe(false);
+            Should.Throw<Exception>(() =>
+            {
+                dataPage.Insert(insertLength, out var index);
+            });
+            dataPage.Delete(100);
+            dataPage.IsInsertPossible(1).ShouldBe(true);
+            dataPage.Insert(insertLength, out index);
+            index.ShouldBe((byte)100);
+        }
+
+
+        [Fact]
+        public void InsertTest_Middle()
+        {
+            using BufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
+            PageHeader header = new PageHeader(1, PageType.Data);
+            header.ToBuffer(bufferSegment.Span, 0);
+            DataPage dataPage = new DataPage(bufferSegment);
+            dataPage.IsFull.ShouldBeFalse();
+
+            byte[] toInsert = TestHelper.GenerateByteArray(36, 0x0F);
+            ushort insertLength = (ushort)toInsert.Length;
+            byte index = 0;
+
+            for (int i = 0; i < 203; i++)
+            {
+                if (!dataPage.IsInsertPossible(insertLength))
+                    continue;
+                var ins = dataPage.Insert(insertLength, out index);
+                ins.WriteBytes(0, toInsert);
+                dataPage.PageHeader.HighestEntryId.ShouldBe(index);
+            }
+            dataPage.IsFull.ShouldBeTrue();
+            var freeSpace = dataPage.GetMaxContiguounesFreeSpace();
+            freeSpace.ShouldBe((ushort)40);
+            dataPage.Delete(10);
+            freeSpace = dataPage.GetMaxContiguounesFreeSpace();
+            freeSpace.ShouldBe((ushort)40);
+            dataPage.Delete(11);
+            freeSpace = dataPage.GetMaxContiguounesFreeSpace();
+            freeSpace.ShouldBe((ushort)72);
+            dataPage.Delete(12);
+            freeSpace = dataPage.GetMaxContiguounesFreeSpace();
+            freeSpace.ShouldBe((ushort)108);
+            var toTest =dataPage.Insert(50, out var newIndex);
+            toTest.WriteBytes(0, TestHelper.GenerateByteArray(50, 0xFF));
+
+            dataPage.PageHeader.ItemCount.ShouldBe((byte)201);
+            var dataSegment = bufferSegment.Span.Slice(Constants.PAGE_HEADER_SIZE,
+                Constants.PAGE_SIZE - Constants.PAGE_HEADER_SIZE -
+                (dataPage.PageHeader.ItemCount * Constants.PAGE_DIRECTORY_ENTRY_SIZE)).ToArray();
+            dataSegment.Count(b => b == 0xFF).ShouldBe(50);
+            dataSegment.Count(b => b == 0x0F).ShouldBe((dataPage.PageHeader.ItemCount - 1) * insertLength);
         }
 
         [Fact]
@@ -160,6 +237,67 @@ namespace Datatent2.Core.Tests.Page
             freeSpace.ShouldBe((ushort)108);
         }
 
+        [Fact]
+        public void GetBytesByIndexTest()
+        {
+            using BufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
+            PageHeader header = new PageHeader(1, PageType.Data);
+            header.ToBuffer(bufferSegment.Span, 0);
+            DataPage dataPage = new DataPage(bufferSegment);
+            dataPage.IsFull.ShouldBeFalse();
+
+            for (int i = 0; i < 10; i++)
+            {
+                byte[] toInsert = Encoding.UTF8.GetBytes($"Hello World {i + 1}");
+                ushort insertLength = (ushort)toInsert.Length;
+                dataPage.IsInsertPossible(insertLength).ShouldBeTrue();
+                var ins = dataPage.Insert(insertLength, out var index);
+                ins.WriteBytes(0, toInsert);
+                dataPage.PageHeader.HighestEntryId.ShouldBe(index);
+            }
+
+            for (int i = 0; i < 10; i++)
+            {
+                var bytes = dataPage.GetDataByIndex((byte) (i + 1));
+                var text = Encoding.UTF8.GetString(bytes);
+                text.ShouldBe($"Hello World {i+1}");
+            }
+        }
+
+        [Fact]
+        public void DefragTest()
+        {
+            using BufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
+            PageHeader header = new PageHeader(1, PageType.Data);
+            header.ToBuffer(bufferSegment.Span, 0);
+            DataPage dataPage = new DataPage(bufferSegment);
+            dataPage.IsFull.ShouldBeFalse();
+
+            byte[] toInsert = TestHelper.GenerateByteArray(36, 0x0F);
+            ushort insertLength = (ushort)toInsert.Length;
+            byte index = 0;
+
+            for (int i = 0; i < 203; i++)
+            {
+                if (!dataPage.IsInsertPossible(insertLength))
+                    continue;
+                var ins = dataPage.Insert(insertLength, out index);
+                ins.WriteBytes(0, toInsert);
+                dataPage.PageHeader.HighestEntryId.ShouldBe(index);
+            }
+            dataPage.IsFull.ShouldBeTrue();
+            dataPage.Delete(10);
+            dataPage.Delete(11);
+            dataPage.Delete(12);
+
+            dataPage.Delete(50);
+
+            dataPage.Delete(105);
+            dataPage.Delete(106);
+
+            dataPage.Defrag();
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -179,7 +317,7 @@ namespace Datatent2.Core.Tests.Page
             var res = dataPage.FindFreeSpaceBetween(1000);
             res.Index1.ShouldBe((byte)0);
             res.Index2.ShouldBe((byte)2);
-            
+
 
         }
     }

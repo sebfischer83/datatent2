@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using Dawn;
 
 namespace Datatent2.Core.Page
 {
+    /// <summary>
+    /// The position of a piece of data in a page
+    /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = Constants.PAGE_ADDRESS_SIZE)]
     internal readonly struct PageAddress
     {

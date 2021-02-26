@@ -132,6 +132,19 @@ namespace Datatent2.Core
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public static unsafe void WriteBytes(this ref Span<byte> span, int offset, Span<byte> bytes)
+        {
+            if (bytes == null)
+                throw new ArgumentNullException(nameof(bytes));
+
+            fixed (byte* bp = bytes)
+            fixed (byte* rp = span.Slice(offset))
+            {
+                Unsafe.CopyBlock(rp, bp, (uint)bytes.Length);
+            }
+        }
+
         /// <summary>
         /// Writes the values to the span.
         /// </summary>

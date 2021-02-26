@@ -56,7 +56,7 @@ namespace Datatent2.Core.Page
         [FieldOffset(PAGE_HIGHEST_ENTRY_ID)]
         public readonly byte HighestEntryId;
 
-        [FieldOffset(32)]
+        [FieldOffset(31)]
         public readonly byte End;
 
         private const int PAGE_ID = 0; // 0-3 uint
