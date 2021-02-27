@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Datatent2.Core.Scripting;
+using Datatent2.Core.Scripting.Csharp;
 using Shouldly;
 using Xunit;
 

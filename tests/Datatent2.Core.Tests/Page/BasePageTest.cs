@@ -273,29 +273,46 @@ namespace Datatent2.Core.Tests.Page
             DataPage dataPage = new DataPage(bufferSegment);
             dataPage.IsFull.ShouldBeFalse();
 
-            byte[] toInsert = TestHelper.GenerateByteArray(36, 0x0F);
-            ushort insertLength = (ushort)toInsert.Length;
             byte index = 0;
 
-            for (int i = 0; i < 203; i++)
+            List<string> expectedData = new(Enumerable.Range(1, 20).Select(i => "H" + i));
+            List<byte> indexes = new();
+
+            for (int i = 1; i < 21; i++)
             {
+                byte[] toInsert = Encoding.UTF8.GetBytes($"H{i}");
+                ushort insertLength = (ushort)toInsert.Length;
                 if (!dataPage.IsInsertPossible(insertLength))
                     continue;
                 var ins = dataPage.Insert(insertLength, out index);
                 ins.WriteBytes(0, toInsert);
+                indexes.Add(index);
                 dataPage.PageHeader.HighestEntryId.ShouldBe(index);
             }
             dataPage.IsFull.ShouldBeTrue();
+            expectedData.Remove("H" + 10);
+            expectedData.Remove("H" + 11);
+            expectedData.Remove("H" + 12);
+            expectedData.Remove("H" + 18);
+            indexes.Remove(10);
+            indexes.Remove(11);
+            indexes.Remove(12);
+            indexes.Remove(18);
             dataPage.Delete(10);
             dataPage.Delete(11);
             dataPage.Delete(12);
-
-            dataPage.Delete(50);
-
-            dataPage.Delete(105);
-            dataPage.Delete(106);
-
+            dataPage.Delete(18);
+            
             dataPage.Defrag();
+
+            List<string> currentData = new();
+            foreach (var ind in indexes)
+            {
+                currentData.Add(Encoding.UTF8.GetString(dataPage.GetDataByIndex(ind)));
+            }
+
+            dataPage.PageHeader.UnalignedFreeBytes.ShouldBe((ushort)0);
+            currentData.ShouldBe(expectedData, true);
         }
 
         /// <summary>

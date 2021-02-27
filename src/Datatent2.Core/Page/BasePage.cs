@@ -101,6 +101,16 @@ namespace Datatent2.Core.Page
                     entryToChange.ToBuffer(Buffer.Span, PageDirectoryEntry.GetEntryPosition(between[i].Index));
                 }
 
+
+                var pageHeader = new PageHeader(Header.PageId, Header.Type, Header.PrevPageId, Header.NextPageId,
+                    (ushort)(Header.UsedBytes),
+                    (byte) (Header.ItemCount - 1),
+                    Header.NextFreePosition,
+                    (ushort) (regions.Sum(tuple => tuple.Item3) -  region.Item3),
+                    HighestDirectoryEntryId);
+                pageHeader.ToBuffer(Buffer.Span, 0);
+                Header = pageHeader;
+
                 regions = GetFreeRegions();
                 freeRegions = regions.Count;
                 maxLoops -= 1;
