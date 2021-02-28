@@ -12,14 +12,19 @@ namespace Datatent2.Core.Block
     [StructLayout(LayoutKind.Explicit, Size = Constants.BLOCK_HEADER_SIZE)]
     internal readonly struct BlockHeader
     {
+        [FieldOffset(BH_PAGE_IS_FOLLOWING_BLOCK)]
+        public readonly bool IsFollowingBlock;
+
         [FieldOffset(BH_PAGE_ADDRESS)]
         public readonly PageAddress NextBlockAddress;
 
-        private const int BH_PAGE_ADDRESS = 0; // 0-5 PageAddress 6 byte
+        private const int BH_PAGE_IS_FOLLOWING_BLOCK = 0; // 0 byte
+        private const int BH_PAGE_ADDRESS = 1; // 1-4 PageAddress 6 byte
 
-        public BlockHeader(PageAddress pageAddress)
+        public BlockHeader(PageAddress pageAddress, bool isFollowingBlock)
         {
             NextBlockAddress = pageAddress;
+            IsFollowingBlock = isFollowingBlock;
         }
 
         public static BlockHeader FromBuffer(Span<byte> span)
@@ -35,7 +40,6 @@ namespace Datatent2.Core.Block
 
         public void ToBuffer(Span<byte> span)
         {
-            Guard.Argument(span.Length + 1).GreaterThan(Constants.BLOCK_HEADER_SIZE);
             BlockHeader a = this;
             MemoryMarshal.Write(span, ref a);
         }

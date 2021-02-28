@@ -14,6 +14,7 @@ namespace Datatent2.Core.Services.Compression
         public Span<byte> Compress(Span<byte> bytes, Span<byte> target)
         {
             Unsafe.CopyBlock(ref target[0], ref bytes[0], (uint)bytes.Length);
+            target = target.Slice(0, bytes.Length);
             return target.Slice(0, bytes.Length);
         }
 

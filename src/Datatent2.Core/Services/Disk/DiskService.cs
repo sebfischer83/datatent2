@@ -12,13 +12,18 @@ namespace Datatent2.Core.Services.Disk
 { 
     internal abstract class DiskService
     {
-        protected Stream? _stream;
+        protected readonly Stream Stream;
+
+        protected DiskService(Stream stream)
+        {
+            Stream = stream;
+        }
 
         public BufferSegment GetPageBuffer(uint pageId)
         {
             var bufferSegment = BufferPool.Shared.Rent(Constants.PAGE_SIZE);
-            _stream.Seek(BasePage.PageOffset(pageId), SeekOrigin.Begin);
-            _stream.Read(bufferSegment.Span.Slice(0, Constants.PAGE_SIZE));
+            Stream.Seek(BasePage.PageOffset(pageId), SeekOrigin.Begin);
+            Stream.Read(bufferSegment.Span.Slice(0, Constants.PAGE_SIZE));
 
             return bufferSegment;
         }

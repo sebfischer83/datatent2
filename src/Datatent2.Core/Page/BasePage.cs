@@ -15,13 +15,15 @@ namespace Datatent2.Core.Page
 
         public ref PageHeader PageHeader => ref Header;
 
-        public bool IsFull => GetFreeRegions().Count == 0;
+        public bool IsFull => FreeContinuousBytes < 8;
         public ushort UsedBytes => Header.UsedBytes;
 
         /// <summary>
         /// The free bytes in a continuous block
         /// </summary>
-        public ushort FreeContinuousBytes => (ushort)(Constants.PAGE_SIZE - Constants.PAGE_HEADER_SIZE - Header.UsedBytes - Header.UnalignedFreeBytes - (Header.HighestEntryId * Constants.PAGE_DIRECTORY_ENTRY_SIZE));
+        public ushort FreeContinuousBytes => (ushort)(Constants.PAGE_SIZE - Constants.PAGE_HEADER_SIZE - Header.UsedBytes - Header.UnalignedFreeBytes - (Header.HighestEntryId * Constants.PAGE_DIRECTORY_ENTRY_SIZE)) ;
+
+        public ushort MaxFreeUsableBytes => (ushort) (FreeContinuousBytes - Constants.PAGE_DIRECTORY_ENTRY_SIZE);
 
         protected BufferSegment Buffer;
         protected PageHeader Header;
@@ -48,7 +50,7 @@ namespace Datatent2.Core.Page
                 return false;
 
             // is enough space free at the end?
-            if (FreeContinuousBytes > length + Constants.PAGE_DIRECTORY_ENTRY_SIZE)
+            if (FreeContinuousBytes >= length + Constants.PAGE_DIRECTORY_ENTRY_SIZE)
                 return true;
 
             // unaligned space is not big enough
@@ -68,16 +70,19 @@ namespace Datatent2.Core.Page
 
             var regions = GetFreeRegions();
             var freeRegions = regions.Count;
-            int maxLoops = 10;
+            // maximum number of loops to is the initial number of regions with free space
+            int maxLoops = regions.Count;
 
             while (freeRegions > 0 && maxLoops > 0)
             {
+                // take the first free region
                 var region = regions[0];
                 
                 // last free region in the file
                 byte nextFreeEntry = HighestDirectoryEntryId;
                 if (regions.Count > 1)
                 {
+                    // next free entry starts here, so all between these indexes need to be moved
                     var nextRegion = regions[1];
                     nextFreeEntry = nextRegion.Item1;
                 }
@@ -233,7 +238,7 @@ namespace Datatent2.Core.Page
             PageDirectoryEntry entry = new PageDirectoryEntry(0, 0);
 
             // can be added at the end?
-            if (FreeContinuousBytes > length + Constants.PAGE_DIRECTORY_ENTRY_SIZE)
+            if (FreeContinuousBytes >= length + Constants.PAGE_DIRECTORY_ENTRY_SIZE)
             {
                 entry = new PageDirectoryEntry(nextFreePos, length);
                 nextFreePos += length;

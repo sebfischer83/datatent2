@@ -22,6 +22,7 @@
     <PackageReference Include="Bogus" Version="33.0.1" />
     <PackageReference Include="Bogus.Text" Version="33.0.1" />
     <PackageReference Include="ConsoleTableExt" Version="3.1.2" />
+    <PackageReference Include="Cryptisk.Utf8Json" Version="1.4.0" />
     <PackageReference Include="Dawn.Guard" Version="1.12.0" />
     <PackageReference Include="ErrorProne.NET.CoreAnalyzers" Version="0.3.0-beta.0">
       <PrivateAssets>all</PrivateAssets>

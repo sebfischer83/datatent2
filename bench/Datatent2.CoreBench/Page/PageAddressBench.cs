@@ -34,7 +34,7 @@ namespace Datatent2.CoreBench.Page
             Random random = new Random();
             for (int i = 0; i < Count; i++)
             {
-                PageAddress address = new PageAddress((uint) random.Next(0, int.MaxValue), (byte)random.Next(0, byte.MaxValue), false);
+                PageAddress address = new PageAddress((uint) random.Next(0, int.MaxValue), (byte)random.Next(0, byte.MaxValue));
                 _pageAddresses[i] = address;
                 MemoryMarshal.Write(array.Slice((i * Constants.PAGE_ADDRESS_SIZE)), ref address);
             }

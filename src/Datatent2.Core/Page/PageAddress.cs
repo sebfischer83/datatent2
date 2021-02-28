@@ -16,25 +16,20 @@ namespace Datatent2.Core.Page
         [FieldOffset(PA_BLOCK)]
         public readonly byte DirectoryEntryId;
 
-        [FieldOffset(PA_IS_EXTENSION_BLOCK)]
-        public readonly bool IsExtensionBlock;
-
         private const int PA_PAGE_ID = 0; // 0-3 uint
         private const int PA_BLOCK = 4; // 4 byte
-        private const int PA_IS_EXTENSION_BLOCK = 5; // 5 bool (byte)
 
-        public static PageAddress Empty { get; } = new PageAddress(uint.MaxValue, byte.MaxValue, false);
+        public static PageAddress Empty { get; } = new PageAddress(0, 0);
 
-        public PageAddress(uint pageId, byte dicDirectoryEntryId, bool isExtensionBlock)
+        public PageAddress(uint pageId, byte dicDirectoryEntryId)
         {
             PageId = pageId;
             DirectoryEntryId = dicDirectoryEntryId;
-            IsExtensionBlock = isExtensionBlock;
         }
 
         public bool IsEmpty()
         {
-            return IsExtensionBlock == false && PageId == 0 && PageId == uint.MaxValue && DirectoryEntryId == byte.MaxValue;
+            return PageId == 0 && DirectoryEntryId == 0;
         }
 
         public static PageAddress FromBuffer(Span<byte> span)
@@ -59,6 +54,11 @@ namespace Datatent2.Core.Page
         {
             Guard.Argument(offset).GreaterThan(0);
             ToBuffer(span.Slice(offset));
+        }
+
+        public override string ToString()
+        {
+            return $"{PageId}:{DirectoryEntryId}";
         }
     }
 }
