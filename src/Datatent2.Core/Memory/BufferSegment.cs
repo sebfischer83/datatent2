@@ -6,7 +6,7 @@ namespace Datatent2.Core.Memory
     /// <summary>
     /// Buffer always a complete page, only dispose when not in use anymore
     /// </summary>
-    internal class BufferSegment : IMemoryOwner<byte>
+    internal class BufferSegment : IBufferSegment
     {
         private byte[]? _rental;
 

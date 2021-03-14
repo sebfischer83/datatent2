@@ -49,7 +49,7 @@ namespace Datatent2.CoreBench.Page
             for (int i = 0; i < Count; i++)
             {
                 var page = PageAddress.FromBuffer(new Span<byte>(_array).Slice(i * Constants.PAGE_ADDRESS_SIZE));
-                a += page.DirectoryEntryId;
+                a += page.SlotId;
             }
 
             return a;
@@ -63,7 +63,7 @@ namespace Datatent2.CoreBench.Page
             {
                 ref var address = ref _pageAddresses[i];
                 address.ToBuffer(new Span<byte>(_array).Slice(i * Constants.PAGE_ADDRESS_SIZE));
-                a += address.DirectoryEntryId;
+                a += address.SlotId;
             }
 
             return a;

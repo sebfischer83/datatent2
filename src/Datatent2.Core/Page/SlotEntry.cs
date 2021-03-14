@@ -6,7 +6,7 @@ using Dawn;
 namespace Datatent2.Core.Page
 {
     [StructLayout(LayoutKind.Explicit, Size = Constants.PAGE_DIRECTORY_ENTRY_SIZE)]
-    internal readonly struct PageDirectoryEntry
+    internal readonly struct SlotEntry
     {
         [FieldOffset(PDE_DATA_OFFSET)]
         public readonly ushort DataOffset;
@@ -17,7 +17,7 @@ namespace Datatent2.Core.Page
         private const int PDE_DATA_OFFSET = 0; // ushort 0-1
         private const int PDE_DATA_LENGTH = 2; // ushort 2-3
 
-        public PageDirectoryEntry(ushort dataOffset, ushort dataLength)
+        public SlotEntry(ushort dataOffset, ushort dataLength)
         {
             DataOffset = dataOffset;
             DataLength = dataLength;
@@ -30,9 +30,9 @@ namespace Datatent2.Core.Page
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static PageDirectoryEntry FromBuffer(Span<byte> span)
+        public static SlotEntry FromBuffer(Span<byte> span)
         {
-            return MemoryMarshal.Read<PageDirectoryEntry>(span);
+            return MemoryMarshal.Read<SlotEntry>(span);
         }
 
         public static void Clear(Span<byte> span, byte index)
@@ -49,13 +49,13 @@ namespace Datatent2.Core.Page
             return i == 0;
         }
 
-        public static PageDirectoryEntry FromBuffer(Span<byte> span, int offset)
+        public static SlotEntry FromBuffer(Span<byte> span, int offset)
         {
             Guard.Argument(offset).Min(0);
             return FromBuffer(span.Slice(offset));
         }
 
-        public static PageDirectoryEntry FromBuffer(Span<byte> span, byte index)
+        public static SlotEntry FromBuffer(Span<byte> span, byte index)
         {
             var offset = (int)GetEntryPosition(index);
             Guard.Argument(offset).Min(0);
@@ -65,7 +65,7 @@ namespace Datatent2.Core.Page
         public void ToBuffer(Span<byte> span)
         {
             Guard.Argument(span.Length).Min(Constants.PAGE_DIRECTORY_ENTRY_SIZE);
-            PageDirectoryEntry a = this;
+            SlotEntry a = this;
             MemoryMarshal.Write(span, ref a);
         }
 
@@ -78,7 +78,7 @@ namespace Datatent2.Core.Page
         public static ushort GetEntryPosition(byte id)
         {
             return (ushort)(Constants.PAGE_SIZE -
-                             (id * Constants.PAGE_DIRECTORY_ENTRY_SIZE) - 1);
+                             (id * Constants.PAGE_DIRECTORY_ENTRY_SIZE));
         }
     }
 }

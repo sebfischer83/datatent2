@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using Datatent2.Core.Memory;
 using Dawn;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Datatent2.Core.Page
 {
-    internal abstract class BasePage
+    internal abstract class BasePage : IEquatable<BasePage?>, IDisposable
     {
         public uint Id => Header.PageId;
         public PageType Type => Header.Type;
@@ -15,33 +16,37 @@ namespace Datatent2.Core.Page
 
         public ref PageHeader PageHeader => ref Header;
 
-        public bool IsFull => FreeContinuousBytes < 8;
+        public bool IsDirty { get; set; }
+
+        public virtual bool IsFull => FreeContinuousBytes < (Constants.PAGE_DIRECTORY_ENTRY_SIZE + 1) || MaxFreeUsableBytes <= 8 || HighestDirectoryEntryId == byte.MaxValue;
         public ushort UsedBytes => Header.UsedBytes;
 
         /// <summary>
         /// The free bytes in a continuous block
         /// </summary>
-        public ushort FreeContinuousBytes => (ushort)(Constants.PAGE_SIZE - Constants.PAGE_HEADER_SIZE - Header.UsedBytes - Header.UnalignedFreeBytes - (Header.HighestEntryId * Constants.PAGE_DIRECTORY_ENTRY_SIZE)) ;
+        public ushort FreeContinuousBytes => (ushort)(Constants.PAGE_SIZE - Constants.PAGE_HEADER_SIZE - Header.UsedBytes - Header.UnalignedFreeBytes - (Header.HighestSlotId * Constants.PAGE_DIRECTORY_ENTRY_SIZE)) ;
 
         public ushort MaxFreeUsableBytes => (ushort) (FreeContinuousBytes - Constants.PAGE_DIRECTORY_ENTRY_SIZE);
 
-        protected BufferSegment Buffer;
+        protected IBufferSegment Buffer;
         protected PageHeader Header;
         protected byte HighestDirectoryEntryId;
 
-        protected BasePage(BufferSegment buffer)
+        public IBufferSegment PageBuffer => Buffer;
+
+        protected BasePage(IBufferSegment buffer)
         {
             Header = PageHeader.FromBuffer(buffer.Span);
             Buffer = buffer;
-            HighestDirectoryEntryId = Header.HighestEntryId;
+            HighestDirectoryEntryId = Header.HighestSlotId;
         }
 
-        protected BasePage(BufferSegment buffer, uint id, PageType pageType)
+        protected BasePage(IBufferSegment buffer, uint id, PageType pageType)
         {
             Guard.Argument((int)buffer.Length).Min(Constants.PAGE_SIZE);
             Buffer = buffer;
             Header = new PageHeader(id, pageType);
-            HighestDirectoryEntryId = Header.HighestEntryId;
+            HighestDirectoryEntryId = Header.HighestSlotId;
         }
 
         public bool IsInsertPossible(ushort length)
@@ -91,8 +96,8 @@ namespace Datatent2.Core.Page
                 var startOffset = between[0].Entry.DataOffset;
                 var endOffset = between[^1].Entry.EndPositionOfData();
 
-                var entry = PageDirectoryEntry.FromBuffer(Buffer.Span,
-                    PageDirectoryEntry.GetEntryPosition(region.Item1));
+                var entry = SlotEntry.FromBuffer(Buffer.Span,
+                    SlotEntry.GetEntryPosition(region.Item1));
                 var spanTarget = Buffer.Span.Slice(entry.EndPositionOfData());
                 var spanSource = Buffer.Span.Slice(startOffset, endOffset - startOffset);
                 // copy all bytes
@@ -100,10 +105,10 @@ namespace Datatent2.Core.Page
                 Buffer.Span.Slice(endOffset - region.Item3, region.Item3).Clear();
                 for (int i = 0; i < between.Count; i++)
                 {
-                    var entryToChange = PageDirectoryEntry.FromBuffer(Buffer.Span, between[i].Index);
-                    entryToChange = new PageDirectoryEntry((ushort) (entryToChange.DataOffset - region.Item3),
+                    var entryToChange = SlotEntry.FromBuffer(Buffer.Span, between[i].Index);
+                    entryToChange = new SlotEntry((ushort) (entryToChange.DataOffset - region.Item3),
                         entryToChange.DataLength);
-                    entryToChange.ToBuffer(Buffer.Span, PageDirectoryEntry.GetEntryPosition(between[i].Index));
+                    entryToChange.ToBuffer(Buffer.Span, SlotEntry.GetEntryPosition(between[i].Index));
                 }
 
 
@@ -120,13 +125,15 @@ namespace Datatent2.Core.Page
                 freeRegions = regions.Count;
                 maxLoops -= 1;
             }
+
+            IsDirty = true;
         }
 
         public Span<byte> GetDataByIndex(byte directoryIndex)
         {
-            Guard.Argument(directoryIndex).Max(Header.HighestEntryId);
+            Guard.Argument(directoryIndex).Max(Header.HighestSlotId);
 
-            var entry = PageDirectoryEntry.FromBuffer(Buffer.Span, directoryIndex);
+            var entry = SlotEntry.FromBuffer(Buffer.Span, directoryIndex);
 
             return Buffer.Span.Slice(entry.DataOffset, entry.DataLength);
         }
@@ -144,17 +151,17 @@ namespace Datatent2.Core.Page
             return listFreeRegions.Max(tuple => tuple.Item3);
         }
 
-        private List<(byte Index, PageDirectoryEntry Entry)> GetAllDirectoryEntriesBetween(byte from, byte to)
+        private List<(byte Index, SlotEntry Entry)> GetAllDirectoryEntriesBetween(byte from, byte to)
         {
-            List<(byte Index, PageDirectoryEntry Entry)> regionsList =
+            List<(byte Index, SlotEntry Entry)> regionsList =
                 new();
 
-            PageDirectoryEntry entryFrom = PageDirectoryEntry.FromBuffer(Buffer.Span, PageDirectoryEntry.GetEntryPosition(from));
-            PageDirectoryEntry entryTo = PageDirectoryEntry.FromBuffer(Buffer.Span, PageDirectoryEntry.GetEntryPosition(to));
+            SlotEntry entryFrom = SlotEntry.FromBuffer(Buffer.Span, SlotEntry.GetEntryPosition(from));
+            SlotEntry entryTo = SlotEntry.FromBuffer(Buffer.Span, SlotEntry.GetEntryPosition(to));
             
             for (byte i = 1; i <= HighestDirectoryEntryId; i++)
             {
-                var current = PageDirectoryEntry.FromBuffer(Buffer.Span, PageDirectoryEntry.GetEntryPosition(i));
+                var current = SlotEntry.FromBuffer(Buffer.Span, SlotEntry.GetEntryPosition(i));
                 if (current.DataOffset >= entryFrom.DataOffset && current.DataOffset <= entryTo.DataOffset)
                     regionsList.Add((i, current));
             }
@@ -165,7 +172,7 @@ namespace Datatent2.Core.Page
         private List<(byte, byte, ushort)> GetFreeRegions()
         {
             List<(byte, byte, ushort)> regionsList = new();
-            PageDirectoryEntry lastDirectoryEntry = new PageDirectoryEntry(0, 0);
+            SlotEntry lastDirectoryEntry = new SlotEntry(0, 0);
             if (HighestDirectoryEntryId == 0)
             {
                 regionsList.Add((Byte.MaxValue, Byte.MaxValue, FreeContinuousBytes));
@@ -175,11 +182,11 @@ namespace Datatent2.Core.Page
             byte lastId = 0;
             for (byte i = 1; i <= HighestDirectoryEntryId; i++)
             {
-                var offset = PageDirectoryEntry.GetEntryPosition(i);
-                if (PageDirectoryEntry.IsEmpty(Buffer.Span, offset))
+                var offset = SlotEntry.GetEntryPosition(i);
+                if (SlotEntry.IsEmpty(Buffer.Span, offset))
                     continue;
 
-                var current = PageDirectoryEntry.FromBuffer(Buffer.Span, PageDirectoryEntry.GetEntryPosition(i));
+                var current = SlotEntry.FromBuffer(Buffer.Span, SlotEntry.GetEntryPosition(i));
 
                 if (lastDirectoryEntry.DataLength == 0 && lastDirectoryEntry.DataOffset == 0)
                 {
@@ -231,16 +238,16 @@ namespace Datatent2.Core.Page
             if (!found)
                 throw new Exception("No available directory entry in page.");
             
-            var entryPos = PageDirectoryEntry.GetEntryPosition(entryIndex);
+            var entryPos = SlotEntry.GetEntryPosition(entryIndex);
 
             var nextFreePos = Header.NextFreePosition;
             var unalignedBytes = Header.UnalignedFreeBytes;
-            PageDirectoryEntry entry = new PageDirectoryEntry(0, 0);
+            SlotEntry entry = new SlotEntry(0, 0);
 
             // can be added at the end?
             if (FreeContinuousBytes >= length + Constants.PAGE_DIRECTORY_ENTRY_SIZE)
             {
-                entry = new PageDirectoryEntry(nextFreePos, length);
+                entry = new SlotEntry(nextFreePos, length);
                 nextFreePos += length;
             }
             else
@@ -252,8 +259,8 @@ namespace Datatent2.Core.Page
                     var region = regions[i];
                     if (region.Item3 >= length)
                     {
-                        var entryBefore = PageDirectoryEntry.FromBuffer(Buffer.Span, PageDirectoryEntry.GetEntryPosition(region.Item1));
-                        entry = new PageDirectoryEntry(entryBefore.EndPositionOfData(), length);
+                        var entryBefore = SlotEntry.FromBuffer(Buffer.Span, SlotEntry.GetEntryPosition(region.Item1));
+                        entry = new SlotEntry(entryBefore.EndPositionOfData(), length);
                         unalignedBytes -= length;
                         break;
                     }
@@ -263,7 +270,7 @@ namespace Datatent2.Core.Page
             Guard.Argument(entry.DataOffset == 0 && entry.DataLength == 0).False();
 
             // new highest index
-            if (entryIndex > Header.HighestEntryId)
+            if (entryIndex > Header.HighestSlotId)
             {
                 HighestDirectoryEntryId = entryIndex;
             }
@@ -275,17 +282,18 @@ namespace Datatent2.Core.Page
                 (byte)(Header.ItemCount + 1), nextFreePos, unalignedBytes, HighestDirectoryEntryId);
             pageHeader.ToBuffer(Buffer.Span, 0);
             Header = pageHeader;
+            IsDirty = true;
             return Buffer.Span.Slice(entry.DataOffset, entry.DataLength);
         }
 
         public bool Delete(byte entryIndex)
         {
             Guard.Argument(entryIndex).Min((byte)0);
-            Guard.Argument(entryIndex).Max(Header.HighestEntryId,
+            Guard.Argument(entryIndex).Max(Header.HighestSlotId,
                 (b, _) => $"EntryIndex is out of range {b} max available is {1}");
 
-            var entryPos = PageDirectoryEntry.GetEntryPosition(entryIndex);
-            var pageDirectoryEntry = PageDirectoryEntry.FromBuffer(Buffer.Span, entryPos);
+            var entryPos = SlotEntry.GetEntryPosition(entryIndex);
+            var pageDirectoryEntry = SlotEntry.FromBuffer(Buffer.Span, entryPos);
 
             // did we delete the last entry in the page?
             var lastEntry = Header.NextFreePosition == pageDirectoryEntry.EndPositionOfData();
@@ -306,13 +314,14 @@ namespace Datatent2.Core.Page
             }
 
             Buffer.Span.Slice(pageDirectoryEntry.DataOffset, pageDirectoryEntry.DataLength).Clear();
-            PageDirectoryEntry.Clear(Buffer.Span, entryIndex);
+            SlotEntry.Clear(Buffer.Span, entryIndex);
 
             var pageHeader = new PageHeader(Header.PageId, Header.Type, Header.PrevPageId, Header.NextPageId,
                 (ushort)(Header.UsedBytes - pageDirectoryEntry.DataLength),
                 (byte)(Header.ItemCount - 1), nextFreePosition, unalignedBytes, HighestDirectoryEntryId);
             pageHeader.ToBuffer(Buffer.Span, 0);
             Header = pageHeader;
+            IsDirty = true;
 
             return true;
         }
@@ -333,8 +342,8 @@ namespace Datatent2.Core.Page
 
             for (byte i = startIndex; i != 0; i--)
             {
-                var offset = PageDirectoryEntry.GetEntryPosition(i);
-                if (!PageDirectoryEntry.IsEmpty(Buffer.Span, offset))
+                var offset = SlotEntry.GetEntryPosition(i);
+                if (!SlotEntry.IsEmpty(Buffer.Span, offset))
                     return i;
             }
 
@@ -350,25 +359,25 @@ namespace Datatent2.Core.Page
         protected bool GetNextAvailableDirectoryEntryIndex(out byte index)
         {
             index = byte.MaxValue;
-            if (Header.HighestEntryId == 0)
+            if (Header.HighestSlotId == 0)
             {
                 index = 1;
                 return true;
             }
 
-            if (Header.HighestEntryId < byte.MaxValue)
+            if (Header.HighestSlotId < byte.MaxValue)
             {
-                if (Header.HighestEntryId == byte.MaxValue)
+                if (Header.HighestSlotId == byte.MaxValue)
                     throw new Exception("Full");
 
                 index = (byte)(HighestDirectoryEntryId + 1);
                 return true;
             }
 
-            for (byte i = Header.HighestEntryId; i != 0; i--)
+            for (byte i = Header.HighestSlotId; i != 0; i--)
             {
-                var offset = PageDirectoryEntry.GetEntryPosition(i);
-                if (PageDirectoryEntry.IsEmpty(Buffer.Span, offset))
+                var offset = SlotEntry.GetEntryPosition(i);
+                if (SlotEntry.IsEmpty(Buffer.Span, offset))
                 {
                     index = i;
                     return true;
@@ -388,13 +397,13 @@ namespace Datatent2.Core.Page
             stringBuilder.AppendLine("------------- Content");
             stringBuilder.AppendLine($"|HHHHHHHHHHH| Header {Constants.PAGE_HEADER_SIZE} bytes");
 
-            List<(PageDirectoryEntry, byte)> pageDirectoryEntries = new();
-            var lastEntry = new PageDirectoryEntry(0, 0);
+            List<(SlotEntry, byte)> pageDirectoryEntries = new();
+            var lastEntry = new SlotEntry(0, 0);
             for (byte i = HighestDirectoryEntryId; i > 0; i--)
             {
-                var pos = PageDirectoryEntry.GetEntryPosition(i);
-                if (!PageDirectoryEntry.IsEmpty(Buffer.Span, pos))
-                    pageDirectoryEntries.Add((PageDirectoryEntry.FromBuffer(Buffer.Span, pos), i));
+                var pos = SlotEntry.GetEntryPosition(i);
+                if (!SlotEntry.IsEmpty(Buffer.Span, pos))
+                    pageDirectoryEntries.Add((SlotEntry.FromBuffer(Buffer.Span, pos), i));
             }
 
             var lastIndex = 0;
@@ -441,7 +450,7 @@ namespace Datatent2.Core.Page
         }
 
         #endregion
-        
+
         public static uint PageOffset(uint pageId) => pageId * Constants.PAGE_SIZE;
 
         /// <summary>
@@ -449,11 +458,64 @@ namespace Datatent2.Core.Page
         /// </summary>
         /// <param name="bufferSegment"></param>
         /// <returns></returns>
-        public static bool IsEmpty(BufferSegment bufferSegment)
+        public static bool IsEmpty(IBufferSegment bufferSegment)
         {
             PageHeader pageHeader = PageHeader.FromBuffer(bufferSegment.Span);
 
             return pageHeader.PageId == 0;
+        }
+
+        public static T? Create<T>(IBufferSegment bufferSegment) where T: BasePage
+        {
+            if (typeof(T) == typeof(DataPage))
+            {
+                return (T) (object)new DataPage(bufferSegment);
+            }
+            return null;
+        }
+
+        public static T CreateNew<T>() where T : BasePage
+        {
+            IBufferSegment newBufferSegment = BufferPoolFactory.Get().Rent();
+            BasePage basePage = null!;
+            var pageId = HeaderPage.Instance.GetNextPageId();
+            if (typeof(T) == typeof(DataPage))
+            {
+                basePage = new DataPage(newBufferSegment, pageId);
+            }
+
+            return (T)(object)basePage!;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return Equals(obj as BasePage);
+        }
+
+        public bool Equals(BasePage? other)
+        {
+            return other != null &&
+                   Id == other.Id;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Id);
+        }
+
+        public static bool operator ==(BasePage? left, BasePage? right)
+        {
+            return EqualityComparer<BasePage>.Default.Equals(left, right);
+        }
+
+        public static bool operator !=(BasePage? left, BasePage? right)
+        {
+            return !(left == right);
+        }
+
+        public void Dispose()
+        {
+            BufferPoolFactory.Get().Return(Buffer);
         }
     }
 }

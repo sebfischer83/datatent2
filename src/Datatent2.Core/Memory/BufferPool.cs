@@ -3,21 +3,25 @@ using System.Buffers;
 
 namespace Datatent2.Core.Memory
 {
-    internal class BufferPool : MemoryPool<byte>
+    internal class BufferPool : BufferPoolBase
     {
         public override int MaxBufferSize => Int32.MaxValue;
+        public override void Return(IBufferSegment segment)
+        {
+            segment.Dispose();
+        }
 
         public new static Impl Shared { get; } = new();
 
         protected override void Dispose(bool disposing) { }
 
-        public override BufferSegment Rent(int minBufferSize = -1) => RentCore(minBufferSize);
+        public override IBufferSegment Rent(int minBufferSize = -1) => RentCore(minBufferSize);
 
-        private BufferSegment RentCore(int minBufferSize) => new(minBufferSize);
+        private IBufferSegment RentCore(int minBufferSize) => new BufferSegment(minBufferSize);
 
         public sealed class Impl : BufferPool
         {
-            public new BufferSegment Rent(int minBufferSize) => RentCore(minBufferSize);
+            public new IBufferSegment Rent(int minBufferSize) => RentCore(minBufferSize);
         }
     }
 }

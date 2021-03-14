@@ -12,7 +12,7 @@ namespace Datatent2.Core.Block
     {
         public BlockHeader Header { get; private set; }
 
-        public PageAddress Position => new PageAddress(Page.Id, _entryId);
+        public PageAddress Position { get; private set; }
 
         protected readonly T Page;
         private readonly byte _entryId;
@@ -21,19 +21,28 @@ namespace Datatent2.Core.Block
         {
             Page = page;
             _entryId = entryId;
+            Position = new PageAddress(Page.Id, _entryId);
             var memory = page.GetDataByIndex(entryId);
             Header = BlockHeader.FromBuffer(memory, 0);
         }
-
-        public Span<byte> GetData()
+        
+        public void FillData(Span<byte> data)
         {
-            return Page.GetDataByIndex(_entryId).Slice(Constants.BLOCK_HEADER_SIZE);
+            var dataArea = Page.GetDataByIndex(_entryId).Slice(Constants.BLOCK_HEADER_SIZE);
+            dataArea.WriteBytes(0, data);
+        }
+
+        public byte[] GetData()
+        {
+            var dataArea = Page.GetDataByIndex(_entryId).Slice(Constants.BLOCK_HEADER_SIZE);
+            return dataArea.ToArray();
         }
 
         protected Block(T page, byte entryId, PageAddress nextBlock, bool isFollowingBlock)
         {
             Page = page;
             _entryId = entryId;
+            Position = new PageAddress(Page.Id, _entryId);
             var memory = page.GetDataByIndex(entryId);
             Header = new BlockHeader(nextBlock, isFollowingBlock);
             Header.ToBuffer(memory);

@@ -10,13 +10,13 @@ namespace Datatent2.Core.Page
 {
     internal class DataPage : BasePage
     {
-        public DataPage(BufferSegment buffer) : base(buffer)
+        public DataPage(IBufferSegment buffer) : base(buffer)
         {
             if (Header.Type != PageType.Data)
                 throw new Exception("Invalid page type!");
         }
 
-        public DataPage(BufferSegment buffer, uint id) : base(buffer, id, PageType.Data)
+        public DataPage(IBufferSegment buffer, uint id) : base(buffer, id, PageType.Data)
         {
         }
 

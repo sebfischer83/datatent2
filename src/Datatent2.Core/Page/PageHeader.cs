@@ -17,59 +17,56 @@ namespace Datatent2.Core.Page
         /// The id of the page, a continuous increasing number.
         /// Starts with 0 for the header of the database. 
         /// </summary>
-        [FieldOffset(PAGE_ID)]
+        [FieldOffset(ID)]
         public readonly uint PageId;
 
         /// <summary>
         /// The type of the page.
         /// <see cref="PageType"/>
         /// </summary>
-        [FieldOffset(PAGE_TYPE)]
+        [FieldOffset(TYPE)]
         public readonly PageType Type;
 
         /// <summary>
         /// Link to the previous page of the same type.
         /// If none then uint.MaxValue.
         /// </summary>
-        [FieldOffset(PAGE_PREV_ID)]
+        [FieldOffset(PREV_ID)]
         public readonly uint PrevPageId;
 
         /// <summary>
         /// Link to the next page of the same type.
         /// If none then uint.MaxValue.
         /// </summary>
-        [FieldOffset(PAGE_NEXT_ID)]
+        [FieldOffset(NEXT_ID)]
         public readonly uint NextPageId;
 
-        [FieldOffset(PAGE_USED_BYTES)]
+        [FieldOffset(USED_BYTES)]
         public readonly ushort UsedBytes;
 
-        [FieldOffset(PAGE_NUMBER_OF_ITEMS)]
+        [FieldOffset(NUMBER_OF_ITEMS)]
         public readonly byte ItemCount;
         
-        [FieldOffset(PAGE_NEXT_FREE_POSITION)]
+        [FieldOffset(NEXT_FREE_POSITION)]
         public readonly ushort NextFreePosition;
 
-        [FieldOffset(PAGE_UNALIGNED_FREE_BYTES)]
+        [FieldOffset(UNALIGNED_FREE_BYTES)]
         public readonly ushort UnalignedFreeBytes;
 
-        [FieldOffset(PAGE_HIGHEST_ENTRY_ID)]
-        public readonly byte HighestEntryId;
+        [FieldOffset(HIGHEST_SLOT_ID)]
+        public readonly byte HighestSlotId;
+        
+        private const int ID = 0; // 0-3 uint
+        private const int TYPE = 4; // 4 byte (enum PageType)
+        private const int PREV_ID = 5; // 5-8 uint 
+        private const int NEXT_ID = 9; // 9-12 uint
+        private const int USED_BYTES = 13; // 13-14 ushort
+        private const int NUMBER_OF_ITEMS = 15; // 15 byte
+        private const int NEXT_FREE_POSITION = 16; // 16-17 ushort
+        private const int UNALIGNED_FREE_BYTES = 18; // 18-19 ushort
+        private const int HIGHEST_SLOT_ID = 20; // 20 byte
 
-        [FieldOffset(31)]
-        public readonly byte End;
-
-        private const int PAGE_ID = 0; // 0-3 uint
-        private const int PAGE_TYPE = 4; // 4 byte (enum PageType)
-        private const int PAGE_PREV_ID = 5; // 5-8 uint 
-        private const int PAGE_NEXT_ID = 9; // 9-12 uint
-        private const int PAGE_USED_BYTES = 13; // 13-14 ushort
-        private const int PAGE_NUMBER_OF_ITEMS = 15; // 15 byte
-        private const int PAGE_NEXT_FREE_POSITION = 16; // 16-17 ushort
-        private const int PAGE_UNALIGNED_FREE_BYTES = 18; // 18-19 ushort
-        private const int PAGE_HIGHEST_ENTRY_ID = 20; // 20 byte
-
-        public PageHeader(uint pageId, PageType type, uint prevPageId, uint nextPageId, ushort usedBytes, byte itemCount, ushort nextFreePosition, ushort unalignedFreeBytes, byte highestEntryId)
+        public PageHeader(uint pageId, PageType type, uint prevPageId, uint nextPageId, ushort usedBytes, byte itemCount, ushort nextFreePosition, ushort unalignedFreeBytes, byte highestSlotId)
         {
             PageId = pageId;
             Type = type;
@@ -79,8 +76,7 @@ namespace Datatent2.Core.Page
             ItemCount = itemCount;
             NextFreePosition = nextFreePosition;
             UnalignedFreeBytes = unalignedFreeBytes;
-            HighestEntryId = highestEntryId;
-            End = 0xFF;
+            HighestSlotId = highestSlotId;
         }
 
         public PageHeader(uint pageId, PageType type)
@@ -93,8 +89,7 @@ namespace Datatent2.Core.Page
             ItemCount = 0;
             NextFreePosition = Constants.PAGE_HEADER_SIZE;
             UnalignedFreeBytes = 0;
-            HighestEntryId = 0;
-            End = 0xFF;
+            HighestSlotId = 0;
         }
 
         public static PageHeader FromBuffer(Span<byte> span)
@@ -136,13 +131,5 @@ namespace Datatent2.Core.Page
                 .WithTitle($"{Enum.GetName(typeof(PageType), Type)}:{PageId}", ConsoleColor.Yellow, ConsoleColor.DarkGray)
                 .WithColumn("Property", "Value").Export().ToString();
         }
-    }
-
-    internal enum PageType : byte
-    {
-        Header = 1,
-        Data = 2,
-        Index = 3,
-        Directory
     }
 }

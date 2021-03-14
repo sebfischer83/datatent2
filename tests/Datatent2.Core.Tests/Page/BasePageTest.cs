@@ -90,20 +90,22 @@ namespace Datatent2.Core.Tests.Page
             ushort insertLength = (ushort)toInsert.Length;
             byte index = 0;
 
-            for (int i = 0; i < 203; i++)
+            for (int i = 0; i < 202; i++)
             {
                 if (!dataPage.IsInsertPossible(insertLength))
                     continue;
                 var ins = dataPage.Insert(insertLength, out index);
                 ins.WriteBytes(0, toInsert);
-                dataPage.PageHeader.HighestEntryId.ShouldBe(index);
+                dataPage.PageHeader.HighestSlotId.ShouldBe(index);
             }
-            dataPage.IsFull.ShouldBeTrue();
+            var freeSpaceExpected = (ushort)(Constants.PAGE_SIZE - Constants.PAGE_HEADER_SIZE -
+                                             202 * Constants.PAGE_DIRECTORY_ENTRY_SIZE - 202 * 36);
+
             var freeSpace = dataPage.GetMaxContiguounesFreeSpace();
-            freeSpace.ShouldBe((ushort)40);
+            freeSpace.ShouldBe(freeSpaceExpected);
             dataPage.Delete(10);
             freeSpace = dataPage.GetMaxContiguounesFreeSpace();
-            freeSpace.ShouldBe((ushort)40);
+            freeSpace.ShouldBe(freeSpaceExpected);
             dataPage.Delete(11);
             freeSpace = dataPage.GetMaxContiguounesFreeSpace();
             freeSpace.ShouldBe((ushort)72);
@@ -113,7 +115,7 @@ namespace Datatent2.Core.Tests.Page
             var toTest =dataPage.Insert(50, out var newIndex);
             toTest.WriteBytes(0, TestHelper.GenerateByteArray(50, 0xFF));
 
-            dataPage.PageHeader.ItemCount.ShouldBe((byte)201);
+            dataPage.PageHeader.ItemCount.ShouldBe((byte)200);
             var dataSegment = bufferSegment.Span.Slice(Constants.PAGE_HEADER_SIZE,
                 Constants.PAGE_SIZE - Constants.PAGE_HEADER_SIZE -
                 (dataPage.PageHeader.ItemCount * Constants.PAGE_DIRECTORY_ENTRY_SIZE)).ToArray();
@@ -141,14 +143,14 @@ namespace Datatent2.Core.Tests.Page
             }
             // Highest index should be 10
             index.ShouldBe((byte)10);
-            dataPage.PageHeader.HighestEntryId.ShouldBe(index);
+            dataPage.PageHeader.HighestSlotId.ShouldBe(index);
 
             var before = dataPage.PageHeader.UsedBytes;
             var unaligned = dataPage.PageHeader.UnalignedFreeBytes;
             unaligned.ShouldBe((ushort)0);
             // delete entry 3
-            var dirEntryPosition = PageDirectoryEntry.GetEntryPosition(3);
-            var dirEntry = PageDirectoryEntry.FromBuffer(bufferSegment.Span, dirEntryPosition);
+            var dirEntryPosition = SlotEntry.GetEntryPosition(3);
+            var dirEntry = SlotEntry.FromBuffer(bufferSegment.Span, dirEntryPosition);
             dirEntry.DataLength.ShouldBe((ushort)insertLength);
             dataPage.Delete(3);
             // data should be gone
@@ -157,8 +159,8 @@ namespace Datatent2.Core.Tests.Page
             dataPage.PageHeader.UsedBytes.ShouldBe((ushort)(before - insertLength));
 
             // delete entry 7
-            dirEntryPosition = PageDirectoryEntry.GetEntryPosition(7);
-            dirEntry = PageDirectoryEntry.FromBuffer(bufferSegment.Span, dirEntryPosition);
+            dirEntryPosition = SlotEntry.GetEntryPosition(7);
+            dirEntry = SlotEntry.FromBuffer(bufferSegment.Span, dirEntryPosition);
             dirEntry.DataLength.ShouldBe((ushort)insertLength);
             dataPage.Delete(7);
             // data should be gone
@@ -166,14 +168,14 @@ namespace Datatent2.Core.Tests.Page
             data.ToArray().ShouldAllBe(b => b == 0x00);
 
             // delete entry 10
-            dirEntryPosition = PageDirectoryEntry.GetEntryPosition(10);
-            dirEntry = PageDirectoryEntry.FromBuffer(bufferSegment.Span, dirEntryPosition);
+            dirEntryPosition = SlotEntry.GetEntryPosition(10);
+            dirEntry = SlotEntry.FromBuffer(bufferSegment.Span, dirEntryPosition);
             dirEntry.DataLength.ShouldBe((ushort)insertLength);
             dataPage.Delete(10);
             // data should be gone
             data = bufferSegment.Span.Slice(dirEntry.DataOffset, dirEntry.DataLength);
             data.ToArray().ShouldAllBe(b => b == 0x00);
-            dataPage.PageHeader.HighestEntryId.ShouldBe((byte)9);
+            dataPage.PageHeader.HighestSlotId.ShouldBe((byte)9);
 
             dataPage.PageHeader.UnalignedFreeBytes.ShouldBe((ushort)40);
             var s = dataPage.ToString();
@@ -199,7 +201,8 @@ namespace Datatent2.Core.Tests.Page
 
             var freeSpace = dataPage.GetMaxContiguounesFreeSpace();
             freeSpace.ShouldBe((ushort)dataPage.FreeContinuousBytes);
-            freeSpace.ShouldBe((ushort)2152);
+            freeSpace.ShouldBe((ushort)(Constants.PAGE_SIZE - Constants.PAGE_HEADER_SIZE - 3000 - 3000 -
+                                        2 * Constants.PAGE_DIRECTORY_ENTRY_SIZE));
         }
 
         [Fact]
@@ -215,20 +218,23 @@ namespace Datatent2.Core.Tests.Page
             ushort insertLength = (ushort)toInsert.Length;
             byte index = 0;
 
-            for (int i = 0; i < 203; i++)
+            for (int i = 0; i < 202; i++)
             {
                 if (!dataPage.IsInsertPossible(insertLength))
                     continue;
                 var ins = dataPage.Insert(insertLength, out index);
                 ins.WriteBytes(0, toInsert);
-                dataPage.PageHeader.HighestEntryId.ShouldBe(index);
+                dataPage.PageHeader.HighestSlotId.ShouldBe(index);
             }
-            dataPage.IsFull.ShouldBeTrue();
+
+            var freeSpaceExpected = (ushort) (Constants.PAGE_SIZE - Constants.PAGE_HEADER_SIZE -
+                                              202 * Constants.PAGE_DIRECTORY_ENTRY_SIZE - 202 * 36);
+
             var freeSpace = dataPage.GetMaxContiguounesFreeSpace();
-            freeSpace.ShouldBe((ushort)40);
+            freeSpace.ShouldBe(freeSpaceExpected);
             dataPage.Delete(10);
             freeSpace = dataPage.GetMaxContiguounesFreeSpace();
-            freeSpace.ShouldBe((ushort)40);
+            freeSpace.ShouldBe(freeSpaceExpected);
             dataPage.Delete(11);
             freeSpace = dataPage.GetMaxContiguounesFreeSpace();
             freeSpace.ShouldBe((ushort)72);
@@ -253,7 +259,7 @@ namespace Datatent2.Core.Tests.Page
                 dataPage.IsInsertPossible(insertLength).ShouldBeTrue();
                 var ins = dataPage.Insert(insertLength, out var index);
                 ins.WriteBytes(0, toInsert);
-                dataPage.PageHeader.HighestEntryId.ShouldBe(index);
+                dataPage.PageHeader.HighestSlotId.ShouldBe(index);
             }
 
             for (int i = 0; i < 10; i++)
@@ -287,9 +293,8 @@ namespace Datatent2.Core.Tests.Page
                 var ins = dataPage.Insert(insertLength, out index);
                 ins.WriteBytes(0, toInsert);
                 indexes.Add(index);
-                dataPage.PageHeader.HighestEntryId.ShouldBe(index);
+                dataPage.PageHeader.HighestSlotId.ShouldBe(index);
             }
-            dataPage.IsFull.ShouldBeTrue();
             expectedData.Remove("H" + 10);
             expectedData.Remove("H" + 11);
             expectedData.Remove("H" + 12);
@@ -324,8 +329,8 @@ namespace Datatent2.Core.Tests.Page
             using BufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
             bufferSegment.Span.Clear();
             PageHeader header = new PageHeader(1, PageType.Data, 0, 0, 5000, 0, 7032, 2000, 2);
-            PageDirectoryEntry directoryEntry = new PageDirectoryEntry(2032, 5000);
-            directoryEntry.ToBuffer(bufferSegment.Span, PageDirectoryEntry.GetEntryPosition(2));
+            SlotEntry directoryEntry = new SlotEntry(2032, 5000);
+            directoryEntry.ToBuffer(bufferSegment.Span, SlotEntry.GetEntryPosition(2));
             header.ToBuffer(bufferSegment.Span);
 
             DataPage dataPage = new DataPage(bufferSegment);

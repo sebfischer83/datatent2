@@ -14,22 +14,22 @@ namespace Datatent2.Core.Page
         public readonly uint PageId;
 
         [FieldOffset(PA_BLOCK)]
-        public readonly byte DirectoryEntryId;
+        public readonly byte SlotId;
 
         private const int PA_PAGE_ID = 0; // 0-3 uint
         private const int PA_BLOCK = 4; // 4 byte
 
         public static PageAddress Empty { get; } = new PageAddress(0, 0);
 
-        public PageAddress(uint pageId, byte dicDirectoryEntryId)
+        public PageAddress(uint pageId, byte slotId)
         {
             PageId = pageId;
-            DirectoryEntryId = dicDirectoryEntryId;
+            SlotId = slotId;
         }
 
         public bool IsEmpty()
         {
-            return PageId == 0 && DirectoryEntryId == 0;
+            return PageId == 0 && SlotId == 0;
         }
 
         public static PageAddress FromBuffer(Span<byte> span)
@@ -58,7 +58,7 @@ namespace Datatent2.Core.Page
 
         public override string ToString()
         {
-            return $"{PageId}:{DirectoryEntryId}";
+            return $"{PageId}:{SlotId}";
         }
     }
 }
