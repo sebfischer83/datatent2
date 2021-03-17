@@ -473,20 +473,7 @@ namespace Datatent2.Core.Page
             }
             return null;
         }
-
-        public static T CreateNew<T>() where T : BasePage
-        {
-            IBufferSegment newBufferSegment = BufferPoolFactory.Get().Rent();
-            BasePage basePage = null!;
-            var pageId = HeaderPage.Instance.GetNextPageId();
-            if (typeof(T) == typeof(DataPage))
-            {
-                basePage = new DataPage(newBufferSegment, pageId);
-            }
-
-            return (T)(object)basePage!;
-        }
-
+        
         public override bool Equals(object? obj)
         {
             return Equals(obj as BasePage);

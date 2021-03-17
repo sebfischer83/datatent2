@@ -10,7 +10,7 @@ using ObjectLayoutInspector;
 
 namespace Datatent2.Core.Page
 {
-    [StructLayout(LayoutKind.Explicit, Size = Constants.PAGE_HEADER_SIZE)] 
+    [StructLayout(LayoutKind.Explicit, Size = Constants.PAGE_COMMON_HEADER_SIZE)] 
     internal readonly struct PageHeader
     {
         /// <summary>
@@ -105,7 +105,7 @@ namespace Datatent2.Core.Page
 
         public void ToBuffer(Span<byte> span)
         {
-            Guard.Argument(span.Length).Min(Constants.PAGE_HEADER_SIZE);
+            Guard.Argument(span.Length).Min(Constants.PAGE_COMMON_HEADER_SIZE);
             PageHeader a = this;
             MemoryMarshal.Write(span, ref a);
         }

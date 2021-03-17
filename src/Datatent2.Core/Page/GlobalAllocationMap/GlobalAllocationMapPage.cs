@@ -20,6 +20,7 @@ namespace Datatent2.Core.Page.GlobalAllocationMap
     internal class GlobalAllocationMapPage : BasePage
     {
         protected SpinLock SpinLock;
+        public const int PAGES_PER_GAM = (Constants.PAGE_SIZE - Constants.PAGE_HEADER_SIZE) * 8;
 
         protected uint PagesPerGam = 0;
         protected long LastIssuedId = -1;
@@ -36,12 +37,10 @@ namespace Datatent2.Core.Page.GlobalAllocationMap
 
         public GlobalAllocationMapPage(IBufferSegment buffer) : base(buffer)
         {
-            PagesPerGam = (Constants.PAGE_SIZE - Constants.PAGE_HEADER_SIZE) * 8;
         }
 
         public GlobalAllocationMapPage(IBufferSegment buffer, uint id) : base(buffer, id, PageType.GlobalAllocationMap)
         {
-            PagesPerGam = (Constants.PAGE_SIZE - Constants.PAGE_HEADER_SIZE) * 8;
         }
 
         public uint AcquirePageId()
@@ -67,8 +66,8 @@ namespace Datatent2.Core.Page.GlobalAllocationMap
 
                 // first GAM page is always at id 1, so the next always follows after 65024 pages
                 // so next id is 65025, 130049, 195073, ... when the page size is 8192
-                var myGamPageNumber = (Id - 1) / PagesPerGam;
-                var newId = (uint)localId + ((myGamPageNumber) * PagesPerGam);
+
+                var newId = (uint)localId + Id;
 
                 MarkPageAsAllocated(localId);
 

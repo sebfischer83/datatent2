@@ -38,11 +38,17 @@ namespace Datatent2.Core
         /// </summary>
         public const int PAGE_HEADER_SIZE = 64;
 
+        public const int PAGE_COMMON_HEADER_SIZE = 32;
+
+        public const int PAGE_SPECIFIC_HEADER_SIZE = 32;
+
         public const int PAGE_ADDRESS_SIZE = 6;
 
         public const int BLOCK_HEADER_SIZE = 8;
 
         public const int PAGE_DIRECTORY_ENTRY_SIZE = 4;
+
+        public const int ALLOCATION_INFORMATION_ENTRY_SIZE = 8;
 
         // ReSharper disable once InconsistentNaming
         public static readonly BigInteger MAX_DATABASE_SIZE = new BigInteger(PAGE_SIZE) * uint.MaxValue;

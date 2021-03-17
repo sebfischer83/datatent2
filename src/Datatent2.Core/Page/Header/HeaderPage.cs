@@ -17,10 +17,6 @@ namespace Datatent2.Core.Page
 
         private HeaderPageData _headerPageData;
 
-        private uint _pageIdSequence;
-
-        public uint HighestPageId => _headerPageData.HighestPageId;
-
         protected HeaderPage(IBufferSegment buffer) : base(buffer)
         {
             Guard.Argument(Header.PageId).Zero();
@@ -36,27 +32,11 @@ namespace Datatent2.Core.Page
         private void LoadData()
         {
             _headerPageData = MemoryMarshal.Read<HeaderPageData>(Buffer.Span);
-            _pageIdSequence = HighestPageId;
         }
 
         private void SaveData()
         {
             MemoryMarshal.Write(Buffer.Span, ref _headerPageData);
-        }
-
-        public uint GetNextPageId()
-        {
-            _pageIdSequence++;
-            var id = _pageIdSequence;
-            return id;
-        }
-
-        public void SetHighestPageId(uint id)
-        {
-            if (id <= _headerPageData.HighestPageId)
-                return;
-            _headerPageData = new HeaderPageData(_headerPageData, id);
-            SaveData();
         }
         
         public static HeaderPage LoadHeaderPage(IBufferSegment bufferSegment)

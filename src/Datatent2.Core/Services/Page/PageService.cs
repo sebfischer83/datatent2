@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Datatent2.Core.Memory;
 using Datatent2.Core.Page;
+using Datatent2.Core.Page.AllocationInformation;
+using Datatent2.Core.Page.GlobalAllocationMap;
 using Datatent2.Core.Services.Cache;
 using Datatent2.Core.Services.Disk;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -17,18 +19,43 @@ namespace Datatent2.Core.Services.Page
     {
         private readonly DiskService _diskService;
         private readonly CacheService _cacheService;
+        private GlobalAllocationMapPage? _globalAllocationMap;
+        private AllocationInformationPage? _allocationInformationPage;
 
         public PageService(DiskService diskService)
         {
             _diskService = diskService;
             _cacheService = new CacheService();
-
-            InitNewIfNeeded();
         }
 
-        private void InitNewIfNeeded()
+        private async Task Init()
         {
+            // create the first GAM page => only when new database
+            var firstGamBuffer = await _diskService.GetBuffer(new ReadRequest(1));
+            var header = PageHeader.FromBuffer(firstGamBuffer.BufferSegment.Span);
+            if (header.PageId == 0)
+            {
+                // new database
+                _globalAllocationMap = new GlobalAllocationMapPage(firstGamBuffer.BufferSegment, 1);
 
+                var nextId = _globalAllocationMap.AcquirePageId();
+                var newInfo = await _diskService.GetBuffer(new ReadRequest(nextId));
+                _allocationInformationPage = new AllocationInformationPage(newInfo.BufferSegment, nextId);
+            }
+            else
+            {
+                // existing database, search last GAM page in database
+                if (header.NextPageId == 0)
+                    _globalAllocationMap = new GlobalAllocationMapPage(firstGamBuffer.BufferSegment, 1);
+                else
+                {
+                    while (header.NextPageId > 0)
+                    {
+                        var res = await _diskService.GetBuffer(new ReadRequest(header.NextPageId));
+                        header = PageHeader.FromBuffer(res.BufferSegment.Span);
+                    }
+                }
+            }
         }
 
         public async Task<T?> GetPage<T>(uint id) where T : BasePage
@@ -38,28 +65,13 @@ namespace Datatent2.Core.Services.Page
                 return _cacheService.Get<T>(id);
             }
 
-            for (uint i = 1; i <= HeaderPage.Instance.HighestPageId; i++)
+            var response = await _diskService.GetBuffer(new ReadRequest(id));
+
+            var page = BasePage.Create<T>(response.BufferSegment);
+            if (page != null)
             {
-                if (_cacheService.HasPage(i))
-                    continue;
-
-                var response = await _diskService.GetBuffer(new ReadRequest(i));
-                var header = PageHeader.FromBuffer(response.BufferSegment.Span);
-
-                // new page at this id, not saved back to disk
-                if (header.PageId == 0)
-                    continue;
-
-                var page = BasePage.Create<T>(response.BufferSegment);
-                if (page != null)
-                {
-                    _cacheService.Add(page);
-                    return (T)page;
-                }
-                else
-                {
-                    continue;
-                }
+                _cacheService.Add(page);
+                return page;
             }
 
             return null;
@@ -89,7 +101,7 @@ namespace Datatent2.Core.Services.Page
                 return;
 
             await _diskService.WriteBuffer(new WriteRequest(page.PageBuffer, page.Id));
-            HeaderPage.Instance.SetHighestPageId(page.Id);
+            //HeaderPage.Instance.SetHighestPageId(page.Id);
             page.IsDirty = false;
         }
 
@@ -103,38 +115,40 @@ namespace Datatent2.Core.Services.Page
             if (freePage != null)
                 return freePage;
 
-            for (uint i = 1; i <= HeaderPage.Instance.HighestPageId; i++)
-            {
-                if (_cacheService.HasPage(i))
-                    continue;
+            //for (uint i = 1; i <= HeaderPage.Instance.HighestPageId; i++)
+            //{
+            //    if (_cacheService.HasPage(i))
+            //        continue;
 
-                var response = await _diskService.GetBuffer(new ReadRequest(i));
-                var header = PageHeader.FromBuffer(response.BufferSegment.Span);
+            //    var response = await _diskService.GetBuffer(new ReadRequest(i));
+            //    var header = PageHeader.FromBuffer(response.BufferSegment.Span);
 
-                // new page at this id, not saved back to disk
-                if (header.PageId == 0)
-                    continue;
-                if (header.Type != PageType.Data)
-                {
-                    continue;
-                }
+            //    // new page at this id, not saved back to disk
+            //    if (header.PageId == 0)
+            //        continue;
+            //    if (header.Type != PageType.Data)
+            //    {
+            //        continue;
+            //    }
 
-                var pageFromDisk = new DataPage(response.BufferSegment);
-                if (!pageFromDisk.IsFull)
-                {
-                    _cacheService.Add(pageFromDisk);
-                    return pageFromDisk;
-                }
-                else
-                {
-                    pageFromDisk.Dispose();
-                }
-            }
+            //    var pageFromDisk = new DataPage(response.BufferSegment);
+            //    if (!pageFromDisk.IsFull)
+            //    {
+            //        _cacheService.Add(pageFromDisk);
+            //        return pageFromDisk;
+            //    }
+            //    else
+            //    {
+            //        pageFromDisk.Dispose();
+            //    }
+            //}
 
-            var page = BasePage.CreateNew<DataPage>();
-            _cacheService.Add(page);
+            //var page = BasePage.CreateNew<DataPage>();
+            //_cacheService.Add(page);
 
-            return page;
+            //return page;
+
+            return null;
         }
     }
 }
