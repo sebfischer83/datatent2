@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Datatent2.Core.Memory;
 using Dawn;
@@ -51,12 +52,11 @@ namespace Datatent2.Core.Page.AllocationInformation
 
     internal class AllocationInformationPage : BasePage
     {
+        // all positions in AIM are relative to the outer GAM page
+
         public const int ENTRIES_PER_PAGE = (Constants.PAGE_SIZE -
                                               Constants.PAGE_HEADER_SIZE) / Constants.ALLOCATION_INFORMATION_ENTRY_SIZE;
 
-        /// <summary>
-        /// Last AIM is never full
-        /// </summary>
         public const int AIM_PER_GAM = GlobalAllocationMap.GlobalAllocationMapPage.PAGES_PER_GAM / ENTRIES_PER_PAGE;
 
         private static readonly HashSet<uint> PositionsInGamLookup;
@@ -67,10 +67,10 @@ namespace Datatent2.Core.Page.AllocationInformation
         static AllocationInformationPage()
         {
             uint[] pos = new uint[AIM_PER_GAM];
-            pos[0] = 3;
+            pos[0] = 0;
             for (int i = 1; i < AIM_PER_GAM; i++)
             {
-                pos[i] = (uint) ((uint)(i * (uint)ENTRIES_PER_PAGE) + 2 + (i * 1));
+                pos[i] = (uint) ((uint)(i * (uint)ENTRIES_PER_PAGE));
             }
 
             LastPosInGam = pos[^1];
@@ -84,7 +84,7 @@ namespace Datatent2.Core.Page.AllocationInformation
             {
                 var span = MemoryMarshal.Cast<byte, AllocationInformationEntry>(Buffer.Span);
                 var lastItem = span[^1];
-                return lastItem.PageId != 0;
+                return lastItem.PageId != 0 && lastItem.PageType == PageType.Empty;
             }
         }
         
@@ -160,17 +160,20 @@ namespace Datatent2.Core.Page.AllocationInformation
             return -1;
         }
 
-        public static uint GetNextAllocationInformationPageId(uint currentAimPageId)
+        public static (uint Id, bool NewGAM) GetNextAllocationInformationPageId(uint currentAIMPageId)
         {
-            var gam = Math.DivRem(currentAimPageId, GlobalAllocationMap.GlobalAllocationMapPage.PAGES_PER_GAM, out var id);
-            if (id == LastPosInGam)
-            {
-                return (uint) (PositionsInGam[0] + ((gam + 1) * GlobalAllocationMap.GlobalAllocationMapPage.PAGES_PER_GAM));
-            }
+            // only need the remainder
+            var gam = (uint)Math.DivRem(currentAIMPageId, GlobalAllocationMap.GlobalAllocationMapPage.PAGES_PER_GAM, out var id);
+
+            // when we are not in the first GAM so subtract the gam pages from the id
+            id = currentAIMPageId - GlobalAllocationMap.GlobalAllocationMapPage.PAGES_PER_GAM * gam;
+            id -= 2 + (gam * 1);
 
             var pos = Array.IndexOf(PositionsInGam, (uint)id);
+            if (pos == AIM_PER_GAM)
+                return ((uint) currentAIMPageId + ENTRIES_PER_PAGE + 1, true);
 
-            return (uint) (PositionsInGam[pos + 1] + (gam * GlobalAllocationMap.GlobalAllocationMapPage.PAGES_PER_GAM));
+            return (currentAIMPageId + ENTRIES_PER_PAGE, false);
         }
 
         public override string ToString()
@@ -178,11 +181,21 @@ namespace Datatent2.Core.Page.AllocationInformation
             return Header.ToString();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public static bool IsAllocationInformationPage(uint pageId)
         {
             // only need the remainder
-            var id = pageId % GlobalAllocationMap.GlobalAllocationMapPage.PAGES_PER_GAM;
-            return PositionsInGamLookup.Contains(id);
+            var gam = (uint) Math.DivRem(pageId, GlobalAllocationMap.GlobalAllocationMapPage.PAGES_PER_GAM, out var id);
+
+            // when we are not in the first GAM so subtract the gam pages from the id
+            id = pageId - GlobalAllocationMap.GlobalAllocationMapPage.PAGES_PER_GAM * gam;
+
+            var gamMult = id / ENTRIES_PER_PAGE;
+
+            // we need always to subtract 2 because there is always a header page, a GAM and our self behind us
+            id -= 2 + (gam * 1) + (gamMult * 1);
+
+            return PositionsInGamLookup.Contains((uint)id);
         }
     }
 }

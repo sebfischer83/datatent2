@@ -49,6 +49,29 @@ namespace Datatent2.Core.Page
             HighestDirectoryEntryId = Header.HighestSlotId;
         }
 
+        public void SetPreviousPage(uint pageId)
+        {
+            SetLinkedPages(pageId, Header.NextPageId);
+        }
+
+        public void SetNextPage(uint pageId)
+        {
+            SetLinkedPages(Header.PrevPageId, pageId);
+        }
+
+        private void SetLinkedPages(uint prev, uint next)
+        {
+            var pageHeader = new PageHeader(Header.PageId, Header.Type, prev, next,
+                (ushort)(Header.UsedBytes),
+                (byte)(Header.ItemCount),
+                Header.NextFreePosition,
+                Header.UnalignedFreeBytes,
+                HighestDirectoryEntryId);
+            pageHeader.ToBuffer(Buffer.Span, 0);
+            Header = pageHeader;
+            IsDirty = true;
+        }
+
         public bool IsInsertPossible(ushort length)
         {
             if (PageHeader.ItemCount == byte.MaxValue)
@@ -451,7 +474,7 @@ namespace Datatent2.Core.Page
 
         #endregion
 
-        public static uint PageOffset(uint pageId) => pageId * Constants.PAGE_SIZE;
+        public static uint PageOffset(uint pageId) => (pageId) * Constants.PAGE_SIZE;
 
         /// <summary>
         /// Is the BufferSegment an empty page 

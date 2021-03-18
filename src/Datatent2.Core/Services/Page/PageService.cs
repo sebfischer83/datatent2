@@ -28,7 +28,7 @@ namespace Datatent2.Core.Services.Page
             _cacheService = new CacheService();
         }
 
-        private async Task Init()
+        public async Task Init()
         {
             // create the first GAM page => only when new database
             var firstGamBuffer = await _diskService.GetBuffer(new ReadRequest(1));
@@ -143,12 +143,20 @@ namespace Datatent2.Core.Services.Page
             //    }
             //}
 
-            //var page = BasePage.CreateNew<DataPage>();
-            //_cacheService.Add(page);
+            var page = CreateNewPage<DataPage>();
+            _cacheService.Add(page);
 
-            //return page;
+            return page;
+        }
 
-            return null;
+        private T CreateNewPage<T>() where T: BasePage
+        {
+            
+            if (typeof(T) == typeof(DataPage))
+            {
+
+            }
+            return default;
         }
     }
 }

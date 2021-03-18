@@ -25,47 +25,24 @@ namespace Datatent2.Core.Tests.Page
         [Fact]
         public void IsAllocationInformationPageTest()
         {
-            var p = Core.Page.GlobalAllocationMap.GlobalAllocationMapPage.PAGES_PER_GAM /
-                    Core.Page.AllocationInformation.AllocationInformationPage.ENTRIES_PER_PAGE;
-            uint[] pos = new uint[p];
-            pos[0] = 3;
-            for (int i = 1; i < p; i++)
-            {
-                pos[i] = (uint)((uint)(i * (uint)Core.Page.AllocationInformation.AllocationInformationPage.ENTRIES_PER_PAGE) + 2 + (i * 1));
-            }
-
+            AllocationInformationPage.IsAllocationInformationPage(0).ShouldBeFalse();
             AllocationInformationPage.IsAllocationInformationPage(1).ShouldBeFalse();
-            AllocationInformationPage.IsAllocationInformationPage(2).ShouldBeFalse();
-            AllocationInformationPage.IsAllocationInformationPage(3).ShouldBeTrue();
-            AllocationInformationPage.IsAllocationInformationPage(3 + AllocationInformationPage.ENTRIES_PER_PAGE).ShouldBeTrue();
-            AllocationInformationPage.IsAllocationInformationPage(3 + AllocationInformationPage.ENTRIES_PER_PAGE + 2).ShouldBeFalse();
-            AllocationInformationPage.IsAllocationInformationPage(3 + GlobalAllocationMapPage.PAGES_PER_GAM).ShouldBeTrue();
-            AllocationInformationPage.IsAllocationInformationPage(3 + ((AllocationInformationPage.ENTRIES_PER_PAGE * 2) + 1) + (GlobalAllocationMapPage.PAGES_PER_GAM * 2)).ShouldBeTrue();
+            AllocationInformationPage.IsAllocationInformationPage(2).ShouldBeTrue();
+            AllocationInformationPage.IsAllocationInformationPage(2 + GlobalAllocationMapPage.PAGES_PER_GAM + 1).ShouldBeTrue();
+            AllocationInformationPage.IsAllocationInformationPage(2 + AllocationInformationPage.ENTRIES_PER_PAGE + 1).ShouldBeTrue();
+            AllocationInformationPage.IsAllocationInformationPage(2 + AllocationInformationPage.ENTRIES_PER_PAGE * 2 + 2).ShouldBeTrue();
         }
 
         [Fact]
         public void GetNextAllocationInformationPageIdTest()
         {
-            var p = Core.Page.GlobalAllocationMap.GlobalAllocationMapPage.PAGES_PER_GAM /
-                    Core.Page.AllocationInformation.AllocationInformationPage.ENTRIES_PER_PAGE;
-            uint[] pos = new uint[p];
-            pos[0] = 3;
-            for (int i = 1; i < p; i++)
-            {
-                pos[i] = (uint)((uint)(i * (uint)Core.Page.AllocationInformation.AllocationInformationPage.ENTRIES_PER_PAGE) + 2 + (i * 1));
-            }
+            var next = AllocationInformationPage.GetNextAllocationInformationPageId(2);
+            next.Id.ShouldBe((uint)(2 + AllocationInformationPage.ENTRIES_PER_PAGE));
+            next.NewGAM.ShouldBeFalse();
 
-            var next = AllocationInformationPage.GetNextAllocationInformationPageId(pos[0]);
-            next.ShouldBe(pos[1]);
-
-            next = AllocationInformationPage.GetNextAllocationInformationPageId(pos[5]);
-            next.ShouldBe(pos[6]);
-
-            next = AllocationInformationPage.GetNextAllocationInformationPageId(pos[5] + GlobalAllocationMapPage.PAGES_PER_GAM);
-            next.ShouldBe(pos[6] + GlobalAllocationMapPage.PAGES_PER_GAM);
-
-            next = AllocationInformationPage.GetNextAllocationInformationPageId(pos[^1] + GlobalAllocationMapPage.PAGES_PER_GAM);
-            next.ShouldBe(pos[0] + GlobalAllocationMapPage.PAGES_PER_GAM * 2);
+            next = AllocationInformationPage.GetNextAllocationInformationPageId(2 + AllocationInformationPage.ENTRIES_PER_PAGE * 64);
+            next.Id.ShouldBe((uint)(2 + AllocationInformationPage.ENTRIES_PER_PAGE * 63 + 1));
+            next.NewGAM.ShouldBeTrue();
         }
     }
 }

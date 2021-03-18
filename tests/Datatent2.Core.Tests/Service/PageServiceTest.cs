@@ -22,10 +22,11 @@ namespace Datatent2.Core.Tests.Service
             var headerPage = HeaderPage.CreateHeaderPage(headerBufferSegment);
 
             using BufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
-            PageHeader header = new PageHeader(1, PageType.Data);
+            PageHeader header = new PageHeader(0, PageType.Data);
             header.ToBuffer(bufferSegment.Span, 0);
             
             PageService pageService = new PageService(new InMemoryDiskService());
+            await pageService.Init();
 
             var dataPage = await pageService.GetDataPageWithFreeSpace();
 
