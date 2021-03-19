@@ -52,7 +52,7 @@ namespace Datatent2.Core.Page.AllocationInformation
 
     internal class AllocationInformationPage : BasePage
     {
-        // all positions in AIM are relative to the outer GAM page
+        // all positions in AIM are relative to the outer GAM page, but the AIM is the first page in itself
 
         public const int ENTRIES_PER_PAGE = (Constants.PAGE_SIZE -
                                               Constants.PAGE_HEADER_SIZE) / Constants.ALLOCATION_INFORMATION_ENTRY_SIZE;
@@ -104,13 +104,14 @@ namespace Datatent2.Core.Page.AllocationInformation
 
             _allocationInformationPageHeader = new AllocationInformationPageHeader((ushort) aim, gam);
             _allocationInformationPageHeader.ToBuffer(Buffer.Span);
+            AddAllocationInformation(this);
         }
         
-        public void AddAllocationInformation(uint pageId, PageType pageType, int percentFilled)
+        public void AddAllocationInformation(BasePage page)
         {
-            var id = pageId - Id - 1;
-            var span = MemoryMarshal.Cast<byte, AllocationInformationEntry>(Buffer.Span);
-            span[(int) id] = new AllocationInformationEntry(pageId, pageType, PageFillFactor.Zero);
+            var id = page.Id - Id;
+            var span = MemoryMarshal.Cast<byte, AllocationInformationEntry>(Buffer.Span.Slice(Constants.PAGE_HEADER_SIZE));
+            span[(int) id] = new AllocationInformationEntry(page.Id, page.Type, page.FillFactor);
 
             Header = new PageHeader(Header.PageId,
                 Header.Type,
@@ -127,8 +128,8 @@ namespace Datatent2.Core.Page.AllocationInformation
 
         public void UpdateAllocationInformation(uint pageId, int percentFilled)
         {
-            var id = pageId - Id - 1;
-            var span = MemoryMarshal.Cast<byte, AllocationInformationEntry>(Buffer.Span);
+            var id = pageId - Id;
+            var span = MemoryMarshal.Cast<byte, AllocationInformationEntry>(Buffer.Span.Slice(Constants.PAGE_HEADER_SIZE));
             var old = span[(int) id];
             span[(int)id] = new AllocationInformationEntry(pageId, old.PageType, PageFillFactor.Zero);
 
@@ -137,21 +138,22 @@ namespace Datatent2.Core.Page.AllocationInformation
 
         public AllocationInformationEntry GetAllocationInformationEntry(uint pageId)
         {
-            var id = pageId - Id - 1;
-            var span = MemoryMarshal.Cast<byte, AllocationInformationEntry>(Buffer.Span);
+            var id = pageId - Id;
+            var span = MemoryMarshal.Cast<byte, AllocationInformationEntry>(Buffer.Span.Slice(Constants.PAGE_HEADER_SIZE));
             var val = span[(int)id];
 
             return val;
         }
 
         public long FindPageWithFreeSpace(PageType pageType,
-            PageFillFactor pageFillFactor = PageFillFactor.SeventyToNinetyNine)
+            PageFillFactor maxPageFillFactor = PageFillFactor.SeventyToNinetyFive)
         {
             var span = MemoryMarshal.Cast<byte, AllocationInformationEntry>(Buffer.Span);
-            for (int i = 0; i < ENTRIES_PER_PAGE; i++)
+            var elements = Header.UsedBytes / Constants.ALLOCATION_INFORMATION_ENTRY_SIZE;
+            for (int i = 0; i < elements; i++)
             {
                 ref AllocationInformationEntry entry = ref span[i];
-                if (entry.PageType == pageType && entry.PageFillFactor <= pageFillFactor)
+                if (entry.PageType == pageType && entry.PageFillFactor <= maxPageFillFactor)
                 {
                     return entry.PageId;
                 }
@@ -167,10 +169,12 @@ namespace Datatent2.Core.Page.AllocationInformation
 
             // when we are not in the first GAM so subtract the gam pages from the id
             id = currentAIMPageId - GlobalAllocationMap.GlobalAllocationMapPage.PAGES_PER_GAM * gam;
+
+            // we need always to subtract 2 because there is always a header page and minimum a GAM behind us
             id -= 2 + (gam * 1);
 
             var pos = Array.IndexOf(PositionsInGam, (uint)id);
-            if (pos == AIM_PER_GAM)
+            if (pos == AIM_PER_GAM - 1)
                 return ((uint) currentAIMPageId + ENTRIES_PER_PAGE + 1, true);
 
             return (currentAIMPageId + ENTRIES_PER_PAGE, false);
@@ -189,11 +193,9 @@ namespace Datatent2.Core.Page.AllocationInformation
 
             // when we are not in the first GAM so subtract the gam pages from the id
             id = pageId - GlobalAllocationMap.GlobalAllocationMapPage.PAGES_PER_GAM * gam;
-
-            var gamMult = id / ENTRIES_PER_PAGE;
-
-            // we need always to subtract 2 because there is always a header page, a GAM and our self behind us
-            id -= 2 + (gam * 1) + (gamMult * 1);
+            
+            // we need always to subtract 2 because there is always a header page and minimum a GAM behind us
+            id -= 2 + (gam * 1);
 
             return PositionsInGamLookup.Contains((uint)id);
         }

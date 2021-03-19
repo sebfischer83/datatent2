@@ -21,6 +21,25 @@ namespace Datatent2.Core.Page
         public virtual bool IsFull => FreeContinuousBytes < (Constants.PAGE_DIRECTORY_ENTRY_SIZE + 1) || MaxFreeUsableBytes <= 8 || HighestDirectoryEntryId == byte.MaxValue;
         public ushort UsedBytes => Header.UsedBytes;
 
+        public virtual PageFillFactor FillFactor
+        {
+            get
+            {
+                if (Header.UsedBytes == 0)
+                    return PageFillFactor.Zero;
+                return ((100 * Header.UsedBytes) / (decimal) (Constants.PAGE_SIZE - Constants.PAGE_HEADER_SIZE)) switch
+                {
+                    0 => PageFillFactor.Zero,
+                    < 50 => PageFillFactor.ZeroToFifty,
+                    < 70 => PageFillFactor.FiftyToSeventy,
+                    < 95 => PageFillFactor.SeventyToNinetyFive,
+                    < 99 => PageFillFactor.NinetyFiveToNinetyNine,
+                    > 99 => PageFillFactor.Full,
+                    _ => PageFillFactor.Zero
+                };
+            }
+        }
+
         /// <summary>
         /// The free bytes in a continuous block
         /// </summary>

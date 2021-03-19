@@ -15,7 +15,8 @@
         Zero = 0,
         ZeroToFifty = 1,
         FiftyToSeventy = 2,
-        SeventyToNinetyNine = 3,
-        NinetyNineToFull = 4
+        SeventyToNinetyFive = 3,
+        NinetyFiveToNinetyNine = 4,
+        Full = 5
     }
 }
