@@ -162,6 +162,11 @@ namespace Datatent2.Core.Page.AllocationInformation
             return -1;
         }
 
+        public static uint[] GetAllAllocationInformationPageIdsForGAM(uint gamPageId)
+        {
+
+        }
+
         public static (uint Id, bool NewGAM) GetNextAllocationInformationPageId(uint currentAIMPageId)
         {
             // only need the remainder
