@@ -36,7 +36,5 @@ jobs:
         # Directory to search for coverage reports.
         directory: /datatent2/output/tests
         verbose: false
-        # User defined upload name. Visible in Codecov UI
-        name: $GITHUB_RUN_ID
         # Specify the branch name
         override_branch: develop
