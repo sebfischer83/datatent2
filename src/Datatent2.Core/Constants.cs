@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 [assembly: InternalsVisibleTo("Datatent2.Core.Tests")]
 [assembly: InternalsVisibleTo("Datatent2.CoreBench")]
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 namespace Datatent2.Core
 {
     internal enum BufferPoolImplementation

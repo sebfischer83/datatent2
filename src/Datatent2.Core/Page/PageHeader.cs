@@ -99,20 +99,20 @@ namespace Datatent2.Core.Page
 
         public static PageHeader FromBuffer(Span<byte> span, int offset)
         {
-            Guard.Argument(offset).Min(0);
+            //Guard.Argument(offset).Min(0);
             return FromBuffer(span.Slice(offset));
         }
 
         public void ToBuffer(Span<byte> span)
         {
-            Guard.Argument(span.Length).Min(Constants.PAGE_COMMON_HEADER_SIZE);
+            //Guard.Argument(span.Length,  nameof(span.Length)).Min(Constants.PAGE_COMMON_HEADER_SIZE);
             PageHeader a = this;
             MemoryMarshal.Write(span, ref a);
         }
 
         public void ToBuffer(Span<byte> span, int offset)
         {
-            Guard.Argument(offset).Min(0);
+            //Guard.Argument(offset).Min(0);
             ToBuffer(span.Slice(offset));
         }
 

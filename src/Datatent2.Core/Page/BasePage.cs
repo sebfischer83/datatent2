@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Datatent2.Core.Page
 {
-    internal abstract class BasePage : IEquatable<BasePage?>, IDisposable
+    internal abstract class BasePage : IPage
     {
         public uint Id => Header.PageId;
         public PageType Type => Header.Type;
@@ -52,7 +52,7 @@ namespace Datatent2.Core.Page
         protected byte HighestDirectoryEntryId;
 
         public IBufferSegment PageBuffer => Buffer;
-
+        
         protected BasePage(IBufferSegment buffer)
         {
             Header = PageHeader.FromBuffer(buffer.Span);
