@@ -16,7 +16,7 @@ namespace Datatent2.Core.Tests.Page
         [Fact]
         public void TestFindEmptyId()
         {
-            IBufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
+            using IBufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
             var dataArea = bufferSegment.Span.Slice(Constants.PAGE_HEADER_SIZE);
             dataArea.Clear();
             GlobalAllocationMapPage globalAllocationMapPage = new GlobalAllocationMapPage(bufferSegment);
@@ -54,7 +54,7 @@ namespace Datatent2.Core.Tests.Page
         [Fact]
         public void TestFindEmptyId2()
         {
-            IBufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
+            using IBufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
             var dataArea = bufferSegment.Span.Slice(Constants.PAGE_HEADER_SIZE);
             dataArea.Clear();
             GlobalAllocationMapPage globalAllocationMapPage = new GlobalAllocationMapPage(bufferSegment);
@@ -92,7 +92,7 @@ namespace Datatent2.Core.Tests.Page
         [Fact]
         public void AcquireIdTest()
         {
-            IBufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
+            using IBufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
             var dataArea = bufferSegment.Span.Slice(Constants.PAGE_HEADER_SIZE);
             GlobalAllocationMapPage globalAllocationMapPage = new GlobalAllocationMapPage(bufferSegment, 1);
 
@@ -108,7 +108,7 @@ namespace Datatent2.Core.Tests.Page
         [Fact]
         public void AcquireIdTestNotFirstGam()
         {
-            IBufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
+            using IBufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
             var dataArea = bufferSegment.Span.Slice(Constants.PAGE_HEADER_SIZE);
             GlobalAllocationMapPage globalAllocationMapPage = new GlobalAllocationMapPage(bufferSegment, 1 + GlobalAllocationMapPage.PAGES_PER_GAM);
 
@@ -124,7 +124,8 @@ namespace Datatent2.Core.Tests.Page
         [Fact]
         public void AcquireIdCompleteGamTest()
         {
-            IBufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
+            using IBufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
+            bufferSegment.Clear();
             var dataArea = bufferSegment.Span.Slice(Constants.PAGE_HEADER_SIZE);
             GlobalAllocationMapPage globalAllocationMapPage = new GlobalAllocationMapPage(bufferSegment, 1);
 
