@@ -103,11 +103,11 @@ class Build : NukeBuild
                 .SetCoverletOutput(TestResultDirectory / "Datatent2.Core.Tests.xml")
                 .SetCoverletOutputFormat(CoverletOutputFormat.cobertura));
 
-            ReportGenerator(_ => _
-                .SetReports(TestResultDirectory / "*.xml")
-                .SetReportTypes(ReportTypes.HtmlInline, ReportTypes.CsvSummary)
-                .SetTargetDirectory(CoverageDirectory)
-                .SetFramework("netcoreapp2.1"));
+            //ReportGenerator(_ => _
+            //    .SetReports(TestResultDirectory / "*.xml")
+            //    .SetReportTypes(ReportTypes.HtmlInline, ReportTypes.CsvSummary)
+            //    .SetTargetDirectory(CoverageDirectory)
+            //    .SetFramework("netcoreapp2.1"));
 
         });
 }
