@@ -32,9 +32,9 @@ jobs:
       with:
         # Repository upload token - get it from codecov.io. Required only for private repositories
         token: ${{ secrets.CODECOV }}
+        files: ./output/tests/Datatent2.Core.Tests.xml
         # Directory to search for coverage reports.
-        directory: ./output/coverage
-        # User defined upload name. Visible in Codecov UI
-        name: $GITHUB_RUN_ID
+        directory: /datatent2/output/tests
+        verbose: false
         # Specify the branch name
         override_branch: develop
