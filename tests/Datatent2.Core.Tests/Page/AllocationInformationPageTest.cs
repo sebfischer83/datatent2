@@ -118,6 +118,7 @@ namespace Datatent2.Core.Tests.Page
             AllocationInformationPage.IsAllocationInformationPage(2).ShouldBeTrue();
             AllocationInformationPage.IsAllocationInformationPage(2 + AllocationInformationPage.ENTRIES_PER_PAGE).ShouldBeTrue();
             AllocationInformationPage.IsAllocationInformationPage(2 + GlobalAllocationMapPage.PAGES_PER_GAM + 1).ShouldBeTrue();
+            AllocationInformationPage.IsAllocationInformationPage(2 + (GlobalAllocationMapPage.PAGES_PER_GAM * 2) + 2).ShouldBeTrue();
             AllocationInformationPage.IsAllocationInformationPage(2 + AllocationInformationPage.ENTRIES_PER_PAGE * 2).ShouldBeTrue();
             AllocationInformationPage.IsAllocationInformationPage(2 + GlobalAllocationMapPage.PAGES_PER_GAM + 1 + AllocationInformationPage.ENTRIES_PER_PAGE * 2).ShouldBeTrue();
         }

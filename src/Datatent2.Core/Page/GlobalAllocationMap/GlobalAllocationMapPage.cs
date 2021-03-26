@@ -22,7 +22,6 @@ namespace Datatent2.Core.Page.GlobalAllocationMap
         protected SpinLock SpinLock;
         public const int PAGES_PER_GAM = (Constants.PAGE_SIZE - Constants.PAGE_HEADER_SIZE) * 8;
 
-        protected uint PagesPerGam = 0;
         protected long LastIssuedId = -1;
 
         public override bool IsFull
@@ -52,7 +51,7 @@ namespace Datatent2.Core.Page.GlobalAllocationMap
             {
                 SpinLock.Enter(ref isTaken);
                 int localId = -1;
-                if (LastIssuedId > -1 && LastIssuedId < PagesPerGam)
+                if (LastIssuedId > -1 && LastIssuedId < PAGES_PER_GAM)
                 {
                     // that page has already issued an id, so we can take the next on
                     localId = (int) LastIssuedId + 1;
@@ -65,7 +64,7 @@ namespace Datatent2.Core.Page.GlobalAllocationMap
                     throw new Exception();
 
                 // first GAM page is always at id 1, so the next always follows after 65024 pages
-                // so next id is 65025, 130049, 195073, ... when the page size is 8192
+                // so next id is 65026, 130050, 195074, ... when the page size is 8192
 
                 var newId = (uint)localId + Id;
 
@@ -84,7 +83,7 @@ namespace Datatent2.Core.Page.GlobalAllocationMap
 
         public void RemovePageFromGam(uint id)
         {
-
+            // TODO: implement
         }
 
         protected void MarkPageAsAllocated(int localId)
@@ -113,57 +112,102 @@ namespace Datatent2.Core.Page.GlobalAllocationMap
 
         public int FindLocalEmptyPageId()
         {
-            Span<ulong> longSpan = MemoryMarshal.Cast<byte, ulong>(Buffer.Span.Slice(Constants.PAGE_HEADER_SIZE));
+            Span<ulong> span = MemoryMarshal.Cast<byte, ulong>(Buffer.Span.Slice(Constants.PAGE_HEADER_SIZE));
+            int min = 0;
+            int max = span.Length - 1;
+            int index = -1;
 
-            var lastItem = longSpan[^1];
-            if (lastItem == ulong.MaxValue)
+            while (min <= max)
             {
-                return -1;
+                int mid = mid = (int)unchecked((uint)(min + max) >> 1);
+                ref var b = ref span[mid];
+
+                if (b != ulong.MaxValue)
+                {
+                    if (mid == 0)
+                    {
+                        index = 0;
+                        break;
+                    }
+
+                    ref var b1 = ref span[mid - 1];
+                    if (b1 == ulong.MaxValue)
+                    {
+                        index = mid;
+                        break;
+                    }
+
+                    max = mid - 1;
+                }
+                else
+                {
+                    min = mid + 1;
+                }
             }
 
-            int iterCount = longSpan.Length;
-            for (int i = 0; i < iterCount; i += 4)
+            if (index > -1)
             {
-                ref ulong l4 = ref longSpan[i + 3];
-                // when l4 is max value all others before too
-                if (l4 == ulong.MaxValue)
-                    continue;
-
-                ref ulong l1 = ref longSpan[i];
-                ref ulong l2 = ref longSpan[i + 1];
-                ref ulong l3 = ref longSpan[i + 2];
-
-                int mult = i + 1;
-                int res = -1;
-                if (l1 != ulong.MaxValue)
-                {
-                    var count = BitOperations.LeadingZeroCount(l1);
-
-                    res = (64 - count) + 1;
-                }
-                else if (l2 != ulong.MaxValue)
-                {
-                    var count = BitOperations.LeadingZeroCount(l2);
-                    res = (64) - count + 64 + 1;
-                }
-                else if (l3 != ulong.MaxValue)
-                {
-                    var count = BitOperations.LeadingZeroCount(l3);
-                    res = (64) - count + 128 + 1;
-                }
-                else if (l4 != ulong.MaxValue)
-                {
-                    var count = BitOperations.LeadingZeroCount(l4);
-                    res = (64) - count + 192 + 1;
-                }
-
-                if (i > 0 && res != -1)
-                    res += (64 * i);
-
+                int res = 0;
+                ref var l = ref span[index];
+                var count = BitOperations.LeadingZeroCount((ulong)l);
+                res = (64 - count) + 1;
+                if (index > 0 && res != -1)
+                    res += (64 * (index));
                 return res;
             }
 
-            return -1;
+            return index;
+            //Span<ulong> longSpan = MemoryMarshal.Cast<byte, ulong>(Buffer.Span.Slice(Constants.PAGE_HEADER_SIZE));
+
+            //var lastItem = longSpan[^1];
+            //if (lastItem == ulong.MaxValue)
+            //{
+            //    return -1;
+            //}
+
+            //int iterCount = longSpan.Length;
+            //for (int i = 0; i < iterCount; i += 4)
+            //{
+            //    ref ulong l4 = ref longSpan[i + 3];
+            //    // when l4 is max value all others before too
+            //    if (l4 == ulong.MaxValue)
+            //        continue;
+
+            //    ref ulong l1 = ref longSpan[i];
+            //    ref ulong l2 = ref longSpan[i + 1];
+            //    ref ulong l3 = ref longSpan[i + 2];
+
+            //    int mult = i + 1;
+            //    int res = -1;
+            //    if (l1 != ulong.MaxValue)
+            //    {
+            //        var count = BitOperations.LeadingZeroCount(l1);
+
+            //        res = (64 - count) + 1;
+            //    }
+            //    else if (l2 != ulong.MaxValue)
+            //    {
+            //        var count = BitOperations.LeadingZeroCount(l2);
+            //        res = (64) - count + 64 + 1;
+            //    }
+            //    else if (l3 != ulong.MaxValue)
+            //    {
+            //        var count = BitOperations.LeadingZeroCount(l3);
+            //        res = (64) - count + 128 + 1;
+            //    }
+            //    else if (l4 != ulong.MaxValue)
+            //    {
+            //        var count = BitOperations.LeadingZeroCount(l4);
+            //        res = (64) - count + 192 + 1;
+            //    }
+
+            //    if (i > 0 && res != -1)
+            //        res += (64 * i);
+
+            //    return res;
+            //}
+
+            //return -1;
         }
     }
 }

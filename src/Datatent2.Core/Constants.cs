@@ -45,7 +45,7 @@ namespace Datatent2.Core
 
         public const int PAGE_ADDRESS_SIZE = 6;
 
-        public const int BLOCK_HEADER_SIZE = 8;
+        public const int BLOCK_HEADER_SIZE = 10;
 
         public const int PAGE_DIRECTORY_ENTRY_SIZE = 4;
 

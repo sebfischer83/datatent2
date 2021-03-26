@@ -18,13 +18,18 @@ namespace Datatent2.Core.Block
         [FieldOffset(BH_PAGE_ADDRESS)]
         public readonly PageAddress NextBlockAddress;
 
-        private const int BH_PAGE_IS_FOLLOWING_BLOCK = 0; // 0 byte
-        private const int BH_PAGE_ADDRESS = 1; // 1-4 PageAddress 6 byte
+        [FieldOffset(BH_CHECKSUM)]
+        public readonly byte[] Checksum;
 
-        public BlockHeader(PageAddress pageAddress, bool isFollowingBlock)
+        private const int BH_PAGE_IS_FOLLOWING_BLOCK = 0; // 0 byte
+        private const int BH_PAGE_ADDRESS = 1; // 1-4 PageAddress 4 byte
+        private const int BH_CHECKSUM = 5; // 5-7 PageAddress 4 byte
+
+        public BlockHeader(PageAddress pageAddress, bool isFollowingBlock, byte[] checksum)
         {
             NextBlockAddress = pageAddress;
             IsFollowingBlock = isFollowingBlock;
+            Checksum = checksum;
         }
 
         public static BlockHeader FromBuffer(Span<byte> span)

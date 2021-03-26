@@ -109,7 +109,7 @@ namespace Datatent2.Core.Page
             return res.Index1 != byte.MaxValue || res.Index2 != byte.MaxValue;
         }
 
-        public void Defrag()
+        public virtual void Defrag()
         {
             // nothing to do
             if (Header.UnalignedFreeBytes == 0)

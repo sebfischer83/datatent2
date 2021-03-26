@@ -97,6 +97,7 @@ namespace Datatent2.Core.Tests.Page
             GlobalAllocationMapPage globalAllocationMapPage = new GlobalAllocationMapPage(bufferSegment, 1);
 
             var id = globalAllocationMapPage.AcquirePageId();
+            id.ShouldBe((uint)2);
             var nextId = (uint) globalAllocationMapPage.FindLocalEmptyPageId() + 1;
             nextId.ShouldBe<uint>(id + 1);
 
@@ -110,14 +111,14 @@ namespace Datatent2.Core.Tests.Page
         {
             using IBufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
             var dataArea = bufferSegment.Span.Slice(Constants.PAGE_HEADER_SIZE);
-            GlobalAllocationMapPage globalAllocationMapPage = new GlobalAllocationMapPage(bufferSegment, 1 + GlobalAllocationMapPage.PAGES_PER_GAM);
+            GlobalAllocationMapPage globalAllocationMapPage = new GlobalAllocationMapPage(bufferSegment, 1 + GlobalAllocationMapPage.PAGES_PER_GAM + 1);
 
             var id = globalAllocationMapPage.AcquirePageId();
-            var nextId = (uint)globalAllocationMapPage.FindLocalEmptyPageId() + 1 + GlobalAllocationMapPage.PAGES_PER_GAM;
+            var nextId = (uint)globalAllocationMapPage.FindLocalEmptyPageId() + 1 + GlobalAllocationMapPage.PAGES_PER_GAM + 1;
             nextId.ShouldBe<uint>(id + 1);
 
             id = globalAllocationMapPage.AcquirePageId();
-            nextId = (uint)globalAllocationMapPage.FindLocalEmptyPageId() + 1 + GlobalAllocationMapPage.PAGES_PER_GAM;
+            nextId = (uint)globalAllocationMapPage.FindLocalEmptyPageId() + 1 + GlobalAllocationMapPage.PAGES_PER_GAM + 1;
             nextId.ShouldBe<uint>(id + 1);
         }
 
@@ -128,22 +129,27 @@ namespace Datatent2.Core.Tests.Page
             bufferSegment.Clear();
             var dataArea = bufferSegment.Span.Slice(Constants.PAGE_HEADER_SIZE);
             GlobalAllocationMapPage globalAllocationMapPage = new GlobalAllocationMapPage(bufferSegment, 1);
-
+            uint id = 0u;
+            List<uint> list = new List<uint>(GlobalAllocationMapPage.PAGES_PER_GAM);
             while (!globalAllocationMapPage.IsFull)
             {
-                var id = globalAllocationMapPage.AcquirePageId();
-                if (id == 65025)
-                    Debugger.Break();
+                id = globalAllocationMapPage.AcquirePageId();
+                list.Add(id);
                 var nextId = globalAllocationMapPage.FindLocalEmptyPageId() + 1;
+                if (nextId == 66)
+                    Debugger.Break();
                 if (globalAllocationMapPage.IsFull)
                 {
                     nextId.ShouldBe(0);
                     continue;
                 }
-
+             
                 // works only for GAM 1
                 ((uint)nextId).ShouldBe<uint>(id + 1);
             }
+
+            var controllList = Enumerable.Range(2, GlobalAllocationMapPage.PAGES_PER_GAM).Select(i => (uint)i).ToList();
+            list.ShouldBe(controllList);
         }
     }
 }

@@ -25,20 +25,29 @@ namespace Datatent2.Core.Services.Data
             _pageService = pageService;
         }
 
-        private byte[] PrepareObject(object obj)
+        private (byte[] Data, byte[] Checksum) PrepareObject(object obj)
         {
             // step 1 serialize object to byte[]
             var serializedBytes = Utf8Json.JsonSerializer.Serialize(obj);
+            // crc from serialized data
+            var checksum = BitConverter.GetBytes(Force.Crc32.Crc32Algorithm.Compute(serializedBytes));
 
             //// step 2 compress data
             //var compressedBytes = _compressionService.Compress(serializedBytes);
 
-            return serializedBytes;
+            return (serializedBytes, checksum);
         }
 
-        private T RetrieveObject<T>(byte[] bytes)
+        private T RetrieveObject<T>(byte[] array, byte[] orgChecksum)
         {
-            return Utf8Json.JsonSerializer.Deserialize<T>(bytes);
+            var checksum = Force.Crc32.Crc32Algorithm.Compute(array);
+            var orgCheckSumNumber = BitConverter.ToUInt32(orgChecksum);
+            if (checksum != orgCheckSumNumber)
+            {
+                throw new Exception("Checksum don't match.");
+            }
+
+            return Utf8Json.JsonSerializer.Deserialize<T>(array);
         }
 
         public async Task<T> Get<T>(PageAddress pageAddress)
@@ -52,6 +61,7 @@ namespace Datatent2.Core.Services.Data
             DataBlock block = new DataBlock(page, pageAddress.SlotId);
             List<byte> bytes = new List<byte>();
             bytes.AddRange(block.GetData());
+            var checksum = block.Header.Checksum;
 
             while (!block.Header.NextBlockAddress.IsEmpty())
             {
@@ -64,7 +74,8 @@ namespace Datatent2.Core.Services.Data
                 bytes.AddRange(block.GetData());
             }
 
-            return RetrieveObject<T>(bytes.ToArray());
+            var array = bytes.ToArray();
+            return RetrieveObject<T>(array, checksum);
         }
 
         public async Task<List<(object, PageAddress)>> BulkInsert(IList<object> objects)
@@ -92,8 +103,8 @@ namespace Datatent2.Core.Services.Data
         {
             var bytes = PrepareObject(obj);
 
-            Memory<byte> tempSpan = bytes;
-            int remainingBytes = bytes.Length;
+            Memory<byte> tempSpan = bytes.Data;
+            int remainingBytes = bytes.Data.Length;
             int blockNr = 0;
             DataBlock? lastBlock = null;
             PageAddress pageAddress = PageAddress.Empty;
@@ -111,8 +122,8 @@ namespace Datatent2.Core.Services.Data
                 }
 
                 var bytesToWrite = Math.Min(bytesThatCanBeWritten, remainingBytes);
-                var block = dataPage.InsertBlock((ushort)((ushort)bytesToWrite + Constants.BLOCK_HEADER_SIZE), blockNr > 0);
-                block.FillData(tempSpan.Span.Slice(bytes.Length - remainingBytes, bytesToWrite));
+                var block = dataPage.InsertBlock((ushort)((ushort)bytesToWrite + Constants.BLOCK_HEADER_SIZE), blockNr > 0, blockNr == 0 ? bytes.Checksum : DataBlock.EMPTY_CHECKSUM);
+                block.FillData(tempSpan.Span.Slice(bytes.Data.Length - remainingBytes, bytesToWrite));
 
                 lastBlock?.SetFollowingBlock(block.Position);
 

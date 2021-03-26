@@ -8,22 +8,20 @@ using Datatent2.Core.Page;
 
 namespace Datatent2.Core.Block
 {
-    internal abstract class Block<T> where T: BasePage
+    internal abstract class Block<T, H> where T: BasePage where H: struct 
     {
-        public BlockHeader Header { get; private set; }
+        public H Header { get; protected set; }
 
-        public PageAddress Position { get; private set; }
+        public PageAddress Position { get; protected set; }
 
         protected readonly T Page;
-        private readonly byte _entryId;
+        protected readonly byte _entryId;
         
         protected Block(T page, byte entryId)
         {
             Page = page;
             _entryId = entryId;
             Position = new PageAddress(Page.Id, _entryId);
-            var memory = page.GetDataByIndex(entryId);
-            Header = BlockHeader.FromBuffer(memory, 0);
         }
         
         public void FillData(Span<byte> data)
@@ -43,15 +41,8 @@ namespace Datatent2.Core.Block
             Page = page;
             _entryId = entryId;
             Position = new PageAddress(Page.Id, _entryId);
-            var memory = page.GetDataByIndex(entryId);
-            Header = new BlockHeader(nextBlock, isFollowingBlock);
-            Header.ToBuffer(memory);
         }
 
-        public void SetFollowingBlock(PageAddress pageAddress)
-        {
-            Header = new BlockHeader(pageAddress, Header.IsFollowingBlock);
-            Header.ToBuffer(Page.GetDataByIndex(_entryId));
-        }
+        public abstract void SetFollowingBlock(PageAddress pageAddress);
     }
 }

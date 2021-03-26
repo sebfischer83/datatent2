@@ -20,11 +20,11 @@ namespace Datatent2.Core.Page
         {
         }
 
-        public DataBlock InsertBlock(ushort length, bool isFollowingBlock)
+        public DataBlock InsertBlock(ushort length, bool isFollowingBlock, byte[] checkSum)
         {
             var span = base.Insert(length, out var index);
 
-            return new DataBlock(this, index, PageAddress.Empty, isFollowingBlock);
+            return new DataBlock(this, index, PageAddress.Empty, isFollowingBlock, checkSum);
         }
     }
 }

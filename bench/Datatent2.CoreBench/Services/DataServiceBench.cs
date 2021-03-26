@@ -8,6 +8,7 @@ using BenchmarkDotNet.Attributes;
 using Datatent2.Core;
 using Datatent2.Core.Memory;
 using Datatent2.Core.Page;
+using Datatent2.Core.Page.Header;
 using Datatent2.Core.Services.Compression;
 using Datatent2.Core.Services.Data;
 using Datatent2.Core.Services.Disk;

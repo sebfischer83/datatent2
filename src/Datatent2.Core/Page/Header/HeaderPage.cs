@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.InteropServices;
 using Datatent2.Core.Memory;
 using Dawn;
 
-namespace Datatent2.Core.Page
+namespace Datatent2.Core.Page.Header
 {
     internal class HeaderPage : BasePage
     {

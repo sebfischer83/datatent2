@@ -49,7 +49,7 @@ namespace Datatent2.Core.Page.AllocationInformation
 
         public AllocationInformationPage(IBufferSegment buffer) : base(buffer)
         {
-            _allocationInformationPageHeader = AllocationInformationPageHeader.FromBuffer(buffer.Span);
+            //_allocationInformationPageHeader = AllocationInformationPageHeader.FromBuffer(buffer.Span);
         }
 
         public AllocationInformationPage(IBufferSegment buffer, uint id) : base(buffer, id, PageType.AllocationInformation)
@@ -61,8 +61,8 @@ namespace Datatent2.Core.Page.AllocationInformation
             // remove header page, all indexes here are relative to the GAM page with index 1
             var aim = Array.IndexOf(PositionsInGam, (int)posInGam);
 
-            _allocationInformationPageHeader = new AllocationInformationPageHeader((ushort)aim, gam);
-            _allocationInformationPageHeader.ToBuffer(Buffer.Span);
+            //_allocationInformationPageHeader = new AllocationInformationPageHeader((ushort)aim, gam);
+            //_allocationInformationPageHeader.ToBuffer(Buffer.Span);
             AddAllocationInformation(this);
         }
 

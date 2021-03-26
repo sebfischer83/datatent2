@@ -15,15 +15,12 @@ using BenchmarkDotNet.Order;
 
 namespace Datatent2.AlgoBench.Find
 {
-    [HtmlExporter, CsvExporter(), CsvMeasurementsExporter(), MarkdownExporter, RPlotExporter, 
-     MeanColumn, MedianColumn, MediumRunJob, EtwProfiler(), DisassemblyDiagnoser(1, true, true, true,
-         true, true, true), EventPipeProfiler(EventPipeProfile.CpuSampling)]
+    [HtmlExporter, CsvExporter(), CsvMeasurementsExporter(), MarkdownExporter, 
+     MeanColumn, MedianColumn, MediumRunJob, BaselineColumn]
     public class FindFirstEmptyPageBench
     {
-        [Params(250, 500, 1000, 2500, 5000)]
+        [Params(1000)]
         public int Iterations { get; set; }
-        private static readonly object _lock = new object();
-        private static SpinLock _spinlock = new SpinLock();
         byte[][] buffers;
 
         [GlobalSetup]
@@ -31,10 +28,12 @@ namespace Datatent2.AlgoBench.Find
         {
             List<byte[]> list = new List<byte[]>(Iterations);
             Random random = new Random();
+            
             for (int i = 0; i < Iterations; i++)
             {
+                var l = random.Next(0, 8000);
                 var b = new byte[8128];
-                for (int j = 0; j < random.Next(0, 8000); j++)
+                for (int j = 0; j < l; j++)
                 {
                     b[j] = 0xFF;
                 }
@@ -44,7 +43,7 @@ namespace Datatent2.AlgoBench.Find
             buffers = list.ToArray();
         }
 
-        [Benchmark()]
+        [Benchmark(Baseline = true)]
         public long FindDefault()
         {
             long l = 0;
@@ -55,18 +54,6 @@ namespace Datatent2.AlgoBench.Find
 
             return l;
         }
-
-        //[Benchmark()]
-        //public long FindDefaultParallel()
-        //{
-        //    long l = 0;
-        //    Parallel.For(0, Iterations, i =>
-        //    {
-        //        l += FindFirstEmptyDefault(buffers[i]);
-        //    });
-
-        //    return l;
-        //}
 
         [Benchmark()]
         public long FindUnrolled4()
@@ -104,136 +91,68 @@ namespace Datatent2.AlgoBench.Find
             return l;
         }
 
-        //[Benchmark()]
-        //public long FindUnrolledParallel()
-        //{
-        //    long l = 0;
-        //    Parallel.For(0, Iterations, i =>
-        //    {
-        //        l += FindFirstEmptyUnroll4(buffers[i]);
-        //    });
+        [Benchmark()]
+        public long FindSearchLong()
+        {
+            long l = 0;
+            for (int i = 0; i < Iterations; i++)
+            {
+                l += FindFirstSearchLong(buffers[i]);
+            }
 
-        //    return l;
-        //}
+            return l;
+        }
 
-        //[Benchmark()]
-        //public long FindDefaultLock()
-        //{
-        //    lock (_lock)
-        //    {
-        //        long l = 0;
-        //        for (int i = 0; i < Iterations; i++)
-        //        {
-        //            l += FindFirstEmptyDefault(buffers[i]);
-        //        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public int FindFirstSearchLong(Span<byte> spanByte)
+        {
+            Span<ulong> span = MemoryMarshal.Cast<byte, ulong>(spanByte);
+            int min = 0;
+            int max = span.Length - 1;
+            int index = -1;
 
-        //        return l;
-        //    }
-        //}
+            while (min <= max)
+            {
+                int mid = mid = (int)unchecked((uint)(min + max) >> 1);
+                ref var b = ref span[mid];
 
-        //[Benchmark()]
-        //public long FindUnrolledLock()
-        //{
-        //    lock (_lock)
-        //    {
-        //        long l = 0;
-        //        for (int i = 0; i < Iterations; i++)
-        //        {
-        //            l += FindFirstEmptyUnroll4(buffers[i]);
-        //        }
+                if (b != ulong.MaxValue)
+                {
+                    if (mid == 0)
+                    {
+                        index = 0;
+                        break;
+                    }
 
-        //        return l;
-        //    }
-        //}
+                    ref var b1 = ref span[mid - 1];
+                    if (b1 == ulong.MaxValue)
+                    {
+                        index = mid;
+                        break;
+                    }
 
+                    max = mid - 1;
+                }
+                else
+                {
+                    min = mid + 1;
+                }
+            }
 
+            if (index > -1)
+            {
+                int res = 0;
+                ref var l = ref span[index];
+                var count = BitOperations.LeadingZeroCount((ulong)l);
+                res = (64 - count) + 1;
+                if (index > 0 && res != -1)
+                    res += (64 * index);
+                return res;
+            }
 
-        //[Benchmark()]
-        //public long FindDefaultSpinlock()
-        //{
-        //    bool lockTaken = false;
-        //    try
-        //    {
-        //        _spinlock.Enter(ref lockTaken);
-        //        long l = 0;
-        //        for (int i = 0; i < Iterations; i++)
-        //        {
-        //            l += FindFirstEmptyDefault(buffers[i]);
-        //        }
+            return index;
+        }
 
-        //        return l;
-        //    }
-        //    finally
-        //    {
-        //        _spinlock.Exit();
-        //    }
-        //}
-
-        //[Benchmark()]
-        //public long FindUnrolledSpinlock()
-        //{
-        //    bool lockTaken = false;
-        //    try
-        //    {
-        //        _spinlock.Enter(ref lockTaken);
-        //        long l = 0;
-        //        for (int i = 0; i < Iterations; i++)
-        //        {
-        //            l += FindFirstEmptyUnroll4(buffers[i]);
-        //        }
-
-        //        return l;
-        //    }
-        //    finally
-        //    {
-        //        _spinlock.Exit();
-        //    }
-
-        //}
-
-
-        //[Benchmark()]
-        //public long FindDefaultSpinlockParallel()
-        //{
-        //    bool lockTaken = false;
-        //    try
-        //    {
-        //        _spinlock.Enter(ref lockTaken);
-        //        long l = 0;
-        //        Parallel.For(0, Iterations, i =>
-        //        {
-        //            l += FindFirstEmptyDefault(buffers[i]);
-        //        });
-
-        //        return l;
-        //    }
-        //    finally
-        //    {
-        //        _spinlock.Exit();
-        //    }
-        //}
-
-        //[Benchmark()]
-        //public long FindUnrolledSpinlockParallel()
-        //{
-        //    bool lockTaken = false;
-        //    try
-        //    {
-        //        _spinlock.Enter(ref lockTaken);
-        //        long l = 0;
-        //        Parallel.For(0, Iterations, i =>
-        //        {
-        //            l += FindFirstEmptyUnroll4(buffers[i]);
-        //        });
-
-        //        return l;
-        //    }
-        //    finally
-        //    {
-        //        _spinlock.Exit();
-        //    }
-
-        //}
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public int FindFirstEmptyDefault(Span<byte> span)
