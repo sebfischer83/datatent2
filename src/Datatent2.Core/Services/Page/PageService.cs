@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Datatent2.Core.Memory;
 using Datatent2.Core.Page;
@@ -21,9 +22,11 @@ namespace Datatent2.Core.Services.Page
         private readonly CacheService _cacheService;
         private GlobalAllocationMapPage? _globalAllocationMap;
         private AllocationInformationPage? _allocationInformationPage;
+        private SpinLock _spinLock;
 
         public PageService(DiskService diskService)
         {
+            _spinLock = new SpinLock();
             _diskService = diskService;
             _cacheService = new CacheService();
         }
@@ -151,12 +154,33 @@ namespace Datatent2.Core.Services.Page
 
         private T CreateNewPage<T>() where T: BasePage
         {
-            
-            if (typeof(T) == typeof(DataPage))
-            {
+            var taken = false;
 
+            _spinLock.Enter(ref taken);
+            try
+            {
+                if (_globalAllocationMap!.IsFull)
+                {
+                    AllocateNewGAM();
+                }
+
+                var nextId = _globalAllocationMap.AcquirePageId();
+
+                if (typeof(T) == typeof(DataPage))
+                {
+
+                }
+                return default;
             }
-            return default;
+            finally
+            {
+                _spinLock.Exit();
+            }
+        }
+
+        private void AllocateNewGAM()
+        {
+
         }
     }
 }

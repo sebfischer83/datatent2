@@ -5,7 +5,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Reflection.Metadata;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,9 +31,8 @@ namespace Datatent2.Core.Page.GlobalAllocationMap
         {
             get
             {
-                Span<ulong> span = MemoryMarshal.Cast<byte, ulong>(Buffer.Span);
-                var lastItem = span[^1];
-                return lastItem == ulong.MaxValue;
+                var lastItem = Buffer.Span[^1];
+                return lastItem == byte.MaxValue;
             }
         }
 
@@ -157,57 +159,6 @@ namespace Datatent2.Core.Page.GlobalAllocationMap
             }
 
             return index;
-            //Span<ulong> longSpan = MemoryMarshal.Cast<byte, ulong>(Buffer.Span.Slice(Constants.PAGE_HEADER_SIZE));
-
-            //var lastItem = longSpan[^1];
-            //if (lastItem == ulong.MaxValue)
-            //{
-            //    return -1;
-            //}
-
-            //int iterCount = longSpan.Length;
-            //for (int i = 0; i < iterCount; i += 4)
-            //{
-            //    ref ulong l4 = ref longSpan[i + 3];
-            //    // when l4 is max value all others before too
-            //    if (l4 == ulong.MaxValue)
-            //        continue;
-
-            //    ref ulong l1 = ref longSpan[i];
-            //    ref ulong l2 = ref longSpan[i + 1];
-            //    ref ulong l3 = ref longSpan[i + 2];
-
-            //    int mult = i + 1;
-            //    int res = -1;
-            //    if (l1 != ulong.MaxValue)
-            //    {
-            //        var count = BitOperations.LeadingZeroCount(l1);
-
-            //        res = (64 - count) + 1;
-            //    }
-            //    else if (l2 != ulong.MaxValue)
-            //    {
-            //        var count = BitOperations.LeadingZeroCount(l2);
-            //        res = (64) - count + 64 + 1;
-            //    }
-            //    else if (l3 != ulong.MaxValue)
-            //    {
-            //        var count = BitOperations.LeadingZeroCount(l3);
-            //        res = (64) - count + 128 + 1;
-            //    }
-            //    else if (l4 != ulong.MaxValue)
-            //    {
-            //        var count = BitOperations.LeadingZeroCount(l4);
-            //        res = (64) - count + 192 + 1;
-            //    }
-
-            //    if (i > 0 && res != -1)
-            //        res += (64 * i);
-
-            //    return res;
-            //}
-
-            //return -1;
         }
     }
 }

@@ -56,6 +56,7 @@ namespace Datatent2.AlgoBench.Hash
         private IxxHash _xxHash;
         private ICRC _crc8;
         private ICRC _crc16;
+        private Crc32HardwareAlgorithm _hardwareCrc32;
 
 
         [GlobalSetup]
@@ -106,6 +107,8 @@ namespace Datatent2.AlgoBench.Hash
             _xxHash = System.Data.HashFunction.xxHash.xxHashFactory.Instance.Create();
             _crc8 = System.Data.HashFunction.CRC.CRCFactory.Instance.Create(new CRCConfig() { HashSizeInBits = 8 });
             _crc16 = System.Data.HashFunction.CRC.CRCFactory.Instance.Create(new CRCConfig() { HashSizeInBits = 16 });
+            _hardwareCrc32 = new Crc32HardwareAlgorithm();
+            _hardwareCrc32.Initialize();
         }
 
         [Benchmark]
@@ -423,6 +426,27 @@ namespace Datatent2.AlgoBench.Hash
                 }
             if (TestType == Types.LongText)
                 Force.Crc32.Crc32CAlgorithm.Compute(_longText);
+            return a;
+        }
+
+        [Benchmark]
+        public int HardwareCrc32()
+        {
+            int a = 0;
+            if (TestType == Types.ShortSentence)
+                for (int i = 0; i < _sentences.GetLength(0); i++)
+                {
+                    _hardwareCrc32.ComputeHash((_sentences[i]));
+                    a++;
+                }
+            if (TestType == Types.Word)
+                for (int i = 0; i < _words.GetLength(0); i++)
+                {
+                    _hardwareCrc32.ComputeHash(_words[i]);
+                    a++;
+                }
+            if (TestType == Types.LongText)
+                _hardwareCrc32.ComputeHash(_longText);
             return a;
         }
     }

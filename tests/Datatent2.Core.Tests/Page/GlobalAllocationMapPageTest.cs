@@ -136,7 +136,7 @@ namespace Datatent2.Core.Tests.Page
                 id = globalAllocationMapPage.AcquirePageId();
                 list.Add(id);
                 var nextId = globalAllocationMapPage.FindLocalEmptyPageId() + 1;
-                if (nextId == 66)
+                if (nextId == 1841)
                     Debugger.Break();
                 if (globalAllocationMapPage.IsFull)
                 {
