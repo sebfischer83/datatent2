@@ -1,4 +1,8 @@
-﻿using System.Runtime.InteropServices;
+﻿// # SPDX-License-Identifier: MIT
+// # Copyright 2021
+// # Sebastian Fischer sebfischer@gmx.net
+
+using System.Runtime.InteropServices;
 
 namespace Datatent2.Core.Page.Header
 {

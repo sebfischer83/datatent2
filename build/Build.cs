@@ -90,24 +90,28 @@ class Build : NukeBuild
         .Produces(TestResultDirectory / "*.xml")
         .Executes(() =>
         {
-            DotNetTest(s => s
-                .SetProjectFile(Solution?.GetProject("Datatent2.Core.Tests"))
-                .SetConfiguration(Configuration)
-                .EnableNoBuild()
-                .EnableNoRestore()
-                .ResetVerbosity()
-                .EnableUseSourceLink()
-                .SetResultsDirectory(TestResultDirectory)
-                .SetLogger("trx;LogFileName=OpenDokoBlazor.Shared.Tests.trx")
-                .EnableCollectCoverage()
-                .SetCoverletOutput(TestResultDirectory / "Datatent2.Core.Tests.xml")
-                .SetCoverletOutputFormat(CoverletOutputFormat.cobertura));
-
-            //ReportGenerator(_ => _
-            //    .SetReports(TestResultDirectory / "*.xml")
-            //    .SetReportTypes(ReportTypes.HtmlInline, ReportTypes.CsvSummary)
-            //    .SetTargetDirectory(CoverageDirectory)
-            //    .SetFramework("netcoreapp2.1"));
+            var projects = Solution.GetProjects("*.Tests");
+            foreach (var project in projects)
+            {
+                DotNetTest(s => s
+                    .SetProjectFile(Solution?.GetProject(project.Path))
+                    .SetConfiguration(Configuration)
+                    .EnableNoBuild()
+                    .EnableNoRestore()
+                    .ResetVerbosity()
+                    .EnableUseSourceLink()
+                    .SetResultsDirectory(TestResultDirectory)
+                    .SetLogger($"trx;LogFileName={project.Name}.trx")
+                    .EnableCollectCoverage()
+                    .SetCoverletOutput(TestResultDirectory / $"{project.Name}.xml")
+                    .SetCoverletOutputFormat(CoverletOutputFormat.cobertura));
+            }
+           
+            ReportGenerator(_ => _
+                .SetReports(TestResultDirectory / "*.xml")
+                .SetReportTypes(ReportTypes.HtmlInline, ReportTypes.CsvSummary)
+                .SetTargetDirectory(CoverageDirectory)
+                .SetFramework("net5.0"));
 
         });
 }

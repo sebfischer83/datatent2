@@ -1,4 +1,8 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Scripting;
+﻿// # SPDX-License-Identifier: MIT
+// # Copyright 2021
+// # Sebastian Fischer sebfischer@gmx.net
+
+using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 
 namespace Datatent2.Core.Scripting.Csharp

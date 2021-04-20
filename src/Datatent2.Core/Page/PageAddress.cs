@@ -1,4 +1,8 @@
-﻿using System;
+﻿// # SPDX-License-Identifier: MIT
+// # Copyright 2021
+// # Sebastian Fischer sebfischer@gmx.net
+
+using System;
 using System.Runtime.InteropServices;
 using Dawn;
 
@@ -58,7 +62,7 @@ namespace Datatent2.Core.Page
 
         public override string ToString()
         {
-            return $"{PageId}:{SlotId}";
+            return $"<{PageId}:{SlotId}>";
         }
     }
 }

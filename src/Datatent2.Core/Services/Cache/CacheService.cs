@@ -1,4 +1,8 @@
-﻿using Advanced.Algorithms.DataStructures;
+﻿// # SPDX-License-Identifier: MIT
+// # Copyright 2021
+// # Sebastian Fischer sebfischer@gmx.net
+
+using Advanced.Algorithms.DataStructures;
 using Datatent2.Core.Page;
 using Microsoft.Extensions.Caching.Memory;
 using System;

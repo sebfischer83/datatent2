@@ -1,4 +1,8 @@
-﻿using System;
+﻿// # SPDX-License-Identifier: MIT
+// # Copyright 2021
+// # Sebastian Fischer sebfischer@gmx.net
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,7 +13,7 @@ namespace Datatent2.Core.Block
 {
     internal class DataBlock : Block<DataPage, BlockHeader>
     {
-        public static readonly byte[] EMPTY_CHECKSUM = { 0x00, 0x00, 0x00, 0x00 };
+        public static readonly uint EMPTY_CHECKSUM = 0;
 
         public DataBlock(DataPage page, byte entryId) : base(page, entryId)
         {
@@ -21,7 +25,7 @@ namespace Datatent2.Core.Block
             byte entryId,
             PageAddress nextBlock,
             bool isFollowingBlock,
-            byte[] checksum) : base(page,
+            uint checksum) : base(page,
             entryId,
             nextBlock,
             isFollowingBlock)

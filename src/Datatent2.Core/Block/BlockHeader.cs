@@ -1,4 +1,8 @@
-﻿using System;
+﻿// # SPDX-License-Identifier: MIT
+// # Copyright 2021
+// # Sebastian Fischer sebfischer@gmx.net
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -9,7 +13,7 @@ using Dawn;
 
 namespace Datatent2.Core.Block
 {
-    [StructLayout(LayoutKind.Explicit, Size = Constants.BLOCK_HEADER_SIZE)]
+    [StructLayout(LayoutKind.Explicit, Size = Constants.BLOCK_HEADER_SIZE, Pack = 1)]
     internal readonly struct BlockHeader
     {
         [FieldOffset(BH_PAGE_IS_FOLLOWING_BLOCK)]
@@ -19,13 +23,13 @@ namespace Datatent2.Core.Block
         public readonly PageAddress NextBlockAddress;
 
         [FieldOffset(BH_CHECKSUM)]
-        public readonly byte[] Checksum;
+        public readonly uint Checksum;
 
         private const int BH_PAGE_IS_FOLLOWING_BLOCK = 0; // 0 byte
         private const int BH_PAGE_ADDRESS = 1; // 1-4 PageAddress 4 byte
-        private const int BH_CHECKSUM = 5; // 5-7 PageAddress 4 byte
+        private const int BH_CHECKSUM = 5; // 5-7 byte 4 byte
 
-        public BlockHeader(PageAddress pageAddress, bool isFollowingBlock, byte[] checksum)
+        public BlockHeader(PageAddress pageAddress, bool isFollowingBlock, uint checksum)
         {
             NextBlockAddress = pageAddress;
             IsFollowingBlock = isFollowingBlock;

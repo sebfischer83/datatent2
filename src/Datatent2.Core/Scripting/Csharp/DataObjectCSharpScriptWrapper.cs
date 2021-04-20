@@ -1,4 +1,8 @@
-﻿using System;
+﻿// # SPDX-License-Identifier: MIT
+// # Copyright 2021
+// # Sebastian Fischer sebfischer@gmx.net
+
+using System;
 using System.Dynamic;
 using Fasterflect;
 

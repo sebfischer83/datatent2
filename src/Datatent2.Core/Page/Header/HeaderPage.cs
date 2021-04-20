@@ -1,4 +1,8 @@
-﻿using System.Runtime.InteropServices;
+﻿// # SPDX-License-Identifier: MIT
+// # Copyright 2021
+// # Sebastian Fischer sebfischer@gmx.net
+
+using System.Runtime.InteropServices;
 using Datatent2.Core.Memory;
 using Dawn;
 

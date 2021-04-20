@@ -1,4 +1,8 @@
-﻿using System;
+﻿// # SPDX-License-Identifier: MIT
+// # Copyright 2021
+// # Sebastian Fischer sebfischer@gmx.net
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -42,6 +46,7 @@ namespace Datatent2.Core.Page.GlobalAllocationMap
 
         public GlobalAllocationMapPage(IBufferSegment buffer, uint id) : base(buffer, id, PageType.GlobalAllocationMap)
         {
+            LastIssuedId = 0;
         }
 
         public uint AcquirePageId()
@@ -53,7 +58,7 @@ namespace Datatent2.Core.Page.GlobalAllocationMap
             {
                 SpinLock.Enter(ref isTaken);
                 int localId = -1;
-                if (LastIssuedId > -1 && LastIssuedId < PAGES_PER_GAM)
+                if (LastIssuedId is > -1 and < PAGES_PER_GAM)
                 {
                     // that page has already issued an id, so we can take the next on
                     localId = (int) LastIssuedId + 1;
@@ -90,7 +95,7 @@ namespace Datatent2.Core.Page.GlobalAllocationMap
 
         protected void MarkPageAsAllocated(int localId)
         {
-            var dataBuffer = Buffer.Span.Slice(Constants.PAGE_HEADER_SIZE);
+            var dataBuffer = Buffer.Span[Constants.PAGE_HEADER_SIZE..];
             if (localId < 9)
             {
                 ref byte b = ref dataBuffer[0];
@@ -114,7 +119,7 @@ namespace Datatent2.Core.Page.GlobalAllocationMap
 
         public int FindLocalEmptyPageId()
         {
-            Span<ulong> span = MemoryMarshal.Cast<byte, ulong>(Buffer.Span.Slice(Constants.PAGE_HEADER_SIZE));
+            Span<ulong> span = MemoryMarshal.Cast<byte, ulong>(Buffer.Span[Constants.PAGE_HEADER_SIZE..]);
             int min = 0;
             int max = span.Length - 1;
             int index = -1;

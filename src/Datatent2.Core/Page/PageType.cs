@@ -1,4 +1,8 @@
-﻿namespace Datatent2.Core.Page
+﻿// # SPDX-License-Identifier: MIT
+// # Copyright 2021
+// # Sebastian Fischer sebfischer@gmx.net
+
+namespace Datatent2.Core.Page
 {
     internal enum PageType : byte
     {

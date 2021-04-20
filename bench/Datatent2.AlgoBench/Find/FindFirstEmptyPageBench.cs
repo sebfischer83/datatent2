@@ -22,7 +22,7 @@ using Microsoft.Diagnostics.Runtime.Interop;
 namespace Datatent2.AlgoBench.Find
 {
     [HtmlExporter, CsvExporter(), CsvMeasurementsExporter(), MarkdownExporter,
-     MeanColumn, MedianColumn, MediumRunJob(), BaselineColumn]
+     MeanColumn, MedianColumn, MediumRunJob, BaselineColumn]
 
     public class FindFirstEmptyPageBench
     {
@@ -44,6 +44,9 @@ namespace Datatent2.AlgoBench.Find
                 {
                     b[j] = 0xFF;
                 }
+
+                ref var v = ref b[^1];
+                v = (byte)(v | (1 << 0));
                 list.Add(b);
             }
 
@@ -104,7 +107,7 @@ namespace Datatent2.AlgoBench.Find
             long l = 0;
             for (int i = 0; i < Iterations; i++)
             {
-                l += FindFirstSearchLong(buffers[i]);
+                l += FindBinarySearch(buffers[i]);
             }
 
             return l;
@@ -116,7 +119,7 @@ namespace Datatent2.AlgoBench.Find
             long l = 0;
             for (int i = 0; i < Iterations; i++)
             {
-                l += FindFirstSearchLong3(buffers[i]);
+                l += BinarySearchWithLookup(buffers[i]);
             }
 
             return l;
@@ -267,7 +270,7 @@ namespace Datatent2.AlgoBench.Find
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public int FindFirstSearchLong(Span<byte> spanByte)
+        public int FindBinarySearch(Span<byte> spanByte)
         {
             Span<ulong> span = MemoryMarshal.Cast<byte, ulong>(spanByte);
 
@@ -323,7 +326,7 @@ namespace Datatent2.AlgoBench.Find
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public int FindFirstSearchLong3(Span<byte> spanByte)
+        public int BinarySearchWithLookup(Span<byte> spanByte)
         {
             Span<ulong> span = MemoryMarshal.Cast<byte, ulong>(spanByte);
 
@@ -339,7 +342,7 @@ namespace Datatent2.AlgoBench.Find
 
             while (min <= max)
             {
-                int mid = mid = (int)unchecked((uint)(min + max) >> 1);
+                int mid = (int)unchecked((uint)(min + max) >> 1);
                 ref var b = ref span[mid];
 
                 if (b != ulong.MaxValue)
@@ -654,5 +657,17 @@ namespace Datatent2.AlgoBench.Find
             return -1;
         }
 
+
+        public void Foo()
+        {
+            int[] arr = new int[100];
+            for (int i = 0; i < arr.Length / 4; i += 4)
+            {
+                arr[i] += 5;
+                arr[i + 1] += 5;
+                arr[i + 2] += 5;
+                arr[i + 3] += 5;
+            }
+        }
     }
 }

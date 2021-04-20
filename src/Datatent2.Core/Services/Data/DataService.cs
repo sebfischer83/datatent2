@@ -1,4 +1,8 @@
-﻿using System;
+﻿// # SPDX-License-Identifier: MIT
+// # Copyright 2021
+// # Sebastian Fischer sebfischer@gmx.net
+
+using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +15,7 @@ using Datatent2.Core.Services.Compression;
 using Datatent2.Core.Services.Page;
 using Dawn;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.Extensions.Logging;
 
 namespace Datatent2.Core.Services.Data
 {
@@ -18,32 +23,34 @@ namespace Datatent2.Core.Services.Data
     {
         private readonly ICompressionService _compressionService;
         private readonly PageService _pageService;
+        private readonly ILogger<DataService> _logger;
 
-        public DataService(ICompressionService compressionService, PageService pageService)
+        public DataService(ICompressionService compressionService, PageService pageService, ILogger<DataService> logger)
         {
             _compressionService = compressionService;
             _pageService = pageService;
+            _logger = logger;
         }
 
-        private (byte[] Data, byte[] Checksum) PrepareObject(object obj)
+        private (byte[] Data, uint Checksum) PrepareObject(object obj)
         {
             // step 1 serialize object to byte[]
             var serializedBytes = Utf8Json.JsonSerializer.Serialize(obj);
-            // crc from serialized data
-            var checksum = BitConverter.GetBytes(Force.Crc32.Crc32Algorithm.Compute(serializedBytes));
-
             //// step 2 compress data
             //var compressedBytes = _compressionService.Compress(serializedBytes);
+
+            var checksum = Force.Crc32.Crc32Algorithm.Compute(serializedBytes);
 
             return (serializedBytes, checksum);
         }
 
-        private T RetrieveObject<T>(byte[] array, byte[] orgChecksum)
+        private T RetrieveObject<T>(byte[] array, uint orgChecksum)
         {
             var checksum = Force.Crc32.Crc32Algorithm.Compute(array);
-            var orgCheckSumNumber = BitConverter.ToUInt32(orgChecksum);
+            var orgCheckSumNumber = orgChecksum;
             if (checksum != orgCheckSumNumber)
             {
+                _logger.LogCritical($"checksum doesn't match {checksum} vs {orgChecksum} type {typeof(T)}");
                 throw new Exception("Checksum don't match.");
             }
 
@@ -52,6 +59,10 @@ namespace Datatent2.Core.Services.Data
 
         public async Task<T> Get<T>(PageAddress pageAddress)
         {
+#if DEBUG
+            _logger.LogInformation($"Get object {typeof(T)} at {pageAddress}");
+#endif
+
             var page = await _pageService.GetPage<DataPage>(pageAddress.PageId);
             if (page == null)
             {

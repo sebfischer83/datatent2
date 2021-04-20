@@ -1,4 +1,8 @@
-﻿using System;
+﻿// # SPDX-License-Identifier: MIT
+// # Copyright 2021
+// # Sebastian Fischer sebfischer@gmx.net
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,7 +24,7 @@ namespace Datatent2.Core.Page
         {
         }
 
-        public DataBlock InsertBlock(ushort length, bool isFollowingBlock, byte[] checkSum)
+        public DataBlock InsertBlock(ushort length, bool isFollowingBlock, uint checkSum)
         {
             var span = base.Insert(length, out var index);
 

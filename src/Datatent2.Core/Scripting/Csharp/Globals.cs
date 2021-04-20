@@ -1,4 +1,8 @@
-﻿namespace Datatent2.Core.Scripting.Csharp
+﻿// # SPDX-License-Identifier: MIT
+// # Copyright 2021
+// # Sebastian Fischer sebfischer@gmx.net
+
+namespace Datatent2.Core.Scripting.Csharp
 {
     public class Globals
     {
