@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="Nuke.Common" Version="5.0.2" />
-    <PackageReference Include="ReportGenerator" Version="4.8.7" />
+    <PackageReference Include="ReportGenerator" Version="4.8.8" />
     <PackageDownload Include="GitVersion.Tool" Version="[5.5.1]" />
   </ItemGroup>
 
