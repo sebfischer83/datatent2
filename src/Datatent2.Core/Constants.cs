@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 
 [assembly: InternalsVisibleTo("Datatent2.Core.Tests")]
 [assembly: InternalsVisibleTo("Datatent2.CoreBench")]
+[assembly: InternalsVisibleTo("Datatent2.Console")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 namespace Datatent2.Core
 {
@@ -47,7 +48,7 @@ namespace Datatent2.Core
 
         public const int PAGE_SPECIFIC_HEADER_SIZE = 32;
 
-        public const int PAGE_ADDRESS_SIZE = 6;
+        public const int PAGE_ADDRESS_SIZE = 8;
 
         public const int BLOCK_HEADER_SIZE = 10;
 

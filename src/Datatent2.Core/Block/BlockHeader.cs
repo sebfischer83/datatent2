@@ -13,7 +13,7 @@ using Dawn;
 
 namespace Datatent2.Core.Block
 {
-    [StructLayout(LayoutKind.Explicit, Size = Constants.BLOCK_HEADER_SIZE, Pack = 1)]
+    [StructLayout(LayoutKind.Explicit, Size = Constants.BLOCK_HEADER_SIZE)]
     internal readonly struct BlockHeader
     {
         [FieldOffset(BH_PAGE_IS_FOLLOWING_BLOCK)]
@@ -21,19 +21,19 @@ namespace Datatent2.Core.Block
 
         [FieldOffset(BH_PAGE_ADDRESS)]
         public readonly PageAddress NextBlockAddress;
-
-        [FieldOffset(BH_CHECKSUM)]
-        public readonly uint Checksum;
+        
+        //[FieldOffset(BH_CHECKSUM)]
+        //public readonly uint Checksum;
 
         private const int BH_PAGE_IS_FOLLOWING_BLOCK = 0; // 0 byte
-        private const int BH_PAGE_ADDRESS = 1; // 1-4 PageAddress 4 byte
-        private const int BH_CHECKSUM = 5; // 5-7 byte 4 byte
+        private const int BH_PAGE_ADDRESS = 1; // 1-8 PageAddress 8 byte
+        //private const int BH_CHECKSUM = 9; // 9-12 byte 4 byte
 
-        public BlockHeader(PageAddress pageAddress, bool isFollowingBlock, uint checksum)
+        public BlockHeader(PageAddress pageAddress, bool isFollowingBlock)
         {
             NextBlockAddress = pageAddress;
             IsFollowingBlock = isFollowingBlock;
-            Checksum = checksum;
+            //Checksum = checksum;
         }
 
         public static BlockHeader FromBuffer(Span<byte> span)
@@ -43,7 +43,7 @@ namespace Datatent2.Core.Block
 
         public static BlockHeader FromBuffer(Span<byte> span, int offset)
         {
-            return FromBuffer(span.Slice(offset));
+            return FromBuffer(span[offset..]);
         }
 
         public void ToBuffer(Span<byte> span)
@@ -54,8 +54,7 @@ namespace Datatent2.Core.Block
 
         public void ToBuffer(Span<byte> span, int offset)
         {
-            Guard.Argument(offset).GreaterThan(0);
-            ToBuffer(span.Slice(offset));
+            ToBuffer(span[offset..]);
         }
     }
 }

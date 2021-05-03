@@ -23,45 +23,55 @@ namespace Datatent2.Core.Services.Page
     internal class PageService
     {
         private readonly DiskService _diskService;
+        private readonly ILogger _logger;
         private readonly CacheService _cacheService;
         private GlobalAllocationMapPage? _globalAllocationMap;
         private AllocationInformationPage? _allocationInformationPage;
-        private SpinLock _spinLock;
+        private readonly SemaphoreSlim _semaphoreSlim;
 
-        public PageService(DiskService diskService)
+        public static async Task<PageService> Create(DiskService diskService, ILogger logger)
         {
-            _spinLock = new SpinLock();
+            var service = new PageService(diskService, logger);
+            await service.Init();
+            return service;
+        }
+
+        public PageService(DiskService diskService, ILogger logger)
+        {
+            _semaphoreSlim = new SemaphoreSlim(1, 1);
             _diskService = diskService;
+            _logger = logger;
             _cacheService = new CacheService();
         }
 
-        public async Task Init()
+        private async Task Init()
         {
             // create the first GAM page => only when new database
             var firstGamBuffer = await _diskService.GetBuffer(new ReadRequest(1));
             var header = PageHeader.FromBuffer(firstGamBuffer.BufferSegment.Span);
+            _logger.LogInformation($"Init {nameof(PageService)} ");
+
             if (header.PageId == 0)
             {
                 // new database
                 _globalAllocationMap = new GlobalAllocationMapPage(firstGamBuffer.BufferSegment, 1);
+                _cacheService.Add(_globalAllocationMap);
 
                 var nextId = _globalAllocationMap.AcquirePageId();
                 var newInfo = await _diskService.GetBuffer(new ReadRequest(nextId));
                 _allocationInformationPage = new AllocationInformationPage(newInfo.BufferSegment, nextId);
+                _cacheService.Add(_allocationInformationPage);
+
             }
             else
             {
                 // existing database, search last GAM page in database
-                if (header.NextPageId == 0)
-                    _globalAllocationMap = new GlobalAllocationMapPage(firstGamBuffer.BufferSegment, 1);
-                else
+                while (header.NextPageId != uint.MaxValue)
                 {
-                    while (header.NextPageId > 0)
-                    {
-                        var res = await _diskService.GetBuffer(new ReadRequest(header.NextPageId));
-                        header = PageHeader.FromBuffer(res.BufferSegment.Span);
-                    }
+                    var res = await _diskService.GetBuffer(new ReadRequest(header.NextPageId));
+                    header = PageHeader.FromBuffer(res.BufferSegment.Span);
                 }
+
             }
         }
 
@@ -92,8 +102,11 @@ namespace Datatent2.Core.Services.Page
         {
             foreach (var page in _cacheService)
             {
-                await WritePage(page);
+                if (page.IsDirty)
+                    await WritePage(page);
             }
+            await _diskService.WriteBuffer(new WriteRequest(_globalAllocationMap!.PageBuffer, _globalAllocationMap.Id)).ConfigureAwait(false);
+            await _diskService.WriteBuffer(new WriteRequest(_allocationInformationPage!.PageBuffer, _allocationInformationPage.Id)).ConfigureAwait(false);
             _cacheService.Clear();
         }
 
@@ -107,9 +120,44 @@ namespace Datatent2.Core.Services.Page
             if (!page.IsDirty)
                 return;
 
+            page.SaveHeader();
             await _diskService.WriteBuffer(new WriteRequest(page.PageBuffer, page.Id));
-            //HeaderPage.Instance.SetHighestPageId(page.Id);
             page.IsDirty = false;
+        }
+
+        public async Task UpdatePageStatisticsAsync(BasePage page)
+        {
+            var gam = (uint)Math.DivRem(page.Id, GlobalAllocationMapPage.PAGES_PER_GAM, out var posInGam) + 1;
+            var aims = AllocationInformationPage.GetAllAllocationInformationPageIdsForGam(gam);
+
+            var val = 0u;
+            int count = 1;
+            do
+            {
+                val = aims[count];
+                if (val > page.Id)
+                {
+                    val = (uint)(count - 1);
+                    break;
+                }
+                count++;
+            } while (count < aims.Length);
+
+            if (gam == _globalAllocationMap!.Id && aims[val] == _allocationInformationPage!.Id)
+            {
+                _allocationInformationPage!.UpdateAllocationInformation(page);
+            }
+            else
+            {
+                var alloc = _cacheService.Get<AllocationInformationPage>(aims[val]);
+                if (alloc == null)
+                {
+                    var buffer = await _diskService.GetBuffer(new ReadRequest(aims[count])).ConfigureAwait(false);
+                    alloc = new AllocationInformationPage(buffer.BufferSegment);
+                    _cacheService.Add(alloc);
+                }
+                alloc.UpdateAllocationInformation(page);
+            }
         }
 
         /// <summary>
@@ -118,73 +166,98 @@ namespace Datatent2.Core.Services.Page
         /// <returns></returns>
         public async ValueTask<DataPage> GetDataPageWithFreeSpace()
         {
-            var freePage = _cacheService.GetDataPage();
-            if (freePage != null)
-                return freePage;
-
-            //for (uint i = 1; i <= HeaderPage.Instance.HighestPageId; i++)
-            //{
-            //    if (_cacheService.HasPage(i))
-            //        continue;
-
-            //    var response = await _diskService.GetBuffer(new ReadRequest(i));
-            //    var header = PageHeader.FromBuffer(response.BufferSegment.Span);
-
-            //    // new page at this id, not saved back to disk
-            //    if (header.PageId == 0)
-            //        continue;
-            //    if (header.Type != PageType.Data)
-            //    {
-            //        continue;
-            //    }
-
-            //    var pageFromDisk = new DataPage(response.BufferSegment);
-            //    if (!pageFromDisk.IsFull)
-            //    {
-            //        _cacheService.Add(pageFromDisk);
-            //        return pageFromDisk;
-            //    }
-            //    else
-            //    {
-            //        pageFromDisk.Dispose();
-            //    }
-            //}
-
-            var page = CreateNewPage<DataPage>();
-            _cacheService.Add(page);
-
-            return page;
-        }
-
-        private T CreateNewPage<T>() where T: BasePage
-        {
-            var taken = false;
-
-            _spinLock.Enter(ref taken);
+            await _semaphoreSlim.WaitAsync();
             try
             {
-                if (_globalAllocationMap!.IsFull)
+                var freePage = _cacheService.GetDataPage();
+                if (freePage != null && freePage.FillFactor < PageFillFactor.NinetyFiveToNinetyNine)
+                    return freePage;
+
+                var freePageId = _allocationInformationPage!.FindPageWithFreeSpace(PageType.Data, PageFillFactor.SeventyToNinetyFive);
+
+                if (freePageId == -1)
                 {
-                    AllocateNewGAM();
+                    var page = await CreateNewPageAsync<DataPage>();
+                    _cacheService.Add(page);
+                    return page;
                 }
 
-                var nextId = _globalAllocationMap.AcquirePageId();
+                var cachedPage = _cacheService.Get<DataPage>((uint)freePageId);
+                if (cachedPage != null)
+                    return cachedPage;
 
-                if (typeof(T) == typeof(DataPage))
-                {
-
-                }
-                return default;
+                var ioResponse = await _diskService.GetBuffer(new ReadRequest((uint)freePageId));
+                var diskPage = new DataPage(ioResponse.BufferSegment, ioResponse.PageId);
+                _cacheService.Add(diskPage);
+                return diskPage;
             }
             finally
             {
-                _spinLock.Exit();
+                _semaphoreSlim.Release();
             }
         }
 
-        private void AllocateNewGAM()
+        private async Task<T> CreateNewPageAsync<T>() where T : BasePage
         {
+            if (_globalAllocationMap!.IsFull)
+            {
+                await AllocateNewGam().ConfigureAwait(false);
+            }
 
+            var nextId = _globalAllocationMap.AcquirePageId();
+            if (_allocationInformationPage!.IsFull)
+            {
+#if DEBUG
+                _logger.LogInformation($"AIM {_allocationInformationPage.Id} is full create new one {nextId}");
+#endif
+                _allocationInformationPage.SetNextPage(nextId);
+                var prevId = _allocationInformationPage.Id;
+                await _diskService.WriteBuffer(new WriteRequest(_allocationInformationPage.PageBuffer,
+                    _allocationInformationPage.Id));
+                _allocationInformationPage = new AllocationInformationPage(BufferPoolFactory.Get().Rent(), nextId);
+                _allocationInformationPage.SetPreviousPage(prevId);
+                _cacheService.Add(_allocationInformationPage);
+
+                nextId = _globalAllocationMap.AcquirePageId();
+            }
+
+            if (typeof(T) == typeof(DataPage))
+            {
+                var page = (T)(object)new DataPage(BufferPoolFactory.Get().Rent(), nextId);
+                _allocationInformationPage.AddAllocationInformation(page);
+
+                return page;
+            }
+
+            throw new NotSupportedException(nameof(T));
+        }
+
+        private async Task AllocateNewGam()
+        {
+            var nextGamId = _globalAllocationMap!.Id + GlobalAllocationMapPage.PAGES_PER_GAM + 1;
+#if DEBUG
+            _logger.LogInformation($"GAM {_globalAllocationMap!.Id} is full, create new one {nextGamId}");
+#endif
+            _globalAllocationMap.SetNextPage(nextGamId);
+            // save the current pages to disk
+            await _diskService.WriteBuffer(new WriteRequest(_globalAllocationMap!.PageBuffer, _globalAllocationMap.Id)).ConfigureAwait(false);
+            var prevId = _globalAllocationMap.Id;
+            var gamBuffer = BufferPoolFactory.Get().Rent();
+            _globalAllocationMap = new GlobalAllocationMapPage(gamBuffer, nextGamId);
+            _globalAllocationMap.SetPreviousPage(prevId);
+
+            _cacheService.Add(_globalAllocationMap);
+
+            var nextId = _globalAllocationMap.AcquirePageId();
+
+            _allocationInformationPage!.SetNextPage(nextId);
+            prevId = _allocationInformationPage.Id;
+            await _diskService.WriteBuffer(new WriteRequest(_allocationInformationPage!.PageBuffer, _allocationInformationPage.Id)).ConfigureAwait(false);
+
+            var newInfo = await _diskService.GetBuffer(new ReadRequest(nextId));
+            _allocationInformationPage = new AllocationInformationPage(newInfo.BufferSegment, nextId);
+            _allocationInformationPage.SetPreviousPage(prevId);
+            _cacheService.Add(_allocationInformationPage);
         }
     }
 }

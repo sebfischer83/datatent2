@@ -17,8 +17,8 @@ namespace Datatent2.Core.Services.Cache
 {
     internal class CacheService : IEnumerable<BasePage>
     {
-        private Dictionary<uint, BasePage> _allPages = new();
-        private Dictionary<uint, BasePage> _freeDataPages = new();
+        private readonly Dictionary<uint, BasePage> _allPages = new();
+        private readonly Dictionary<uint, BasePage> _freeDataPages = new();
 
         public CacheService()
         {
@@ -46,25 +46,31 @@ namespace Datatent2.Core.Services.Cache
                 return null;
             return (T)_allPages[id];
         }
-
+        
         public DataPage? GetDataPage(bool withFreeSpace = true)
         {
             if (_freeDataPages.Count == 0)
                 return null;
 
+            DataPage? dataPage = null;
             List<uint> list = new();
             for (int i = 0; i < _freeDataPages.Keys.Count; i++)
             {
                 var pageKey = _freeDataPages.Keys.ElementAt(i);
                 var page = _freeDataPages[pageKey];
-                if (!page.IsFull)
+                if (!withFreeSpace)
                 {
-                    return (DataPage)page;
+                    dataPage = (DataPage) page;
+                    break;
                 }
-                else
+
+                if (page.FillFactor < PageFillFactor.NinetyFiveToNinetyNine)
                 {
-                    list.Add(pageKey);
+                    dataPage = (DataPage)page;
+                    break;
                 }
+
+                list.Add(pageKey);
             }
 
             for (int i = 0; i < list.Count; i++)
@@ -72,7 +78,7 @@ namespace Datatent2.Core.Services.Cache
                 _freeDataPages.Remove(list[i]);
             }
 
-            return null;
+            return dataPage;
         }
 
         public void Clear()

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConsoleTableExt;
 using Datatent2.Core.Memory;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -25,7 +26,7 @@ namespace Datatent2.Core.Page.AllocationInformation
         private static readonly uint[] PositionsInGam;
         private static readonly uint LastPosInGam;
         private readonly AllocationInformationPageHeader _allocationInformationPageHeader;
-        private static readonly IMemoryCache _memoryCache = new MemoryCache(new MemoryCacheOptions() { SizeLimit = 500 });
+        private static readonly IMemoryCache _memoryCache = new MemoryCache(new MemoryCacheOptions());
 
         static AllocationInformationPage()
         {
@@ -90,12 +91,12 @@ namespace Datatent2.Core.Page.AllocationInformation
             IsDirty = true;
         }
 
-        public void UpdateAllocationInformation(uint pageId, int percentFilled)
+        public void UpdateAllocationInformation(BasePage page)
         {
-            var id = pageId - Id;
+            var id = page.Id - Id;
             var span = MemoryMarshal.Cast<byte, AllocationInformationEntry>(Buffer.Span.Slice(Constants.PAGE_HEADER_SIZE));
             var old = span[(int)id];
-            span[(int)id] = new AllocationInformationEntry(pageId, old.PageType, PageFillFactor.Zero);
+            span[(int)id] = new AllocationInformationEntry(page.Id, old.PageType, page.FillFactor);
 
             IsDirty = true;
         }
@@ -126,7 +127,8 @@ namespace Datatent2.Core.Page.AllocationInformation
             return -1;
         }
 
-        public static uint[] GetAllAllocationInformationPageIdsForGAM(uint gamPageId)
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public static uint[] GetAllAllocationInformationPageIdsForGam(uint gamPageId)
         {
             if (_memoryCache.TryGetValue(gamPageId, out uint[] cachedData))
             {
@@ -141,7 +143,8 @@ namespace Datatent2.Core.Page.AllocationInformation
                 array[i] = pos;
             }
 
-            _memoryCache.Set(gamPageId, cachedData);
+            var entry = _memoryCache.CreateEntry(gamPageId);
+            entry.Value = array;
             return array;
         }
 
@@ -165,7 +168,16 @@ namespace Datatent2.Core.Page.AllocationInformation
 
         public override string ToString()
         {
-            return Header.ToString();
+            var tableData = new List<List<object>>()
+            {
+                new List<object>{nameof(ItemCount), Header.UsedBytes / Constants.ALLOCATION_INFORMATION_ENTRY_SIZE},
+                new List<object>{nameof(UsedBytes), UsedBytes },
+            };
+
+            return ConsoleTableBuilder
+                .From(tableData)
+                .WithTitle($"{Enum.GetName(typeof(PageType), Type)}:{Id}", ConsoleColor.Yellow, ConsoleColor.DarkGray)
+                .WithColumn("Property", "Value").Export().ToString();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

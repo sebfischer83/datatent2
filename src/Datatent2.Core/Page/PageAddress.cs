@@ -64,5 +64,20 @@ namespace Datatent2.Core.Page
         {
             return $"<{PageId}:{SlotId}>";
         }
+
+        public bool Equals(PageAddress other)
+        {
+            return PageId == other.PageId && SlotId == other.SlotId;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is PageAddress other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(PageId, SlotId);
+        }
     }
 }

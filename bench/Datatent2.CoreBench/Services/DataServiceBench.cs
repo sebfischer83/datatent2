@@ -13,6 +13,7 @@ using Datatent2.Core.Services.Compression;
 using Datatent2.Core.Services.Data;
 using Datatent2.Core.Services.Disk;
 using Datatent2.Core.Services.Page;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Datatent2.CoreBench.Services
 {
@@ -33,8 +34,8 @@ namespace Datatent2.CoreBench.Services
             PageHeader header = new PageHeader(1, PageType.Data);
             header.ToBuffer(bufferSegment.Span, 0);
             File.Delete(@"C:\Neuer Ordner\test.db");
-            PageService pageService = new PageService(FileDiskService.Create(new DatatentSettings() { InMemory = false, Path = @"C:\Neuer Ordner\test.db" }));
-            _dataService = new DataService(new NopCompressionService(), pageService);
+            PageService pageService = new PageService(FileDiskService.Create(new DatatentSettings() { InMemory = false, Path = @"C:\Neuer Ordner\test.db" }), NullLogger.Instance);
+            _dataService = new DataService(new NopCompressionService(), pageService, NullLogger<DataService>.Instance);
 
             _objects = new List<TestObject>(50);
             foreach (var i in Enumerable.Range(0, 50))

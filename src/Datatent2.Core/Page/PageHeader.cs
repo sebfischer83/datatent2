@@ -87,8 +87,8 @@ namespace Datatent2.Core.Page
         {
             PageId = pageId;
             Type = type;
-            PrevPageId = ushort.MaxValue;
-            NextPageId = ushort.MaxValue;
+            PrevPageId = uint.MaxValue;
+            NextPageId = uint.MaxValue;
             UsedBytes = 0;
             ItemCount = 0;
             NextFreePosition = Constants.PAGE_HEADER_SIZE;

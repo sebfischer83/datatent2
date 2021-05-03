@@ -3,18 +3,14 @@
 // # Sebastian Fischer sebfischer@gmx.net
 
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata;
-using System.Text;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Datatent2.Core.Block;
 using Datatent2.Core.Page;
 using Datatent2.Core.Services.Compression;
 using Datatent2.Core.Services.Page;
-using Dawn;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Logging;
 
 namespace Datatent2.Core.Services.Data
@@ -23,9 +19,9 @@ namespace Datatent2.Core.Services.Data
     {
         private readonly ICompressionService _compressionService;
         private readonly PageService _pageService;
-        private readonly ILogger<DataService> _logger;
+        private readonly ILogger _logger;
 
-        public DataService(ICompressionService compressionService, PageService pageService, ILogger<DataService> logger)
+        public DataService(ICompressionService compressionService, PageService pageService, ILogger logger)
         {
             _compressionService = compressionService;
             _pageService = pageService;
@@ -46,9 +42,9 @@ namespace Datatent2.Core.Services.Data
 
         private T RetrieveObject<T>(byte[] array, uint orgChecksum)
         {
-            var checksum = Force.Crc32.Crc32Algorithm.Compute(array);
-            var orgCheckSumNumber = orgChecksum;
-            if (checksum != orgCheckSumNumber)
+            Span<byte> span = array;
+            var checksum = Force.Crc32.Crc32Algorithm.Compute(array, 0, array.Length);
+            if (checksum != orgChecksum)
             {
                 _logger.LogCritical($"checksum doesn't match {checksum} vs {orgChecksum} type {typeof(T)}");
                 throw new Exception("Checksum don't match.");
@@ -62,30 +58,31 @@ namespace Datatent2.Core.Services.Data
 #if DEBUG
             _logger.LogInformation($"Get object {typeof(T)} at {pageAddress}");
 #endif
-
-            var page = await _pageService.GetPage<DataPage>(pageAddress.PageId);
-            if (page == null)
-            {
-                throw new Exception();
-            }
-
-            DataBlock block = new DataBlock(page, pageAddress.SlotId);
             List<byte> bytes = new List<byte>();
-            bytes.AddRange(block.GetData());
-            var checksum = block.Header.Checksum;
+            DataPage? page;
+            DataBlock block;
+            PageAddress address = pageAddress;
+            uint checksum = 0;
 
-            while (!block.Header.NextBlockAddress.IsEmpty())
+            do
             {
-                var nextPage = await _pageService.GetPage<DataPage>(block.Header.NextBlockAddress.PageId);
-                if (nextPage == null)
+                page = await _pageService.GetPage<DataPage>(address.PageId);
+                if (page == null)
                 {
                     throw new Exception();
                 }
-                block = new DataBlock(nextPage, block.Header.NextBlockAddress.SlotId);
+                block = new DataBlock(page, address.SlotId);
                 bytes.AddRange(block.GetData());
-            }
+                address = block.Header.NextBlockAddress;
+            } while (!block.Header.NextBlockAddress.IsEmpty());
+            
+            var array = bytes.Take(bytes.Count - sizeof(uint)).ToArray();
+            var check = bytes.Skip(bytes.Count - sizeof(uint)).ToArray();
+            checksum = BitConverter.ToUInt32(check);
+#if DEBUG
+            _logger.LogInformation($"Object at {pageAddress} has length of {array.Length} bytes");
+#endif
 
-            var array = bytes.ToArray();
             return RetrieveObject<T>(array, checksum);
         }
 
@@ -113,14 +110,19 @@ namespace Datatent2.Core.Services.Data
         public async Task<PageAddress> Insert(object obj, bool delayWrite = false)
         {
             var bytes = PrepareObject(obj);
-
+#if DEBUG
+            _logger.LogInformation($"Insert object {obj.GetType().Name} with size {bytes.Data.Length} checksum {bytes.Checksum}");
+#endif
             Memory<byte> tempSpan = bytes.Data;
-            int remainingBytes = bytes.Data.Length;
+
+            // add checksum size to data size
+            int remainingBytes = bytes.Data.Length + sizeof(uint);
             int blockNr = 0;
             DataBlock? lastBlock = null;
             PageAddress pageAddress = PageAddress.Empty;
             HashSet<BasePage> pages = new();
 
+            // get free page and write data until done
             while (remainingBytes > 0)
             {
                 var dataPage = await _pageService.GetDataPageWithFreeSpace();
@@ -133,14 +135,27 @@ namespace Datatent2.Core.Services.Data
                 }
 
                 var bytesToWrite = Math.Min(bytesThatCanBeWritten, remainingBytes);
-                var block = dataPage.InsertBlock((ushort)((ushort)bytesToWrite + Constants.BLOCK_HEADER_SIZE), blockNr > 0, blockNr == 0 ? bytes.Checksum : DataBlock.EMPTY_CHECKSUM);
-                block.FillData(tempSpan.Span.Slice(bytes.Data.Length - remainingBytes, bytesToWrite));
+                var block = dataPage.InsertBlock((ushort)((ushort)bytesToWrite + Constants.BLOCK_HEADER_SIZE), blockNr > 0);
+
+#if DEBUG
+                _logger.LogInformation($"Write {bytesToWrite} bytes from {remainingBytes} bytes to {block}");
+#endif
+
+                if (bytesToWrite - remainingBytes == 0)
+                {
+                    // adjust indexes to checksum
+                    block.FillData(tempSpan.Span.Slice(bytes.Data.Length - remainingBytes + sizeof(uint),
+                        bytesToWrite - sizeof(uint)), bytes.Checksum);
+                }
+                else
+                    block.FillData(tempSpan.Span.Slice(bytes.Data.Length + sizeof(uint) - remainingBytes, bytesToWrite));
 
                 lastBlock?.SetFollowingBlock(block.Position);
 
                 if (pageAddress.IsEmpty())
                     pageAddress = block.Position;
 
+                await _pageService.UpdatePageStatisticsAsync(dataPage);
                 lastBlock = block;
                 remainingBytes -= bytesToWrite;
                 blockNr++;

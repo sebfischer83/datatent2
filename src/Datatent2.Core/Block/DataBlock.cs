@@ -13,8 +13,6 @@ namespace Datatent2.Core.Block
 {
     internal class DataBlock : Block<DataPage, BlockHeader>
     {
-        public static readonly uint EMPTY_CHECKSUM = 0;
-
         public DataBlock(DataPage page, byte entryId) : base(page, entryId)
         {
             var memory = page.GetDataByIndex(entryId);
@@ -24,21 +22,20 @@ namespace Datatent2.Core.Block
         public DataBlock(DataPage page,
             byte entryId,
             PageAddress nextBlock,
-            bool isFollowingBlock,
-            uint checksum) : base(page,
+            bool isFollowingBlock) : base(page,
             entryId,
             nextBlock,
             isFollowingBlock)
         {
             var memory = page.GetDataByIndex(entryId);
-            Header = new BlockHeader(nextBlock, isFollowingBlock, checksum);
+            Header = new BlockHeader(nextBlock, isFollowingBlock);
             Header.ToBuffer(memory);
         }
 
 
         public override void SetFollowingBlock(PageAddress pageAddress)
         {
-            Header = new BlockHeader(pageAddress, Header.IsFollowingBlock, DataBlock.EMPTY_CHECKSUM);
+            Header = new BlockHeader(pageAddress, Header.IsFollowingBlock);
             Header.ToBuffer(Page.GetDataByIndex(_entryId));
         }
     }

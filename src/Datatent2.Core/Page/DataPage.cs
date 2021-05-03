@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO.Enumeration;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,11 +25,11 @@ namespace Datatent2.Core.Page
         {
         }
 
-        public DataBlock InsertBlock(ushort length, bool isFollowingBlock, uint checkSum)
+        public DataBlock InsertBlock(ushort length, bool isFollowingBlock)
         {
             var span = base.Insert(length, out var index);
 
-            return new DataBlock(this, index, PageAddress.Empty, isFollowingBlock, checkSum);
+            return new DataBlock(this, index, PageAddress.Empty, isFollowingBlock);
         }
     }
 }
