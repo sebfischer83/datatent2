@@ -71,7 +71,27 @@ namespace Datatent2.Core.Services.Page
                     var res = await _diskService.GetBuffer(new ReadRequest(header.NextPageId));
                     header = PageHeader.FromBuffer(res.BufferSegment.Span);
                 }
+                var gamBuffer = await _diskService.GetBuffer(new ReadRequest(header.PageId));
+                _globalAllocationMap = new GlobalAllocationMapPage(gamBuffer.BufferSegment);
+                _cacheService.Add(_globalAllocationMap);
 
+                
+                // get all possible indexes for the aim pages
+                var possibleIndexes =
+                    AllocationInformationPage.GetAllAllocationInformationPageIdsForGam(_globalAllocationMap.Id);
+
+                PageHeader aimPageHeader;
+                ReadResponse aimReadResponse;
+                uint aimPageId = possibleIndexes[0];
+                do
+                {
+                    aimReadResponse = await _diskService.GetBuffer(new ReadRequest(aimPageId));
+                    aimPageHeader = PageHeader.FromBuffer(aimReadResponse.BufferSegment.Span, 0);
+                    aimPageId = aimPageHeader.NextPageId;
+                } while (aimPageHeader.NextPageId != uint.MaxValue);
+
+                _allocationInformationPage = new AllocationInformationPage(aimReadResponse.BufferSegment);
+                _cacheService.Add(_allocationInformationPage);
             }
         }
 
