@@ -8,11 +8,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Datatent2.Core.Services.Compression
+namespace Datatent2.Core.Annotations
 {
-    public interface ICompressionService
+    [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
+    public sealed class KeyAnnotation : Attribute
     {
-        Span<byte> Compress(Span<byte> bytes, Span<byte> target);
-        byte[] Compress(Span<byte> bytes);
+        public KeyAnnotation()
+        {
+        }
     }
 }

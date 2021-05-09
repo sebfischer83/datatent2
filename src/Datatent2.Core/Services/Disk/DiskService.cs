@@ -10,8 +10,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Datatent2.Contracts;
 using Datatent2.Core.Memory;
 using Datatent2.Core.Page;
+using Dawn;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Datatent2.Core.Services.Disk
@@ -23,6 +25,20 @@ namespace Datatent2.Core.Services.Disk
         protected readonly Channel<ValueTuple<WriteRequest, TaskCompletionSource<WriteRespone>>> WriteChannel;
         protected readonly Task ReadTask;
         protected readonly Task WriteTask;
+
+        public static DiskService Create(DatatentSettings settings)
+        {
+            if (settings.InMemory)
+            {
+                return new InMemoryDiskService();
+            }
+
+            FileStream fileStream = new FileStream(settings.DatabasePath!, FileMode.OpenOrCreate, FileAccess.ReadWrite,
+                FileShare.Read, Constants.PAGE_SIZE,
+                FileOptions.RandomAccess);
+
+            return (FileDiskService)(new(fileStream, settings));
+        }
 
         protected DiskService(Stream stream)
         {

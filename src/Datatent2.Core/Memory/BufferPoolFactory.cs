@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Datatent2.Contracts;
 
 namespace Datatent2.Core.Memory
 {

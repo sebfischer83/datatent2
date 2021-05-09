@@ -4,27 +4,25 @@
 
 using System;
 using System.Buffers;
-using System.Collections.Generic;
-using System.IO.Compression;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using Dawn;
-using K4os.Compression.LZ4;
-using K4os.Compression.LZ4.Encoders;
+using Datatent2.Contracts;
+using Prise.Plugin;
 
-namespace Datatent2.Core.Services.Compression
+namespace Datatent2.Plugins.Compression
 {
-    public class Lz4CompressionService : ICompressionService
+    [Plugin(PluginType = typeof(ICompressionService))]
+    public class NopCompressionService : ICompressionService
     {
+        public Guid Id => new("B7647CEF-6338-477B-B514-9A48B1E2205A");
+
+        public string Name => "NopCompression";
+
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public Span<byte> Compress(Span<byte> bytes, Span<byte> target)
         {
-            var result = LZ4Pickler.Pickle(bytes);
-            Guard.Argument(result.Length).LessThan(target.Length);
-            Unsafe.CopyBlock(ref target[0], ref result[0], (uint) result.Length);
-            return target.Slice(0, result.Length);
+            Unsafe.CopyBlock(ref target[0], ref bytes[0], (uint)bytes.Length);
+            target = target.Slice(0, bytes.Length);
+            return target.Slice(0, bytes.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

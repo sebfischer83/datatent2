@@ -8,25 +8,26 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConsoleTableExt;
+using Datatent2.Contracts;
 using Datatent2.Core.Memory;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Datatent2.Core.Page.AllocationInformation
 {
-    internal class AllocationInformationPage : BasePage
+    internal sealed class AllocationInformationPage : BasePage
     {
         // all positions in AIM are relative to the outer GAM page, but the AIM is the first page in itself
 
         public const int ENTRIES_PER_PAGE = (Constants.PAGE_SIZE -
                                               Constants.PAGE_HEADER_SIZE) / Constants.ALLOCATION_INFORMATION_ENTRY_SIZE;
 
-        public const int AIM_PER_GAM = GlobalAllocationMap.GlobalAllocationMapPage.PAGES_PER_GAM / ENTRIES_PER_PAGE;
+        public static readonly int AIM_PER_GAM = GlobalAllocationMap.GlobalAllocationMapPage.PAGES_PER_GAM / ENTRIES_PER_PAGE;
 
         private static readonly HashSet<uint> PositionsInGamLookup;
         private static readonly uint[] PositionsInGam;
         private static readonly uint LastPosInGam;
         private readonly AllocationInformationPageHeader _allocationInformationPageHeader;
-        private static readonly IMemoryCache _memoryCache = new MemoryCache(new MemoryCacheOptions());
+        private static readonly IMemoryCache MemoryCache = new MemoryCache(new MemoryCacheOptions());
 
         static AllocationInformationPage()
         {
@@ -130,7 +131,7 @@ namespace Datatent2.Core.Page.AllocationInformation
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public static uint[] GetAllAllocationInformationPageIdsForGam(uint gamPageId)
         {
-            if (_memoryCache.TryGetValue(gamPageId, out uint[] cachedData))
+            if (MemoryCache.TryGetValue(gamPageId, out uint[] cachedData))
             {
                 return cachedData;
             }
@@ -143,7 +144,7 @@ namespace Datatent2.Core.Page.AllocationInformation
                 array[i] = pos;
             }
 
-            var entry = _memoryCache.CreateEntry(gamPageId);
+            var entry = MemoryCache.CreateEntry(gamPageId);
             entry.Value = array;
             return array;
         }

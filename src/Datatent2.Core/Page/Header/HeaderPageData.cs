@@ -19,7 +19,7 @@ namespace Datatent2.Core.Page.Header
      
         private const int HEADER_CREATION_TIME = 1; // 1-8 long
 
-        public HeaderPageData(in HeaderPageData old, uint highestPageId)
+        public HeaderPageData(in HeaderPageData old)
         {
             Version = old.Version;
             CreationTime = old.CreationTime;

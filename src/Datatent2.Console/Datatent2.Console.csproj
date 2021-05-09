@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Datatent2.Core\Datatent2.Core.csproj" />
+    <ProjectReference Include="..\plugins\Datatent2.Plugins.Compression\Datatent2.Plugins.Compression.csproj" />
   </ItemGroup>
 
 </Project>

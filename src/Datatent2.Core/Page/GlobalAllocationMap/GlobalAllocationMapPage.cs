@@ -16,6 +16,7 @@ using System.Runtime.Intrinsics.X86;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Datatent2.Contracts;
 using Datatent2.Core.Memory;
 using Dawn;
 

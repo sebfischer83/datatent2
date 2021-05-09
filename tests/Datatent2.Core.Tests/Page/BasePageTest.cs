@@ -6,8 +6,10 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using Datatent2.Contracts;
 using Datatent2.Core.Memory;
 using Datatent2.Core.Page;
+using Datatent2.Core.Page.Data;
 using Shouldly;
 using Xunit;
 

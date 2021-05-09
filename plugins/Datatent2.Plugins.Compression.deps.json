@@ -1,0 +1,151 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v5.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v5.0": {
+      "Datatent2.Plugins.Compression/1.0.0": {
+        "dependencies": {
+          "Advanced.Algorithms": "0.0.470-beta",
+          "Datatent2.Contracts": "1.0.0",
+          "K4os.Compression.LZ4": "1.2.10-beta",
+          "Prise.Plugin": "2.1.2"
+        },
+        "runtime": {
+          "Datatent2.Plugins.Compression.dll": {}
+        }
+      },
+      "Advanced.Algorithms/0.0.470-beta": {
+        "dependencies": {
+          "System.ValueTuple": "4.5.0"
+        },
+        "runtime": {
+          "lib/netstandard1.0/Advanced.Algorithms.dll": {
+            "assemblyVersion": "0.0.470.0",
+            "fileVersion": "0.0.470.0"
+          }
+        }
+      },
+      "K4os.Compression.LZ4/1.2.10-beta": {
+        "dependencies": {
+          "System.Memory": "4.5.4",
+          "System.Runtime.CompilerServices.Unsafe": "5.0.0"
+        },
+        "runtime": {
+          "lib/netstandard2.0/K4os.Compression.LZ4.dll": {
+            "assemblyVersion": "1.2.10.0",
+            "fileVersion": "1.2.10.0"
+          }
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection/2.1.0": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "2.1.0"
+        },
+        "runtime": {
+          "lib/netcoreapp2.0/Microsoft.Extensions.DependencyInjection.dll": {
+            "assemblyVersion": "2.1.0.0",
+            "fileVersion": "2.1.0.18136"
+          }
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection.Abstractions/2.1.0": {
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
+            "assemblyVersion": "2.1.0.0",
+            "fileVersion": "2.1.0.18136"
+          }
+        }
+      },
+      "Prise.Plugin/2.1.2": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection": "2.1.0"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Prise.Plugin.dll": {
+            "assemblyVersion": "2.1.2.0",
+            "fileVersion": "2.1.2.0"
+          }
+        }
+      },
+      "System.Memory/4.5.4": {},
+      "System.Runtime.CompilerServices.Unsafe/5.0.0": {},
+      "System.ValueTuple/4.5.0": {},
+      "Datatent2.Contracts/1.0.0": {
+        "runtime": {
+          "Datatent2.Contracts.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Datatent2.Plugins.Compression/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Advanced.Algorithms/0.0.470-beta": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-0RJrOGLIkuna6BYVbMqIStgBaO5VB60jfVZT9lNVuBL3IslAwb8rvSN+abyT5UxYamYqdaoHjnVIXc0o1bpz9w==",
+      "path": "advanced.algorithms/0.0.470-beta",
+      "hashPath": "advanced.algorithms.0.0.470-beta.nupkg.sha512"
+    },
+    "K4os.Compression.LZ4/1.2.10-beta": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-gwlABow79RlNGKpz7qC5dlJ/vJWRdkK2HKoCEHge/29SWu3sGPyR5/NdtRQYglXGMUlx4kt+ada53sHKqDsDLA==",
+      "path": "k4os.compression.lz4/1.2.10-beta",
+      "hashPath": "k4os.compression.lz4.1.2.10-beta.nupkg.sha512"
+    },
+    "Microsoft.Extensions.DependencyInjection/2.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-gqQviLfuA31PheEGi+XJoZc1bc9H9RsPa9Gq9XuDct7XGWSR9eVXjK5Sg7CSUPhTFHSuxUFY12wcTYLZ4zM1hg==",
+      "path": "microsoft.extensions.dependencyinjection/2.1.0",
+      "hashPath": "microsoft.extensions.dependencyinjection.2.1.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.DependencyInjection.Abstractions/2.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-8/CtASu80UIoyG+r8FstrmZW5GLtXxzoYpjj3jV0FKZCL5CiFgSH3pAmqut/dC68mu7N1bU6v0UtKKL3gCUQGQ==",
+      "path": "microsoft.extensions.dependencyinjection.abstractions/2.1.0",
+      "hashPath": "microsoft.extensions.dependencyinjection.abstractions.2.1.0.nupkg.sha512"
+    },
+    "Prise.Plugin/2.1.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-QpSCPnNtJ1SHa2o1JP/F8TNZdzrFOgDm7hgsoznbbtVqyPPPPfUtYCKp36cIVycJyMA2T3LSaWLl/IWwSKKUsQ==",
+      "path": "prise.plugin/2.1.2",
+      "hashPath": "prise.plugin.2.1.2.nupkg.sha512"
+    },
+    "System.Memory/4.5.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-1MbJTHS1lZ4bS4FmsJjnuGJOu88ZzTT2rLvrhW7Ygic+pC0NWA+3hgAen0HRdsocuQXCkUTdFn9yHJJhsijDXw==",
+      "path": "system.memory/4.5.4",
+      "hashPath": "system.memory.4.5.4.nupkg.sha512"
+    },
+    "System.Runtime.CompilerServices.Unsafe/5.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ZD9TMpsmYJLrxbbmdvhwt9YEgG5WntEnZ/d1eH8JBX9LBp+Ju8BSBhUGbZMNVHHomWo2KVImJhTDl2hIgw/6MA==",
+      "path": "system.runtime.compilerservices.unsafe/5.0.0",
+      "hashPath": "system.runtime.compilerservices.unsafe.5.0.0.nupkg.sha512"
+    },
+    "System.ValueTuple/4.5.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-okurQJO6NRE/apDIP23ajJ0hpiNmJ+f0BwOlB/cSqTLQlw5upkf+5+96+iG2Jw40G1fCVCyPz/FhIABUjMR+RQ==",
+      "path": "system.valuetuple/4.5.0",
+      "hashPath": "system.valuetuple.4.5.0.nupkg.sha512"
+    },
+    "Datatent2.Contracts/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

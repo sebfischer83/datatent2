@@ -18,13 +18,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Advanced.Algorithms" Version="0.0.470-beta" />
     <PackageReference Include="Bogus" Version="33.0.2" />
     <PackageReference Include="Bogus.Text" Version="33.0.2" />
     <PackageReference Include="ConsoleTableExt" Version="3.1.5" />
     <PackageReference Include="Crc32.NET" Version="1.2.0" />
     <PackageReference Include="Cryptisk.Utf8Json" Version="1.4.0" />
     <PackageReference Include="Dawn.Guard" Version="1.12.0" />
+    <PackageReference Include="DotNext" Version="3.0.0" />
+    <PackageReference Include="DotNext.Reflection" Version="3.0.0" />
+    <PackageReference Include="DotNext.Unsafe" Version="3.0.0" />
     <PackageReference Include="ErrorProne.NET.CoreAnalyzers" Version="0.3.0-beta.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -34,19 +36,22 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="fasterflect.reflect" Version="3.1.0" />
+    <PackageReference Include="Figgle" Version="0.4.0" />
     <PackageReference Include="HPCsharp" Version="3.16.0" />
     <PackageReference Include="jint" Version="3.0.0-beta-001" />
-    <PackageReference Include="K4os.Compression.LZ4" Version="1.2.10-beta" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.9.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
     <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="2.0.0" />
     <PackageReference Include="NLua" Version="1.5.7" />
     <PackageReference Include="ObjectLayoutInspector" Version="0.1.2" />
+    <PackageReference Include="Prise" Version="2.1.2" />
     <PackageReference Include="Roslynator.Analyzers" Version="3.1.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -72,7 +77,10 @@
   <ItemGroup>
     <Folder Include="Algo\" />
     <Folder Include="IO\" />
-    <Folder Include="Pager\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Datatent2.Contracts\Datatent2.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

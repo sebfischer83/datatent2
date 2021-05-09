@@ -37,7 +37,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Datatent2.Contracts\Datatent2.Contracts.csproj" />
     <ProjectReference Include="..\..\src\Datatent2.Core\Datatent2.Core.csproj" />
+    <ProjectReference Include="..\..\src\plugins\Datatent2.Plugins.Compression\Datatent2.Plugins.Compression.csproj" />
   </ItemGroup>
 
 </Project>

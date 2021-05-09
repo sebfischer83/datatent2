@@ -4,38 +4,152 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Datatent2.Contracts;
+using Datatent2.Core.Services.Cache;
+using Datatent2.Core.Services.Data;
+using Datatent2.Core.Services.Disk;
+using Datatent2.Core.Services.Page;
+using Datatent2.Core.Table;
+using Esprima.Ast;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Prise;
+using Prise.DependencyInjection;
+using Prise.Utils;
 
 namespace Datatent2.Core
 {
     public class Datatent
     {
-        public Datatent()
+        private readonly DatatentSettings _datatentSettings;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly ILogger<Datatent> _logger;
+        private IPluginLoader? _loader;
+        private IList<AssemblyScanResult>? _availablePlugins;
+        private PageService? _pageService;
+        private DataService? _dataService;
+        private CacheService _cacheService;
+
+        public Datatent(DatatentSettings datatentSettings, ILoggerFactory loggerFactory)
         {
+            _datatentSettings = datatentSettings;
+            _loggerFactory = loggerFactory;
+            _availablePlugins = null;
+            _logger = loggerFactory.CreateLogger<Datatent>();
+            _logger.LogInformation(Environment.NewLine + Figgle.FiggleFonts.Epic.Render("Datatent2"));
+            _logger.LogInformation(typeof(Datatent).Assembly.GetName().Version!.ToString());
+            var infVersion = typeof(Datatent).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                ?.InformationalVersion;
+            if (!string.IsNullOrWhiteSpace(infVersion))
+                _logger.LogInformation(infVersion);
+            _cacheService = new CacheService();
+
+            _logger.LogInformation($".Net {Environment.Version}");
+            _logger.LogInformation($"64Bit {Environment.Is64BitOperatingSystem} {Environment.Is64BitProcess}");
+            _logger.LogInformation($"Operating System {Environment.OSVersion}");
         }
 
-        public static Datatent Create(DatatentSettings datatentSettings)
+        public async Task Init()
         {
+            _logger.LogInformation(_datatentSettings.ToString());
+            await LoadPlugins();
+            var compressionPlugins = await Task.WhenAll(
+                _availablePlugins!.Select(async result =>
+                {
+                    _logger.LogInformation($"Plugin {result.PluginType.Name} ({result.ContractType.Name}) found");
+                    if (result.ContractType == typeof(ICompressionService))
+                    {
+                        var x = await _loader!.LoadPlugin<ICompressionService>(result, configure: (context) =>
+                        {
+                            context.IgnorePlatformInconsistencies = true;
+                        }).ConfigureAwait(false);
+                        return x;
+                    }
 
+                    return null;
+                }));
 
-            return null;
+            var nopCompressionService =
+                compressionPlugins.First(service => service?.Id == Constants.NopCompressionPluginId);
+
+            _pageService = await
+                PageService.Create(DiskService.Create(_datatentSettings), _cacheService,
+                    _loggerFactory.CreateLogger<PageService>());
+
+            _dataService = new DataService(nopCompressionService!, _pageService, _loggerFactory.CreateLogger<DataService>());
         }
 
-        public static Datatent Load(string path, string pwd)
+        private async Task LoadPlugins()
         {
+            var mainServiceCollection = new ServiceCollection()
+                .AddSingleton<IConfiguration>(new ConfigurationBuilder()
+                    .Build())
+                .AddPrise();
 
-            return null;
+            var serviceProvider = mainServiceCollection.BuildServiceProvider();
+
+            var pathToDist = _datatentSettings.PluginPath;
+
+            var hostFramework = HostFrameworkUtils.GetHostframeworkFromType(typeof(Program));
+            _logger.LogInformation($"Search plugins at {pathToDist}");
+
+            _loader = serviceProvider.GetRequiredService<IPluginLoader>();
+
+            _availablePlugins = (await _loader.FindPlugins<ICompressionService>(pathToDist)).ToList();
+            _logger.LogInformation($"Found {_availablePlugins.Count} plugins");
+        }
+
+        public static async Task<Datatent> Create(DatatentSettings datatentSettings, ILoggerFactory loggerFactory)
+        {
+            var datatent = new Datatent(datatentSettings, loggerFactory);
+            await datatent.Init().ConfigureAwait(false);
+
+            return datatent;
+        }
+
+        public Table<T> GetTable<T>(string name) where T: class
+        {
+            if (!Table<T>.Exists(name))
+            {
+
+            }
+
+            throw new NotImplementedException();
         }
     }
-
+    
     public sealed class DatatentSettings
     {
-        public string? Path { get; set; }
+        public string? DatabasePath { get; set; }
 
         public bool InMemory { get; set; }
+        public string PluginPath { get; internal set; }
+
+        public DatatentSettings()
+        {
+            var pathToThisProgram = Assembly.GetExecutingAssembly() // this assembly location (/bin/Debug/netcoreapp3.1)
+                .Location;
+            var pathToExecutingDir = Path.GetDirectoryName(pathToThisProgram);
+            PluginPath = Path.GetFullPath(Path.Combine(pathToExecutingDir!, "plugins"));
+        }
+
+        public override string ToString()
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.AppendLine("Settings:");
+            stringBuilder.AppendLine($"InMemory: {InMemory}");
+            stringBuilder.AppendLine($"DatabasePath: {DatabasePath}");
+
+
+            return stringBuilder.ToString();
+        }
     }
 }

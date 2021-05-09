@@ -2,16 +2,15 @@
 // # Copyright 2021
 // # Sebastian Fischer sebfischer@gmx.net
 
-using Advanced.Algorithms.DataStructures;
 using Datatent2.Core.Page;
+using Datatent2.Core.Page.Data;
 using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Datatent2.Core.Services.Cache
 {
@@ -89,6 +88,17 @@ namespace Datatent2.Core.Services.Cache
             }
             _allPages.Clear();
             _freeDataPages.Clear();
+        }
+
+        public IEnumerable<T> GetAllPagesOfType<T>(PageType pageType)
+        {
+            foreach (var page in _allPages)
+            {
+                if (page.Value.Type == pageType)
+                {
+                    yield return (T) (object)page;
+                }
+            }
         }
 
         public IEnumerator<BasePage> GetEnumerator()

@@ -6,7 +6,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Datatent2.Contracts;
 using Datatent2.Core.Memory;
+using Datatent2.Core.Page.Data;
+using Datatent2.Core.Page.Data;
+using Datatent2.Core.Page.Table;
 using Dawn;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -505,7 +509,7 @@ namespace Datatent2.Core.Page
 
         public override string ToString()
         {
-            return Header + GenerateLayoutString();
+            return Environment.NewLine + Header + GenerateLayoutString();
         }
 
         #endregion
@@ -529,6 +533,10 @@ namespace Datatent2.Core.Page
             if (typeof(T) == typeof(DataPage))
             {
                 return (T)(object)new DataPage(bufferSegment);
+            }
+            if (typeof(T) == typeof(TablePage))
+            {
+                return (T)(object)new TablePage(bufferSegment);
             }
             return null;
         }

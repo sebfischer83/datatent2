@@ -1,0 +1,6 @@
+{
+  "publishDir": "../../../plugins",
+  "configuration": "Release",
+  "nuspecFile": null,
+  "includeProjectNameInPublishDir": false
+}

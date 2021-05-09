@@ -7,9 +7,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Datatent2.Contracts;
 using Datatent2.Core.Block;
 using Datatent2.Core.Page;
-using Datatent2.Core.Services.Compression;
+using Datatent2.Core.Page.Data;
 using Datatent2.Core.Services.Page;
 using Microsoft.Extensions.Logging;
 
@@ -155,7 +156,7 @@ namespace Datatent2.Core.Services.Data
                 if (pageAddress.IsEmpty())
                     pageAddress = block.Position;
 
-                await _pageService.UpdatePageStatisticsAsync(dataPage);
+                await _pageService.UpdatePageStatistics(dataPage);
                 lastBlock = block;
                 remainingBytes -= bytesToWrite;
                 blockNr++;

@@ -4,29 +4,25 @@
 
 using System;
 using System.Buffers;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.IO.Compression;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using Datatent2.Core.Memory;
-using Dawn;
+using Datatent2.Contracts;
+using Prise.Plugin;
 
-namespace Datatent2.Core.Services.Compression
+namespace Datatent2.Plugins.Compression
 {
-    internal class BrotliCompressionService : ICompressionService
+    [Plugin(PluginType = typeof(ICompressionService))]
+    public class BrotliCompressionService : ICompressionService
     {
+        public Guid Id => new("EE2259AC-E951-497E-8C21-BF895E98D0D7");
+
+        public string Name => "BrotliCompression";
+
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public Span<byte> Compress(Span<byte> bytes, Span<byte> target)
         {
             var needMinLength = BrotliEncoder.GetMaxCompressedLength(bytes.Length);
-            Guard.Argument(target.Length).GreaterThan(needMinLength);
-
             var success = BrotliEncoder.TryCompress(bytes, target, out var bytesWritten, 2, 10);
-            Guard.Argument(success).Require(true);
-
             return target.Slice(0, bytesWritten);
         }
 

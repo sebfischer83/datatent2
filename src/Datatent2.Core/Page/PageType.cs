@@ -6,12 +6,13 @@ namespace Datatent2.Core.Page
 {
     internal enum PageType : byte
     {
-        Empty = 0,
+        Undefined = 0,
         Header = 1,
         Data = 2,
         Index = 3,
         GlobalAllocationMap = 4,
-        AllocationInformation = 5
+        AllocationInformation = 5,
+        Table = 6
     }
 
     internal enum PageFillFactor : byte

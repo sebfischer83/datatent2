@@ -2,12 +2,8 @@
 // # Copyright 2021
 // # Sebastian Fischer sebfischer@gmx.net
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Datatent2.Core.Page;
+using Datatent2.Core.Page.Data;
 
 namespace Datatent2.Core.Block
 {

@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using ConsoleTableExt;
+using Datatent2.Contracts;
 using Dawn;
 using ObjectLayoutInspector;
 

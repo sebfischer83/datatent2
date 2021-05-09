@@ -8,6 +8,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using Datatent2.Contracts;
+
 // ReSharper disable InconsistentNaming
 
 namespace Datatent2.Core.Page.AllocationInformation

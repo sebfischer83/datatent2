@@ -1,7 +1,7 @@
 using System;
 using System.Text;
 using Bogus.DataSets;
-using Datatent2.Core.Services.Compression;
+using Datatent2.Plugins.Compression;
 using Shouldly;
 using Xunit;
 

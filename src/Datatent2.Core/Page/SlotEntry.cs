@@ -5,6 +5,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Datatent2.Contracts;
 using Dawn;
 
 namespace Datatent2.Core.Page

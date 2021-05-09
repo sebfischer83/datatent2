@@ -8,6 +8,7 @@ using BenchmarkDotNet.Order;
 using Datatent2.Core;
 using Datatent2.Core.Memory;
 using Datatent2.Core.Page;
+using Datatent2.Core.Page.Data;
 
 namespace Datatent2.CoreBench.Page
 {

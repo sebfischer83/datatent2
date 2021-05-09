@@ -8,10 +8,13 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Datatent2.Contracts.Exceptions;
 using Datatent2.Core.Memory;
 using Datatent2.Core.Page;
 using Datatent2.Core.Page.AllocationInformation;
+using Datatent2.Core.Page.Data;
 using Datatent2.Core.Page.GlobalAllocationMap;
+using Datatent2.Core.Page.Table;
 using Datatent2.Core.Services.Cache;
 using Datatent2.Core.Services.Disk;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -29,30 +32,36 @@ namespace Datatent2.Core.Services.Page
         private AllocationInformationPage? _allocationInformationPage;
         private readonly SemaphoreSlim _semaphoreSlim;
 
-        public static async Task<PageService> Create(DiskService diskService, ILogger logger)
+        public static async Task<PageService> Create(DiskService diskService, CacheService cacheService, ILogger logger)
         {
-            var service = new PageService(diskService, logger);
+            var service = new PageService(diskService, cacheService, logger);
             await service.Init();
             return service;
         }
 
-        public PageService(DiskService diskService, ILogger logger)
+        public PageService(DiskService diskService, CacheService cacheService, ILogger logger)
         {
             _semaphoreSlim = new SemaphoreSlim(1, 1);
             _diskService = diskService;
             _logger = logger;
-            _cacheService = new CacheService();
+            _cacheService = cacheService;
         }
 
+        /// <summary>
+        /// Creates needed pages if this is a new database or load the needed pages from disk
+        /// </summary>
+        /// <returns></returns>
         private async Task Init()
         {
+            using var scope = _logger.BeginScope($"Init {nameof(PageService)}");
             // create the first GAM page => only when new database
             var firstGamBuffer = await _diskService.GetBuffer(new ReadRequest(1));
             var header = PageHeader.FromBuffer(firstGamBuffer.BufferSegment.Span);
-            _logger.LogInformation($"Init {nameof(PageService)} ");
+            _logger.LogDebug($"First GAM has id of {header.PageId}");
 
             if (header.PageId == 0)
             {
+                _logger.LogInformation($"New database, create first GAM and AIM page");
                 // new database
                 _globalAllocationMap = new GlobalAllocationMapPage(firstGamBuffer.BufferSegment, 1);
                 _cacheService.Add(_globalAllocationMap);
@@ -65,23 +74,26 @@ namespace Datatent2.Core.Services.Page
             }
             else
             {
+                _logger.LogInformation($"Existing database found");
                 // existing database, search last GAM page in database
                 while (header.NextPageId != uint.MaxValue)
                 {
                     var res = await _diskService.GetBuffer(new ReadRequest(header.NextPageId));
                     header = PageHeader.FromBuffer(res.BufferSegment.Span);
                 }
+                _logger.LogDebug($"Last GAM found at id {header.PageId}");
                 var gamBuffer = await _diskService.GetBuffer(new ReadRequest(header.PageId));
                 _globalAllocationMap = new GlobalAllocationMapPage(gamBuffer.BufferSegment);
                 _cacheService.Add(_globalAllocationMap);
 
-                
+
                 // get all possible indexes for the aim pages
                 var possibleIndexes =
                     AllocationInformationPage.GetAllAllocationInformationPageIdsForGam(_globalAllocationMap.Id);
 
                 PageHeader aimPageHeader;
                 ReadResponse aimReadResponse;
+                // search the last used aim page
                 uint aimPageId = possibleIndexes[0];
                 do
                 {
@@ -89,8 +101,8 @@ namespace Datatent2.Core.Services.Page
                     aimPageHeader = PageHeader.FromBuffer(aimReadResponse.BufferSegment.Span, 0);
                     aimPageId = aimPageHeader.NextPageId;
                 } while (aimPageHeader.NextPageId != uint.MaxValue);
-
                 _allocationInformationPage = new AllocationInformationPage(aimReadResponse.BufferSegment);
+                _logger.LogDebug($"Last AIM found at id {_allocationInformationPage.Id}");
                 _cacheService.Add(_allocationInformationPage);
             }
         }
@@ -145,7 +157,7 @@ namespace Datatent2.Core.Services.Page
             page.IsDirty = false;
         }
 
-        public async Task UpdatePageStatisticsAsync(BasePage page)
+        public async Task UpdatePageStatistics(BasePage page)
         {
             var gam = (uint)Math.DivRem(page.Id, GlobalAllocationMapPage.PAGES_PER_GAM, out var posInGam) + 1;
             var aims = AllocationInformationPage.GetAllAllocationInformationPageIdsForGam(gam);
@@ -180,6 +192,56 @@ namespace Datatent2.Core.Services.Page
             }
         }
 
+        public async Task<TablePage> GetTablePageForTable(string name)
+        {
+            await _semaphoreSlim.WaitAsync();
+            try
+            {
+                List<uint> searchedIds = new();
+                // search cached ones 
+                foreach (var tablePage in _cacheService.GetAllPagesOfType<TablePage>(PageType.Table))
+                {
+                    searchedIds.Add(tablePage.Id);
+                    if (tablePage.ContainsTable(name))
+                        return tablePage;
+                }
+
+                // search all tablePages
+                // search from current GAM to the previous and all aims if there is a table page with data for this table
+                var gam = _globalAllocationMap!;
+                do
+                {
+
+                    if (gam.Id == _globalAllocationMap!.Id)
+                    {
+
+                    }
+
+                } while (gam.PageHeader.PrevPageId == UInt32.MaxValue);
+
+                throw new NotImplementedException();
+            }
+            finally
+            {
+                _semaphoreSlim.Release();
+            }
+        }
+
+        private async ValueTask<T> GetFromCacheOrRead<T>(uint pageId) where T : BasePage
+        {
+            if (_cacheService.HasPage(pageId))
+                return (T)(object)_cacheService.Get<T>(pageId)!;
+
+            var response = await _diskService.GetBuffer(new ReadRequest(pageId));
+            var page = BasePage.Create<T>(response.BufferSegment);
+            if (page == null || page.PageHeader.Type == PageType.Undefined)
+            {
+                throw new PageNotFoundException($"The requested page {pageId} not exists in the current database!");
+            }
+
+            return page;
+        }
+
         /// <summary>
         /// Search an existing data page with free space or creates a new one
         /// </summary>
@@ -207,7 +269,7 @@ namespace Datatent2.Core.Services.Page
                     return cachedPage;
 
                 var ioResponse = await _diskService.GetBuffer(new ReadRequest((uint)freePageId));
-                var diskPage = new DataPage(ioResponse.BufferSegment, ioResponse.PageId);
+                var diskPage = new DataPage(ioResponse.BufferSegment);
                 _cacheService.Add(diskPage);
                 return diskPage;
             }
