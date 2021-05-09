@@ -20,7 +20,7 @@
   <ItemGroup>
     <PackageReference Include="Bogus" Version="33.0.2" />
     <PackageReference Include="Bogus.Text" Version="33.0.2" />
-    <PackageReference Include="ConsoleTableExt" Version="3.1.5" />
+    <PackageReference Include="ConsoleTableExt" Version="3.1.7" />
     <PackageReference Include="Crc32.NET" Version="1.2.0" />
     <PackageReference Include="Cryptisk.Utf8Json" Version="1.4.0" />
     <PackageReference Include="Dawn.Guard" Version="1.12.0" />
