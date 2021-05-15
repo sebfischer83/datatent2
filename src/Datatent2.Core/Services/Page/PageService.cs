@@ -209,13 +209,11 @@ namespace Datatent2.Core.Services.Page
                 // search all tablePages
                 // search from current GAM to the previous and all aims if there is a table page with data for this table
                 var gam = _globalAllocationMap!;
+                AllocationInformationPage allocationInformationPage;
                 do
                 {
-
-                    if (gam.Id == _globalAllocationMap!.Id)
-                    {
-
-                    }
+                    var possibleAimPages = AllocationInformationPage.GetAllAllocationInformationPageIdsForGam(gam.Id);
+                    
 
                 } while (gam.PageHeader.PrevPageId == UInt32.MaxValue);
 
@@ -236,7 +234,7 @@ namespace Datatent2.Core.Services.Page
             var page = BasePage.Create<T>(response.BufferSegment);
             if (page == null || page.PageHeader.Type == PageType.Undefined)
             {
-                throw new PageNotFoundException($"The requested page {pageId} not exists in the current database!");
+                throw new PageNotFoundException($"The requested page {pageId} not exists in the current database!", pageId);
             }
 
             return page;

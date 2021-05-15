@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
+using Datatent2.Contracts;
 using Datatent2.Core;
 using Datatent2.Core.Memory;
 

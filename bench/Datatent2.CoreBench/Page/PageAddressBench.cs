@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Order;
 using Bogus.Extensions;
+using Datatent2.Contracts;
 using Datatent2.Core;
 using Datatent2.Core.Page;
 using Microsoft.Diagnostics.Runtime.ICorDebug;

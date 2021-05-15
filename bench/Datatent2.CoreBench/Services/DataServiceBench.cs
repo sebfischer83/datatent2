@@ -5,14 +5,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
+using Datatent2.Contracts;
 using Datatent2.Core;
 using Datatent2.Core.Memory;
 using Datatent2.Core.Page;
 using Datatent2.Core.Page.Header;
-using Datatent2.Core.Services.Compression;
+using Datatent2.Core.Services.Cache;
 using Datatent2.Core.Services.Data;
 using Datatent2.Core.Services.Disk;
 using Datatent2.Core.Services.Page;
+using Datatent2.Plugins.Compression;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Datatent2.CoreBench.Services
@@ -34,7 +36,8 @@ namespace Datatent2.CoreBench.Services
             PageHeader header = new PageHeader(1, PageType.Data);
             header.ToBuffer(bufferSegment.Span, 0);
             File.Delete(@"C:\Neuer Ordner\test.db");
-            PageService pageService = new PageService(FileDiskService.Create(new DatatentSettings() { InMemory = false, DatabasePath = @"C:\Neuer Ordner\test.db" }), NullLogger.Instance);
+            CacheService cacheService = new CacheService();
+            PageService pageService = new PageService(DiskService.Create(new DatatentSettings() { InMemory = false, DatabasePath = @"C:\Neuer Ordner\test.db" }), cacheService, NullLogger.Instance);
             _dataService = new DataService(new NopCompressionService(), pageService, NullLogger<DataService>.Instance);
 
             _objects = new List<TestObject>(50);

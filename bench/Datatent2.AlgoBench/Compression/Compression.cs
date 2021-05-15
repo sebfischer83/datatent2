@@ -12,7 +12,6 @@ using BenchmarkDotNet.Order;
 using CsvHelper;
 using Datatent2.AlgoBench.Hash;
 using K4os.Compression.LZ4;
-using K4os.Compression.LZ4.Encoders;
 
 namespace Datatent2.AlgoBench.Compression
 {

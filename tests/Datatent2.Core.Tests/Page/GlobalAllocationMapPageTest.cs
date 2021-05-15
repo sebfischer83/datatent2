@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Datatent2.Contracts;
+using Datatent2.Contracts.Exceptions;
 using Datatent2.Core.Memory;
 using Datatent2.Core.Page.GlobalAllocationMap;
 using Shouldly;
@@ -14,6 +15,31 @@ namespace Datatent2.Core.Tests.Page
 {
     public class GlobalAllocationMapPageTest
     {
+        [Fact]
+        public void Is_Allocated_Test()
+        {
+            using IBufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
+            var dataArea = bufferSegment.Span.Slice(Constants.PAGE_HEADER_SIZE);
+            dataArea.Clear();
+            GlobalAllocationMapPage globalAllocationMapPage = new GlobalAllocationMapPage(bufferSegment, 1);
+
+            for (int i = 0; i < 15; i++)
+            {
+                var a = globalAllocationMapPage.AcquirePageId();
+            }
+
+            globalAllocationMapPage.IsAllocated(1).ShouldBeTrue();
+            globalAllocationMapPage.IsAllocated(3).ShouldBeTrue();
+            globalAllocationMapPage.IsAllocated(7).ShouldBeTrue();
+            globalAllocationMapPage.IsAllocated(10).ShouldBeTrue();
+            globalAllocationMapPage.IsAllocated(17).ShouldBeFalse();
+
+            ShouldThrowExtensions.ShouldThrow<InvalidPageException>(() =>
+            {
+                globalAllocationMapPage.IsAllocated(0);
+            });
+        }
+
         [Fact]
         public void TestFindEmptyId()
         {

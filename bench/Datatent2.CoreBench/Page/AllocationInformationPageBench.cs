@@ -5,10 +5,12 @@ using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
+using Datatent2.Contracts;
 using Datatent2.Core;
 using Datatent2.Core.Memory;
 using Datatent2.Core.Page;
 using Datatent2.Core.Page.AllocationInformation;
+using Datatent2.Core.Page.Data;
 using Moq;
 
 namespace Datatent2.CoreBench.Page

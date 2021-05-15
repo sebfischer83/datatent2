@@ -9,6 +9,7 @@ using Datatent2.Contracts;
 using Datatent2.Core.Memory;
 using Datatent2.Core.Page;
 using Datatent2.Core.Page.AllocationInformation;
+using Datatent2.Core.Page.Data;
 using Datatent2.Core.Page.GlobalAllocationMap;
 using Moq;
 using Shouldly;

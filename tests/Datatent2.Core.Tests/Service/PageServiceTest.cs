@@ -27,8 +27,8 @@ namespace Datatent2.Core.Tests.Service
             using BufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
             PageHeader header = new PageHeader(2, PageType.Data);
             header.ToBuffer(bufferSegment.Span, 0);
-
-            PageService pageService = await PageService.Create(new InMemoryDiskService(), NullLogger<PageService>.Instance);
+            CacheService cacheService = new CacheService();
+            PageService pageService = await PageService.Create(new InMemoryDiskService(), cacheService, NullLogger<PageService>.Instance);
 
             var dataPage = await pageService.GetDataPageWithFreeSpace();
 

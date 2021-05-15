@@ -49,7 +49,7 @@ namespace Datatent2.Core.Page.AllocationInformation
             {
                 var span = MemoryMarshal.Cast<byte, AllocationInformationEntry>(Buffer.Span);
                 var lastItem = span[^1];
-                return lastItem.PageId != 0 && lastItem.PageType != PageType.Empty;
+                return lastItem.PageId != 0 && lastItem.PageType != PageType.Undefined;
             }
         }
 

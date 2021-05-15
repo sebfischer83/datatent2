@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Datatent2.Core.Memory;
 using Datatent2.Core.Page;
 using Datatent2.Core.Page.Header;
+using Datatent2.Core.Services.Cache;
 using Datatent2.Core.Services.Data;
 using Datatent2.Core.Services.Disk;
 using Datatent2.Core.Services.Page;
@@ -22,7 +23,8 @@ namespace Datatent2.Core.Tests.Service
         public async Task Insert_One_Object_Test()
         {
             var bogus = new Bogus.Randomizer();
-            PageService pageService = await PageService.Create(new InMemoryDiskService(), NullLogger<PageService>.Instance);
+            CacheService cacheService = new CacheService();
+            PageService pageService = await PageService.Create(new InMemoryDiskService(), cacheService, NullLogger<PageService>.Instance);
             DataService dataService = new DataService(new NopCompressionService(), pageService, NullLogger<DataService>.Instance);
 
             TestObject testObject = new TestObject();
@@ -38,7 +40,8 @@ namespace Datatent2.Core.Tests.Service
         public async Task Insert_One_Object_And_Get_Test()
         {
             var bogus = new Bogus.Randomizer();
-            PageService pageService = await PageService.Create(new InMemoryDiskService(), NullLogger<PageService>.Instance);
+            CacheService cacheService = new CacheService();
+            PageService pageService = await PageService.Create(new InMemoryDiskService(), cacheService, NullLogger<PageService>.Instance);
             DataService dataService = new DataService(new NopCompressionService(), pageService, NullLogger<DataService>.Instance);
             TestObject testObject = new TestObject();
             testObject.IntProp = bogus.Int();
@@ -56,7 +59,8 @@ namespace Datatent2.Core.Tests.Service
         public async Task Inster_Large_Object_And_Get_Test()
         {
             var bogus = new Bogus.Randomizer();
-            PageService pageService = await PageService.Create(new InMemoryDiskService(), NullLogger<PageService>.Instance);
+            CacheService cacheService = new CacheService();
+            PageService pageService = await PageService.Create(new InMemoryDiskService(), cacheService, NullLogger<PageService>.Instance);
             DataService dataService = new DataService(new NopCompressionService(), pageService, NullLogger<DataService>.Instance);
             TestObject testObject = new TestObject();
             testObject.IntProp = bogus.Int();

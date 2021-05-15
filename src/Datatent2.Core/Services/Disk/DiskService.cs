@@ -3,21 +3,18 @@
 // # Sebastian Fischer sebfischer@gmx.net
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Datatent2.Contracts;
+using Datatent2.Contracts.Exceptions;
 using Datatent2.Core.Memory;
 using Datatent2.Core.Page;
-using Dawn;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Datatent2.Core.Services.Disk
-{ 
+{
     internal abstract class DiskService : IDisposable
     {
         protected readonly Stream Stream;
@@ -25,6 +22,11 @@ namespace Datatent2.Core.Services.Disk
         protected readonly Channel<ValueTuple<WriteRequest, TaskCompletionSource<WriteRespone>>> WriteChannel;
         protected readonly Task ReadTask;
         protected readonly Task WriteTask;
+
+        // holds references to current pending read operations
+        protected readonly ConcurrentDictionary<uint, TaskCompletionSource<ReadResponse>> ConcurrentDictionaryRead = new();
+        // holds references to current pending write operations
+        protected readonly ConcurrentDictionary<uint, TaskCompletionSource<WriteRespone>> ConcurrentDictionaryWrite = new();
 
         public static DiskService Create(DatatentSettings settings)
         {
@@ -74,6 +76,7 @@ namespace Datatent2.Core.Services.Disk
                 while (reader.TryRead(out var item))
                 {
                     var segment = ReadPageBuffer(item.Item1.PageId);
+                    ConcurrentDictionaryRead.TryRemove(item.Item1.PageId, out _);
                     item.Item2.SetResult(new ReadResponse(item.Item1.Id, segment, item.Item1.PageId));
                 }
             }
@@ -87,6 +90,7 @@ namespace Datatent2.Core.Services.Disk
                 while (reader.TryRead(out var item))
                 {
                     WritePageBuffer(item.Item1.PageId, item.Item1.BufferSegment);
+                    ConcurrentDictionaryWrite.TryRemove(item.Item1.PageId, out _);
                     item.Item2.SetResult(new WriteRespone(item.Item1.Id, true));
                 }
             }
@@ -95,34 +99,58 @@ namespace Datatent2.Core.Services.Disk
 
         public async Task<ReadResponse> GetBuffer(ReadRequest readRequest)
         {
+            var source = await LineUpReadRequestOrUseExisting(readRequest);
+            var response = await source.Task.ConfigureAwait(false);
+            return response;
+        }
+
+        private async Task<TaskCompletionSource<ReadResponse>> LineUpReadRequestOrUseExisting(ReadRequest readRequest)
+        {
+            ConcurrentDictionaryRead.TryGetValue(readRequest.PageId, out var completionSource);
+            if (completionSource != null)
+            {
+                return completionSource;
+            }
             var writer = ReadChannel.Writer;
 
             while (await writer.WaitToWriteAsync())
             {
                 TaskCompletionSource<ReadResponse> source = new TaskCompletionSource<ReadResponse>();
                 ValueTuple<ReadRequest, TaskCompletionSource<ReadResponse>> tuple = (readRequest, source);
+                ConcurrentDictionaryRead.TryAdd(readRequest.PageId, source);
                 await writer.WriteAsync(tuple);
-                var response = await source.Task.ConfigureAwait(false);
-                return response;
+                return source;
             }
 
-            return default;
+            throw new DiskIoRequestException("Can't line up request!", readRequest.PageId, DiskIoRequestException.IoDirection.Read);
         }
 
         public async Task<WriteRespone> WriteBuffer(WriteRequest writeRequest)
         {
+            var source = await LineUpWriteRequestOrUseExisting(writeRequest);
+            var response = await source.Task.ConfigureAwait(false);
+            return response;
+        }
+
+        private async Task<TaskCompletionSource<WriteRespone>> LineUpWriteRequestOrUseExisting(WriteRequest writeRequest)
+        {
+            ConcurrentDictionaryWrite.TryGetValue(writeRequest.PageId, out var completionSource);
+            if (completionSource != null)
+            {
+                return completionSource;
+            }
             var writer = WriteChannel.Writer;
 
             while (await writer.WaitToWriteAsync())
             {
                 TaskCompletionSource<WriteRespone> source = new TaskCompletionSource<WriteRespone>();
                 ValueTuple<WriteRequest, TaskCompletionSource<WriteRespone>> tuple = (writeRequest, source);
+                ConcurrentDictionaryWrite.TryAdd(writeRequest.PageId, source);
                 await writer.WriteAsync(tuple);
-                var response = await source.Task.ConfigureAwait(false);
-                return response;
+                return source;
             }
 
-            return default;
+            throw new DiskIoRequestException("Can't line up request!", writeRequest.PageId, DiskIoRequestException.IoDirection.Write);
         }
 
         protected IBufferSegment ReadPageBuffer(uint pageId)

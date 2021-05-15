@@ -32,6 +32,15 @@ namespace Datatent2.Core.Table
             _logger = logger;
         }
 
+        private Table(SerializableTable serializableTable, DataService dataService,
+            PageService pageService,
+            CacheService cacheService,
+            TablePage tablePage,
+            ILogger<Table<T>> logger) : this("", dataService, pageService, cacheService, tablePage, logger)
+        {
+
+        }
+
         internal static Table<T> Create(string name, DataService dataService, PageService pageService, CacheService cacheService, ILogger<Table<T>> logger)
         {
             return null;
@@ -48,6 +57,12 @@ namespace Datatent2.Core.Table
         internal static bool Exists(string name)
         {
             return false;
+        }
+
+
+        private sealed class SerializableTable
+        {
+            public string Name { get; set; }
         }
     }
 }

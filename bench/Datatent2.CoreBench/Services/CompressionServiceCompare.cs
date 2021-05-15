@@ -9,8 +9,9 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Order;
 using Bogus.DataSets;
+using Datatent2.Contracts;
 using Datatent2.Core;
-using Datatent2.Core.Services.Compression;
+using Datatent2.Plugins.Compression;
 
 namespace Datatent2.CoreBench.Services
 {

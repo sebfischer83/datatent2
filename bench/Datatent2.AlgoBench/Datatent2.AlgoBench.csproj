@@ -36,6 +36,7 @@
     <PackageReference Include="Crc32.NET" Version="1.2.0" />
     <PackageReference Include="CsvHelper" Version="26.1.0" />
     <PackageReference Include="HPCsharp" Version="3.16.0" />
+    <PackageReference Include="K4os.Compression.LZ4" Version="1.2.10-beta" />
     <PackageReference Include="NReco.Text.AhoCorasickDoubleArrayTrie" Version="1.0.2" />
     <PackageReference Include="Spreads.Collections" Version="2019.0.415-build142424" />
     <PackageReference Include="Spreads.Native" Version="2021.1.331" />
