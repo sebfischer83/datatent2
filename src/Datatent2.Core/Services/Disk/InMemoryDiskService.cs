@@ -2,6 +2,7 @@
 // # Copyright 2021
 // # Sebastian Fischer sebfischer@gmx.net
 
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,8 +14,9 @@ namespace Datatent2.Core.Services.Disk
 {
     internal class InMemoryDiskService : DiskService
     {
-        public InMemoryDiskService() : base(new MemoryStream(new byte[1024 * 1024 * 100]))
+        public InMemoryDiskService(DatatentSettings settings) : base(settings, NullLogger.Instance)
         {
+            Stream = new MemoryStream();
         }
     }
 }

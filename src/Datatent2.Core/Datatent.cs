@@ -7,9 +7,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using Datatent2.Contracts;
+using Datatent2.Core.Memory;
 using Datatent2.Core.Services.Cache;
 using Datatent2.Core.Services.Data;
 using Datatent2.Core.Services.Disk;
@@ -40,6 +40,7 @@ namespace Datatent2.Core
 
         public Datatent(DatatentSettings datatentSettings, ILoggerFactory loggerFactory)
         {
+            BufferPoolFactory.Init(datatentSettings, loggerFactory.CreateLogger("BufferPool"));
             _datatentSettings = datatentSettings;
             _loggerFactory = loggerFactory;
             _availablePlugins = null;
@@ -115,7 +116,7 @@ namespace Datatent2.Core
             return datatent;
         }
 
-        public Table<T> GetTable<T>(string name) where T: class
+        public Table<T> GetTable<T>(string name) where T : class
         {
             if (!Table<T>.Exists(name))
             {
@@ -123,33 +124,6 @@ namespace Datatent2.Core
             }
 
             throw new NotImplementedException();
-        }
-    }
-    
-    public sealed class DatatentSettings
-    {
-        public string? DatabasePath { get; set; }
-
-        public bool InMemory { get; set; }
-        public string PluginPath { get; internal set; }
-
-        public DatatentSettings()
-        {
-            var pathToThisProgram = Assembly.GetExecutingAssembly() // this assembly location (/bin/Debug/netcoreapp3.1)
-                .Location;
-            var pathToExecutingDir = Path.GetDirectoryName(pathToThisProgram);
-            PluginPath = Path.GetFullPath(Path.Combine(pathToExecutingDir!, "plugins"));
-        }
-
-        public override string ToString()
-        {
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.AppendLine("Settings:");
-            stringBuilder.AppendLine($"InMemory: {InMemory}");
-            stringBuilder.AppendLine($"DatabasePath: {DatabasePath}");
-
-
-            return stringBuilder.ToString();
         }
     }
 }

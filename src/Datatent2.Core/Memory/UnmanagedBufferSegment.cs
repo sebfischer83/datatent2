@@ -19,7 +19,7 @@ namespace Datatent2.Core.Memory
 
         public unsafe byte* GetPointer()
         {
-            return (byte*) _pool.GetPointerToSlot(Key);
+            return (byte*)_pool.GetPointerToSlot(Key);
         }
 
         public UnmanagedBufferSegment(Memory<byte> memory, int key, UnmanagedBufferPool pool)
@@ -45,7 +45,7 @@ namespace Datatent2.Core.Memory
             Memory.Span.Clear();
         }
 
-        public uint Length => (uint) Memory.Length;
+        public uint Length => (uint)Memory.Length;
 
         public Span<byte> Span => Memory.Span;
     }

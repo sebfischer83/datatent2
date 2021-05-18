@@ -37,7 +37,7 @@ namespace Datatent2.CoreBench.Services
             header.ToBuffer(bufferSegment.Span, 0);
             File.Delete(@"C:\Neuer Ordner\test.db");
             CacheService cacheService = new CacheService();
-            PageService pageService = new PageService(DiskService.Create(new DatatentSettings() { InMemory = false, DatabasePath = @"C:\Neuer Ordner\test.db" }), cacheService, NullLogger.Instance);
+            PageService pageService = new PageService(DiskService.Create(new DatatentSettings() { DatabasePath = @"C:\Neuer Ordner\test.db" }), cacheService, NullLogger.Instance);
             _dataService = new DataService(new NopCompressionService(), pageService, NullLogger<DataService>.Instance);
 
             _objects = new List<TestObject>(50);

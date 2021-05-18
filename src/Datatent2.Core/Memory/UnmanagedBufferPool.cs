@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Datatent2.Contracts;
+using Datatent2.Contracts.Exceptions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -20,15 +21,27 @@ namespace Datatent2.Core.Memory
         private static readonly Lazy<UnmanagedBufferPool>
             Lazy =
                 new Lazy<UnmanagedBufferPool>
-                    (() => new UnmanagedBufferPool());
+                    (() =>
+                    {
+                        if (InitFunction == null)
+                        {
+                            throw new InvalidEngineStateException($"{nameof(InitFunction)} can't be null!");
+                        }
+
+                        var vals = InitFunction();
+                        return new UnmanagedBufferPool(vals.Item1, vals.Item2);
+                    });
 
         public new static UnmanagedBufferPool Shared => Lazy.Value;
+
+        public static Func<(DatatentSettings?, ILogger)> InitFunction { get; set; } = () => new(null, NullLogger.Instance);
 
         private ILogger _logger = NullLogger.Instance;
         private readonly IntPtr _memoryPtr;
         private readonly Memory<byte> _memory;
         private readonly UnmanagedMemoryManager<byte> _memoryManager;
         private readonly Queue<int> _freeSlots = new Queue<int>();
+        private readonly DatatentSettings? _datatentSettings;
 
         public ILogger Logger
         {
@@ -40,8 +53,10 @@ namespace Datatent2.Core.Memory
             return IntPtr.Add(_memoryPtr, Constants.PAGE_SIZE * (key - 1));
         }
 
-        public UnmanagedBufferPool()
+        public UnmanagedBufferPool(DatatentSettings? datatentSettings, ILogger logger)
         {
+            Logger = logger;
+            _datatentSettings = datatentSettings;
             _memoryPtr = Marshal.AllocHGlobal(MaxBufferSize);
             _memoryManager = new UnmanagedMemoryManager<byte>((byte*)_memoryPtr, MaxBufferSize);
             _memory = _memoryManager.Memory;
@@ -77,12 +92,7 @@ namespace Datatent2.Core.Memory
 
         private IBufferSegment RentCore() => this.Rent();
 
-        public sealed class Impl : UnmanagedBufferPool
-        {
-            public IBufferSegment Rent() => RentCore();
-        }
-
         public sealed override int MaxBufferSize =>
-            (Constants.PAGE_SIZE * Constants.MAX_PAGE_CACHE_SIZE) + (Constants.PAGE_SIZE * 100);
+            (Constants.PAGE_SIZE * _datatentSettings!.EngineSettings.MaxPageCacheSize) + (Constants.PAGE_SIZE * _datatentSettings.IOSettings.MaxPageReadAheadCacheSize) + (Constants.PAGE_SIZE * 100);
     }
 }

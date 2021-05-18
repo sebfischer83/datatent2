@@ -10,16 +10,17 @@ using System.Text;
 using System.Threading.Tasks;
 using Datatent2.Contracts;
 using Dawn;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Datatent2.Core.Services.Disk
 {
     internal class FileDiskService : DiskService
     {
-        private readonly DatatentSettings _datatentSettings;
-
-        public FileDiskService(Stream stream, DatatentSettings datatentSettings) : base(stream)
+        public FileDiskService(DatatentSettings datatentSettings) : base(datatentSettings, NullLogger.Instance)
         {
-            _datatentSettings = datatentSettings;
+            Stream = new FileStream(datatentSettings.DatabasePath!, FileMode.OpenOrCreate, FileAccess.ReadWrite,
+                FileShare.Read, Constants.PAGE_SIZE,
+                FileOptions.RandomAccess);
         }
     }
 }

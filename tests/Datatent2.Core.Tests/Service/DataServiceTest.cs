@@ -24,7 +24,7 @@ namespace Datatent2.Core.Tests.Service
         {
             var bogus = new Bogus.Randomizer();
             CacheService cacheService = new CacheService();
-            PageService pageService = await PageService.Create(new InMemoryDiskService(), cacheService, NullLogger<PageService>.Instance);
+            PageService pageService = await PageService.Create(new InMemoryDiskService(new DatatentSettings()), cacheService, NullLogger<PageService>.Instance);
             DataService dataService = new DataService(new NopCompressionService(), pageService, NullLogger<DataService>.Instance);
 
             TestObject testObject = new TestObject();
@@ -41,7 +41,7 @@ namespace Datatent2.Core.Tests.Service
         {
             var bogus = new Bogus.Randomizer();
             CacheService cacheService = new CacheService();
-            PageService pageService = await PageService.Create(new InMemoryDiskService(), cacheService, NullLogger<PageService>.Instance);
+            PageService pageService = await PageService.Create(new InMemoryDiskService(new DatatentSettings()), cacheService, NullLogger<PageService>.Instance);
             DataService dataService = new DataService(new NopCompressionService(), pageService, NullLogger<DataService>.Instance);
             TestObject testObject = new TestObject();
             testObject.IntProp = bogus.Int();
@@ -60,7 +60,7 @@ namespace Datatent2.Core.Tests.Service
         {
             var bogus = new Bogus.Randomizer();
             CacheService cacheService = new CacheService();
-            PageService pageService = await PageService.Create(new InMemoryDiskService(), cacheService, NullLogger<PageService>.Instance);
+            PageService pageService = await PageService.Create(new InMemoryDiskService(new DatatentSettings()), cacheService, NullLogger<PageService>.Instance);
             DataService dataService = new DataService(new NopCompressionService(), pageService, NullLogger<DataService>.Instance);
             TestObject testObject = new TestObject();
             testObject.IntProp = bogus.Int();

@@ -5,46 +5,65 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Datatent2.Contracts;
 using Datatent2.Contracts.Exceptions;
+using Datatent2.Core.IO;
 using Datatent2.Core.Memory;
 using Datatent2.Core.Page;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 
 namespace Datatent2.Core.Services.Disk
 {
+    /// <summary>
+    /// Base implementation of a service that offers methods to read and write pages from the underlying io system
+    /// </summary>
     internal abstract class DiskService : IDisposable
     {
-        protected readonly Stream Stream;
+        protected Stream Stream;
         protected readonly Channel<ValueTuple<ReadRequest, TaskCompletionSource<ReadResponse>>> ReadChannel;
         protected readonly Channel<ValueTuple<WriteRequest, TaskCompletionSource<WriteRespone>>> WriteChannel;
         protected readonly Task ReadTask;
         protected readonly Task WriteTask;
+        protected DiskPageCache _diskPageCache;
+        private int _cacheSize;
 
         // holds references to current pending read operations
         protected readonly ConcurrentDictionary<uint, TaskCompletionSource<ReadResponse>> ConcurrentDictionaryRead = new();
         // holds references to current pending write operations
         protected readonly ConcurrentDictionary<uint, TaskCompletionSource<WriteRespone>> ConcurrentDictionaryWrite = new();
 
+        protected readonly DatatentSettings Settings;
+        protected readonly ILogger Logger;
+        private byte[] _cacheBytes;
+
         public static DiskService Create(DatatentSettings settings)
         {
-            if (settings.InMemory)
+            if (settings.IOSettings.IOSystem == DatatentSettings.IOSystem.InMemory)
             {
-                return new InMemoryDiskService();
+                return new InMemoryDiskService(new DatatentSettings());
             }
 
-            FileStream fileStream = new FileStream(settings.DatabasePath!, FileMode.OpenOrCreate, FileAccess.ReadWrite,
-                FileShare.Read, Constants.PAGE_SIZE,
-                FileOptions.RandomAccess);
-
-            return (FileDiskService)(new(fileStream, settings));
+            return (FileDiskService)(new(settings));
         }
 
-        protected DiskService(Stream stream)
+        protected virtual Stream GetStream(uint pageId)
         {
-            Stream = stream;
+            return Stream;
+        }
+
+        protected DiskService(DatatentSettings settings, ILogger logger)
+        {
+            Stream = Stream.Null;
+            Settings = settings;
+            Logger = logger;
+            _diskPageCache = new DiskPageCache(settings, logger);
+            _cacheSize = Constants.PAGE_SIZE * Constants.MAX_AMOUNT_OF_READ_AHEAD_PAGES;
+            _cacheBytes = new byte[_cacheSize];
             ReadChannel = Channel.CreateBounded<ValueTuple<ReadRequest, TaskCompletionSource<ReadResponse>>>(
                 new BoundedChannelOptions(100)
                 {
@@ -75,7 +94,7 @@ namespace Datatent2.Core.Services.Disk
             {
                 while (reader.TryRead(out var item))
                 {
-                    var segment = ReadPageBuffer(item.Item1.PageId);
+                    var segment = Settings.IOSettings.UseReadAheadCache ? ReadPageBufferReadAheadCache(item.Item1.PageId) : ReadPageBuffer(item.Item1.PageId);
                     ConcurrentDictionaryRead.TryRemove(item.Item1.PageId, out _);
                     item.Item2.SetResult(new ReadResponse(item.Item1.Id, segment, item.Item1.PageId));
                 }
@@ -153,22 +172,58 @@ namespace Datatent2.Core.Services.Disk
             throw new DiskIoRequestException("Can't line up request!", writeRequest.PageId, DiskIoRequestException.IoDirection.Write);
         }
 
-        protected IBufferSegment ReadPageBuffer(uint pageId)
+        protected virtual IBufferSegment ReadPageBuffer(uint pageId)
         {
             var bufferSegment = BufferPoolFactory.Get().Rent(Constants.PAGE_SIZE);
-            Stream.Seek(BasePage.PageOffset(pageId), SeekOrigin.Begin);
-            Stream.Read(bufferSegment.Span.Slice(0, Constants.PAGE_SIZE));
+            var stream = GetStream(pageId);
 
+            stream.Seek(BasePage.PageOffset(pageId), SeekOrigin.Begin);
+            stream.Read(bufferSegment.Span);
+            
             return bufferSegment;
         }
 
-        protected void WritePageBuffer(uint pageId, IBufferSegment bufferSegment)
+        protected virtual IBufferSegment ReadPageBufferReadAheadCache(uint pageId)
         {
-            Stream.Seek(BasePage.PageOffset(pageId), SeekOrigin.Begin);
-            Stream.Write(bufferSegment.Span);
+            var cachedBuffer = _diskPageCache.GetIfExists(pageId);
+            if (cachedBuffer != null)
+            {
+                _diskPageCache.Remove(pageId);
+                return cachedBuffer;
+            }
+
+            var bufferSegment = BufferPoolFactory.Get().Rent(Constants.PAGE_SIZE);
+            var tempSpan = (Span<byte>)_cacheBytes;
+            var stream = GetStream(pageId);
+            stream.Seek(BasePage.PageOffset(pageId), SeekOrigin.Begin);
+            stream.Read(_cacheBytes, 0, _cacheSize);
+            var span = bufferSegment.Span;
+            span.WriteBytes(0, tempSpan.Slice(0, Constants.PAGE_SIZE));
+
+            uint nextPageId = pageId + 1;
+            for (int i = 1; i < Constants.MAX_AMOUNT_OF_READ_AHEAD_PAGES; i++)
+            {
+                if (!_diskPageCache.Contains(nextPageId))
+                {
+                    var bufferCacheSegment = BufferPoolFactory.Get().Rent(Constants.PAGE_SIZE);
+                    var spanCache = bufferCacheSegment.Span;
+                    spanCache.WriteBytes(0, tempSpan.Slice(i * Constants.PAGE_SIZE, Constants.PAGE_SIZE));
+                    _diskPageCache.Add(nextPageId, bufferCacheSegment);
+                }
+                nextPageId++;
+            }
+         
+            return bufferSegment;
         }
 
-        public void Dispose()
+        protected virtual void WritePageBuffer(uint pageId, IBufferSegment bufferSegment)
+        {
+            var stream = GetStream(pageId);
+            stream.Seek(BasePage.PageOffset(pageId), SeekOrigin.Begin);
+            stream.Write(bufferSegment.Span);
+        }
+
+        public virtual void Dispose()
         {
             Stream.Dispose();
         }

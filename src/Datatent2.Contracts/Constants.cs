@@ -15,11 +15,6 @@ namespace Datatent2.Contracts
         public const int PAGE_SIZE = 8192;
 
         /// <summary>
-        /// Maximum of 8000 pages in the cache, currently approx. 64mb
-        /// </summary>
-        public const int MAX_PAGE_CACHE_SIZE = 8000;
-
-        /// <summary>
         /// How many pages the IO system will load to prefetch data access.
         /// </summary>
         public const int MAX_AMOUNT_OF_READ_AHEAD_PAGES = 8;
@@ -55,8 +50,6 @@ namespace Datatent2.Contracts
         /// Document can be maximum take 2000 pages
         /// </summary>
         public const int MAX_DOCUMENT_SIZE = 2000 * MAX_USABLE_BYTES_IN_PAGE;
-
-        public const BufferPoolImplementation BUFFER_POOL_IMPLEMENTATION = BufferPoolImplementation.Unmanaged;
 
         public static Guid NopCompressionPluginId => new("B7647CEF-6338-477B-B514-9A48B1E2205A");
     }

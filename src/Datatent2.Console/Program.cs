@@ -5,7 +5,9 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
+using Datatent2.Contracts;
 using Datatent2.Core;
+using Datatent2.Core.Memory;
 using Datatent2.Core.Page;
 using Datatent2.Core.Page.AllocationInformation;
 using Datatent2.Core.Services.Data;
@@ -23,41 +25,57 @@ namespace Datatent2.Console
     {
         static async Task Main(string[] args)
         {
-            IntSkipList intSkipList = new IntSkipList();
-            foreach (var i in Enumerable.Range(0,99))
+            var settings = new DatatentSettings()
             {
-                intSkipList.Insert(i);
+                DatabasePath = @"C:\temp\mmf.file"
+            };
+            settings.IOSettings.UseReadAheadCache = false;
+            using MemoryMappedDiskService memoryMappedDiskService = new MemoryMappedDiskService(settings,
+                NullLogger.Instance);
+
+            for (int i = 0; i < 505; i++)
+            {
+                System.Console.WriteLine(i);
+                var buffer = BufferPool.Shared.Rent(Constants.PAGE_SIZE);
+                buffer.Span.Fill(0);
+                await memoryMappedDiskService.WriteBuffer(new WriteRequest(buffer, (uint)i));
             }
 
+            //    IntSkipList intSkipList = new IntSkipList();
+            //    foreach (var i in Enumerable.Range(0,99))
+            //    {
+            //        intSkipList.Insert(i);
+            //    }
 
-            var logger = new LoggerConfiguration().Enrich.FromLogContext().WriteTo.Async(configuration => configuration.File("log.txt", outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] {Message} {NewLine}{Exception}").MinimumLevel.Is(LogEventLevel.Information)).Enrich.FromLogContext().CreateLogger();
-            var factory = LoggerFactory.Create(builder =>
-            {
-                builder.AddSerilog(logger);
-                builder.SetMinimumLevel(LogLevel.Trace);
-            });
-            var path = Path.Combine(Path.GetDirectoryName(typeof(Program).Assembly.Location)!, "test.db");
-            var plugins = "C:\\Development\\Datatent2\\plugins";
 
-            Datatent datatent = await Datatent.Create(new DatatentSettings() { InMemory = false, DatabasePath = path, PluginPath = plugins }, factory);
+            //    var logger = new LoggerConfiguration().Enrich.FromLogContext().WriteTo.Async(configuration => configuration.File("log.txt", outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] {Message} {NewLine}{Exception}").MinimumLevel.Is(LogEventLevel.Information)).Enrich.FromLogContext().CreateLogger();
+            //    var factory = LoggerFactory.Create(builder =>
+            //    {
+            //        builder.AddSerilog(logger);
+            //        builder.SetMinimumLevel(LogLevel.Trace);
+            //    });
+            //    var path = Path.Combine(Path.GetDirectoryName(typeof(Program).Assembly.Location)!, "test.db");
+            //    var plugins = "C:\\Development\\Datatent2\\plugins";
 
-            var bogus = new Bogus.Randomizer();
-         
-            for (int i = 0; i < 1; i++)
-            {
-                TestObject testObject = new TestObject();
-                testObject.IntProp = i;
-                testObject.StringProp = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-                try
-                {
-                    //await datatent.Insert(testObject, testObject.IntProp);
-                }
-                catch (Exception e)
-                {
-                    System.Console.WriteLine(e);
-                    throw;
-                }
-            }
+            //    Datatent datatent = await Datatent.Create(new DatatentSettings() { DatabasePath = path, PluginPath = plugins }, factory);
+
+            //    var bogus = new Bogus.Randomizer();
+
+            //    for (int i = 0; i < 1; i++)
+            //    {
+            //        TestObject testObject = new TestObject();
+            //        testObject.IntProp = i;
+            //        testObject.StringProp = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+            //        try
+            //        {
+            //            //await datatent.Insert(testObject, testObject.IntProp);
+            //        }
+            //        catch (Exception e)
+            //        {
+            //            System.Console.WriteLine(e);
+            //            throw;
+            //        }
+            //    }
         }
     }
 

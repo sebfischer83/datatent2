@@ -76,7 +76,6 @@
 
   <ItemGroup>
     <Folder Include="Algo\" />
-    <Folder Include="IO\" />
   </ItemGroup>
 
   <ItemGroup>
