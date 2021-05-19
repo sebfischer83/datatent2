@@ -23,23 +23,46 @@ namespace Datatent2.Console
 {
     class Program
     {
+        private const int PAGES = 64000;
+        const int SIZE = 8192 * PAGES;
+        const int READS = 35000000;
+        static int[] _pagesToRead = new int[READS];
+        static int[] _pagesToReadLinear = new int[READS];
+
         static async Task Main(string[] args)
         {
-            var settings = new DatatentSettings()
+            DatatentSettings datatentSettingsMapRead = new DatatentSettings()
             {
-                DatabasePath = @"C:\temp\mmf.file"
+                DatabasePath = Path.Combine(Path.GetTempPath(), "readmap.file"),
+                IOSettings = new DatatentSettings.IO()
+                {
+                    IOSystem = DatatentSettings.IOSystem.FileStream,
+                    UseReadAheadCache = false
+                }
             };
-            settings.IOSettings.UseReadAheadCache = false;
-            using MemoryMappedDiskService memoryMappedDiskService = new MemoryMappedDiskService(settings,
-                NullLogger.Instance);
+            BufferPoolFactory.Init(datatentSettingsMapRead, NullLogger.Instance);
+            //var buffer = BufferPool.Shared.Rent(Constants.PAGE_SIZE);
+            //buffer.Span.Fill(0xFF);
+            var memoryMappedDiskService =
+                new MemoryMappedDiskService(datatentSettingsMapRead, NullLogger.Instance);
+            //for (uint i = 0; i < PAGES; i++)
+            //{
 
-            for (int i = 0; i < 505; i++)
-            {
-                System.Console.WriteLine(i);
-                var buffer = BufferPool.Shared.Rent(Constants.PAGE_SIZE);
-                buffer.Span.Fill(0);
-                await memoryMappedDiskService.WriteBuffer(new WriteRequest(buffer, (uint)i));
-            }
+            //    await memoryMappedDiskService.WriteBuffer(new WriteRequest(buffer, i));
+            //}
+            //Random random = new Random();
+            //for (int i = 0; i < READS; i++)
+            //{
+            //    _pagesToRead[i] = random.Next(1, 63999);
+            //}
+
+            //for (int i = 0; i < READS; i++)
+            //{
+            //    _pagesToReadLinear[i] = i;
+            //    if (i > 63999)
+            //        _pagesToReadLinear[i] = i - 63999;
+            //}
+            await ReadAsync(memoryMappedDiskService, datatentSettingsMapRead);
 
             //    IntSkipList intSkipList = new IntSkipList();
             //    foreach (var i in Enumerable.Range(0,99))
@@ -76,6 +99,18 @@ namespace Datatent2.Console
             //            throw;
             //        }
             //    }
+            memoryMappedDiskService.Dispose();
+            //File.Delete(datatentSettingsMapRead.DatabasePath);
+        }
+
+        private static async Task ReadAsync(MemoryMappedDiskService memoryMappedDiskService, DatatentSettings datatentSettingsMapRead)
+        {
+            for (int j = 0; j < READS; j++)
+            {
+                var page = _pagesToReadLinear[j];
+                var res = await memoryMappedDiskService.GetBuffer(new ReadRequest((uint)page));
+                res.BufferSegment.Dispose();
+            }
         }
     }
 

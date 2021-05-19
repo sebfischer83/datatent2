@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.0" />
     <PackageReference Include="Crc32.NET" Version="1.2.0" />
     <PackageReference Include="Cryptisk.Utf8Json" Version="1.4.0" />
     <PackageReference Include="Jil" Version="3.0.0-alpha2" />
@@ -30,10 +30,6 @@
     <ProjectReference Include="..\..\src\Datatent2.Contracts\Datatent2.Contracts.csproj" />
     <ProjectReference Include="..\..\src\Datatent2.Core\Datatent2.Core.csproj" />
     <ProjectReference Include="..\..\src\plugins\Datatent2.Plugins.Compression\Datatent2.Plugins.Compression.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="IO\" />
   </ItemGroup>
 
 </Project>

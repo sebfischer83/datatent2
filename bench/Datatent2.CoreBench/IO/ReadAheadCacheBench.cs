@@ -70,9 +70,9 @@ namespace Datatent2.CoreBench.IO
 
             for (int i = 0; i < Reads; i++)
             {
-                pagesToRead[i] = i;
+                pagesToReadLinear[i] = i;
                 if (i > 63999)
-                    pagesToRead[i] = i - 63999;
+                    pagesToReadLinear[i] = i - 63999;
             }
             if (!File.Exists(_path2))
                 File.Copy(_path, _path2);
@@ -149,13 +149,6 @@ namespace Datatent2.CoreBench.IO
 
         private IBufferSegment ReadCached(uint pageId)
         {
-            //var cachedBuffer = _diskPageCache.GetIfExists(pageId);
-            //if (cachedBuffer != null)
-            //{
-            //    _diskPageCache.Remove(pageId);
-            //    return cachedBuffer;
-            //}
-
             var bufferSegment = BufferPoolFactory.Get().Rent(Constants.PAGE_SIZE);
 
             _mappedStream.Seek(BasePage.PageOffset(pageId), SeekOrigin.Begin);

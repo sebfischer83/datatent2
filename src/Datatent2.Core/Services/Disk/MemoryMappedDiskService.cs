@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.MemoryMappedFiles;
+#pragma warning disable 8618
 
 namespace Datatent2.Core.Services.Disk
 {
@@ -15,7 +16,7 @@ namespace Datatent2.Core.Services.Disk
          /// <summary>
         /// 10000 pages per chunk
         /// </summary>
-          private const uint _chunkMultiplicator = 100;
+        private const uint _chunkMultiplicator = 10000;
 
         private MappedRange _mapRange;
 
@@ -35,7 +36,7 @@ namespace Datatent2.Core.Services.Disk
             else
             {
                 // file is there, so we need to map the complete file at start
-                var file = new FileInfo(settings.DatabasePath);
+                var file = new FileInfo(settings.DatabasePath!);
                 initalMap = (uint)file.Length / Constants.PAGE_SIZE;
                 logger.LogInformation($"Existings file found of size {file.Length} bytes, set {nameof(initalMap)} to {initalMap}");
             }
@@ -57,7 +58,7 @@ namespace Datatent2.Core.Services.Disk
                 Stream.Close();
             }
             Logger.LogInformation($"Create new map for {_mapFile}");
-            _mapFile = MemoryMappedFile.CreateFromFile(Settings.DatabasePath!, FileMode.Open, "datatent", (_mapRange.To + 1) * Constants.PAGE_SIZE);
+            _mapFile = MemoryMappedFile.CreateFromFile(Settings.DatabasePath!, FileMode.Open, null, (_mapRange.To + 1) * Constants.PAGE_SIZE);
             _mapAccessor = _mapFile.CreateDirectAccessor();
             Stream = _mapAccessor.AsStream();
         }
@@ -98,3 +99,4 @@ namespace Datatent2.Core.Services.Disk
         }
     }
 }
+#pragma warning restore 8618

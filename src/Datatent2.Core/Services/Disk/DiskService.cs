@@ -61,9 +61,12 @@ namespace Datatent2.Core.Services.Disk
             Stream = Stream.Null;
             Settings = settings;
             Logger = logger;
-            _diskPageCache = new DiskPageCache(settings, logger);
+            if (Settings.IOSettings.UseReadAheadCache)
+            {
+                _diskPageCache = new DiskPageCache(settings, logger);
+            }
             _cacheSize = Constants.PAGE_SIZE * Constants.MAX_AMOUNT_OF_READ_AHEAD_PAGES;
-            _cacheBytes = new byte[_cacheSize];
+            _cacheBytes = new byte[Settings.IOSettings.UseReadAheadCache ? _cacheSize : 1];
             ReadChannel = Channel.CreateBounded<ValueTuple<ReadRequest, TaskCompletionSource<ReadResponse>>>(
                 new BoundedChannelOptions(100)
                 {
