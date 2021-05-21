@@ -5,6 +5,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Reflection;
+using System.Reflection.Metadata;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Channels;
@@ -24,33 +27,80 @@ namespace Datatent2.Core.Services.Disk
     /// </summary>
     internal abstract class DiskService : IDisposable
     {
+        /// <summary>
+        /// The stream which is used
+        /// </summary>
         protected Stream Stream;
+        /// <summary>
+        /// Waiting line for read requests
+        /// </summary>
         protected readonly Channel<ValueTuple<ReadRequest, TaskCompletionSource<ReadResponse>>> ReadChannel;
+        /// <summary>
+        /// Waiting line for write requests
+        /// </summary>
         protected readonly Channel<ValueTuple<WriteRequest, TaskCompletionSource<WriteRespone>>> WriteChannel;
+        /// <summary>
+        /// The task that do the reads
+        /// </summary>
         protected readonly Task ReadTask;
+        /// <summary>
+        /// The task that do the writes
+        /// </summary>
         protected readonly Task WriteTask;
-        protected DiskPageCache _diskPageCache;
+        /// <summary>
+        /// The implementation for the read ahead cache
+        /// </summary>
+        protected IReadAheadPageCache _diskPageCache;
         private int _cacheSize;
 
-        // holds references to current pending read operations
+        /// <summary>
+        /// Holds references to current pending read operations
+        /// </summary>
         protected readonly ConcurrentDictionary<uint, TaskCompletionSource<ReadResponse>> ConcurrentDictionaryRead = new();
-        // holds references to current pending write operations
+        /// <summary>
+        /// Holds references to current pending write operations
+        /// </summary>
         protected readonly ConcurrentDictionary<uint, TaskCompletionSource<WriteRespone>> ConcurrentDictionaryWrite = new();
 
+        /// <summary>
+        /// The database settings
+        /// </summary>
         protected readonly DatatentSettings Settings;
+        /// <summary>
+        /// The logger
+        /// </summary>
         protected readonly ILogger Logger;
         private byte[] _cacheBytes;
 
-        public static DiskService Create(DatatentSettings settings)
+        /// <summary>
+        /// Creates a new instance of the DiskService for the given settings
+        /// </summary>
+        /// <param name="settings"></param>
+        /// <returns></returns>
+        public static DiskService Create(DatatentSettings settings, ILogger logger)
         {
             if (settings.IOSettings.IOSystem == DatatentSettings.IOSystem.InMemory)
             {
                 return new InMemoryDiskService(new DatatentSettings());
             }
+            if (settings.IOSettings.IOSystem == DatatentSettings.IOSystem.FileStream)
+            {
+                return (FileDiskService)(new(settings));
+            }
+            if (settings.IOSettings.IOSystem == DatatentSettings.IOSystem.MemoryMappedFile)
+            {
+                return (MemoryMappedDiskService)(new(settings, logger));
+            }
 
-            return (FileDiskService)(new(settings));
+            throw new ArgumentException(nameof(settings.IOSettings.IOSystem));
         }
 
+        /// <summary>
+        /// Gets the current Stream, possible to override for specific changes
+        /// </summary>
+        /// <param name="pageId"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         protected virtual Stream GetStream(uint pageId)
         {
             return Stream;
@@ -58,12 +108,13 @@ namespace Datatent2.Core.Services.Disk
 
         protected DiskService(DatatentSettings settings, ILogger logger)
         {
+            _diskPageCache = new NullReadAheadPageCache();
             Stream = Stream.Null;
             Settings = settings;
             Logger = logger;
             if (Settings.IOSettings.UseReadAheadCache)
             {
-                _diskPageCache = new DiskPageCache(settings, logger);
+                _diskPageCache = new DiskReadAheadPageCache(settings, logger);
             }
             _cacheSize = Constants.PAGE_SIZE * Constants.MAX_AMOUNT_OF_READ_AHEAD_PAGES;
             _cacheBytes = new byte[Settings.IOSettings.UseReadAheadCache ? _cacheSize : 1];
@@ -90,6 +141,9 @@ namespace Datatent2.Core.Services.Disk
             WriteTask.Start();
         }
 
+        /// <summary>
+        /// Take from the waiting line and forward to the IO system
+        /// </summary>
         protected async void Reader()
         {
             var reader = ReadChannel.Reader;
@@ -103,6 +157,7 @@ namespace Datatent2.Core.Services.Disk
                 }
             }
         }
+
 
         protected async void Writer()
         {

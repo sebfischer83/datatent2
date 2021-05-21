@@ -82,7 +82,7 @@ namespace Datatent2.Core
                 compressionPlugins.First(service => service?.Id == Constants.NopCompressionPluginId);
 
             _pageService = await
-                PageService.Create(DiskService.Create(_datatentSettings), _cacheService,
+                PageService.Create(DiskService.Create(_datatentSettings, _loggerFactory.CreateLogger("DiskService")), _cacheService,
                     _loggerFactory.CreateLogger<PageService>());
 
             _dataService = new DataService(nopCompressionService!, _pageService, _loggerFactory.CreateLogger<DataService>());

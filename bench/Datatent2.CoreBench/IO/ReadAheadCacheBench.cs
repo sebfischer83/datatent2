@@ -45,7 +45,7 @@ namespace Datatent2.CoreBench.IO
         FileStream _readStreamDefault;
         FileStream _readStreamDiskPageCache;
         FileStream _readStreamCached;
-        private DiskPageCache _diskPageCache;
+        private DiskReadAheadPageCache _diskPageCache;
 
 
         [GlobalSetup]
@@ -95,7 +95,7 @@ namespace Datatent2.CoreBench.IO
                 }
             };
             BufferPoolFactory.Init(settings, NullLogger.Instance);
-            _diskPageCache = new DiskPageCache(settings, NullLogger.Instance);
+            _diskPageCache = new DiskReadAheadPageCache(settings, NullLogger.Instance);
             using var test = BufferPoolFactory.Get().Rent();
             ArrayPool<byte> pool = ArrayPool<byte>.Shared;
             cacheSize = Constants.PAGE_SIZE * Constants.MAX_AMOUNT_OF_READ_AHEAD_PAGES;
