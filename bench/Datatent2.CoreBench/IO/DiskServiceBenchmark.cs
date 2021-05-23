@@ -202,7 +202,7 @@ namespace Datatent2.CoreBench.IO
                 var page = Seek == ReadAheadCacheBench.SeekMethod.Linear
                     ? _pagesToReadLinear[j]
                     : _pagesToRead[j];
-                await _memoryMappedDiskServiceWrite.WriteBuffer(new WriteRequest(_buffer,(uint) page));
+                await _memoryMappedDiskServiceWrite.WriteBuffer(new WriteRequest(_buffer, (uint)page));
             }
 
             return i;

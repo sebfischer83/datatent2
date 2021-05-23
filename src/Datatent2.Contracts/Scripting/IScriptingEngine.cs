@@ -8,10 +8,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Datatent2.Core.Scripting
+namespace Datatent2.Contracts.Scripting
 {
     public interface IScriptingEngine : IDisposable
     {
+        public string Name { get; }
+
+        public Guid Id { get; }
+
         T Execute<T>(object obj);
     }
 

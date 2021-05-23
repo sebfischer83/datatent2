@@ -18,7 +18,7 @@
     <PackageReference Include="Crc32.NET" Version="1.2.0" />
     <PackageReference Include="Cryptisk.Utf8Json" Version="1.4.0" />
     <PackageReference Include="Jil" Version="3.0.0-alpha2" />
-    <PackageReference Include="Jint" Version="3.0.0-beta-001" />
+    <PackageReference Include="Jint" Version="3.0.0-beta-2032" />
     <PackageReference Include="K4os.Compression.LZ4" Version="1.2.10-beta" />
     <PackageReference Include="MessagePack" Version="2.2.85" />
     <PackageReference Include="Moq" Version="4.16.1" />
@@ -30,6 +30,7 @@
     <ProjectReference Include="..\..\src\Datatent2.Contracts\Datatent2.Contracts.csproj" />
     <ProjectReference Include="..\..\src\Datatent2.Core\Datatent2.Core.csproj" />
     <ProjectReference Include="..\..\src\plugins\Datatent2.Plugins.Compression\Datatent2.Plugins.Compression.csproj" />
+    <ProjectReference Include="..\..\src\plugins\Datatent2.Plugins.Scripting\Datatent2.Plugins.Scripting.csproj" />
   </ItemGroup>
 
 </Project>

@@ -24,6 +24,8 @@ namespace Datatent2.Core.Services.Disk
 
         private MemoryMappedDirectAccessor _mapAccessor;
 
+        private FileStream _internalStream { get; }
+
         public MemoryMappedDiskService(DatatentSettings settings, ILogger logger) : base(settings, logger)
         {
             var initalMap = 0u;
@@ -40,6 +42,7 @@ namespace Datatent2.Core.Services.Disk
                 initalMap = (uint)file.Length / Constants.PAGE_SIZE;
                 logger.LogInformation($"Existings file found of size {file.Length} bytes, set {nameof(initalMap)} to {initalMap}");
             }
+            _internalStream = new FileStream(Settings.DatabasePath!, FileMode.Open);
             CreateMapping(initalMap);
         }
 
@@ -54,11 +57,11 @@ namespace Datatent2.Core.Services.Disk
             {
                 _mapAccessor.Flush();
                 _mapAccessor.Dispose();
-                _mapFile.Dispose();
+                //_mapFile.Dispose();
                 Stream.Close();
             }
-            Logger.LogInformation($"Create new map for {_mapFile}");
-            _mapFile = MemoryMappedFile.CreateFromFile(Settings.DatabasePath!, FileMode.Open, null, (_mapRange.To + 1) * Constants.PAGE_SIZE);
+            //Logger.LogInformation($"Create new map for {_mapFile}");
+            _mapFile = MemoryMappedFile.CreateFromFile(_internalStream, null, (_mapRange.To + 1) * Constants.PAGE_SIZE, MemoryMappedFileAccess.ReadWrite ,HandleInheritability.Inheritable, true);
             _mapAccessor = _mapFile.CreateDirectAccessor();
             Stream = _mapAccessor.AsStream();
         }
@@ -78,6 +81,7 @@ namespace Datatent2.Core.Services.Disk
             base.Dispose();
             _mapAccessor.Flush();
             _mapAccessor.Dispose();
+            _internalStream.Dispose();
             _mapFile?.Dispose();
         }
 

@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package>
+    <metadata>
+        <id>Datatent2.Plugins.Scripting</id>
+        <title>Datatent2.Plugins.Scripting</title>
+        <version>1.0.0</version>
+        <authors>Sebastian Fischer</authors>
+        <owners>Sebastian Fischer</owners>
+        <description>Datatent2.Plugins.Scripting</description>
+        <copyright>Copyright 2021</copyright>
+        <tags></tags>
+    </metadata>
+    <files>
+        <file src="bin\Release\net5.0\publish\*.*" target="lib\net5.0" />
+    </files>
+</package>

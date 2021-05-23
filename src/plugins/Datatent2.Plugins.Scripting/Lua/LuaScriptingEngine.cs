@@ -8,13 +8,22 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using Datatent2.Contracts.Scripting;
 using NLua;
+using Prise.Plugin;
 
-namespace Datatent2.Core.Scripting
+namespace Datatent2.Plugins.Scripting. Lua
 {
-    internal class LuaScriptingEngine : IMultithreadedScriptingEngine
+    [Plugin(PluginType = typeof(IMultithreadedScriptingEngine))]
+    public class LuaScriptingEngine : IMultithreadedScriptingEngine
     {
         private readonly string _script;
+
+        public string Name => "NLua";
+
+        private static Guid ID = Guid.Parse("0e022cd2-3a12-4ae5-9bb4-d45f16d17869");
+
+        public Guid Id => ID;
 
         public LuaScriptingEngine(string script)
         {
@@ -24,7 +33,7 @@ namespace Datatent2.Core.Scripting
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Execute<T>(object obj)
         {
-            using var lua = new Lua();
+            using var lua = new NLua.Lua();
             lua["dataObject"] = obj;
             lua.DoString(_script);
             return (T)lua.GetObjectFromPath("res");

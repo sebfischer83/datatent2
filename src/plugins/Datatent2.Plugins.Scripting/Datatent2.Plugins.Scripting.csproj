@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="fasterflect" Version="3.0.0" />
+    <PackageReference Include="fasterflect.reflect" Version="3.1.0" />
+    <PackageReference Include="Jint" Version="3.0.0-beta-2032" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.9.0" />
+    <PackageReference Include="NLua" Version="1.5.9" />
+    <PackageReference Include="Prise.Plugin" Version="2.1.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Datatent2.Contracts\Datatent2.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

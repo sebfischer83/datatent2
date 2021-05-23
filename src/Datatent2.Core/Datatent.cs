@@ -15,8 +15,6 @@ using Datatent2.Core.Services.Data;
 using Datatent2.Core.Services.Disk;
 using Datatent2.Core.Services.Page;
 using Datatent2.Core.Table;
-using Esprima.Ast;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -93,13 +91,13 @@ namespace Datatent2.Core
             var mainServiceCollection = new ServiceCollection()
                 .AddSingleton<IConfiguration>(new ConfigurationBuilder()
                     .Build())
-                .AddPrise();
+                .AddPriseNugetPackages();
 
             var serviceProvider = mainServiceCollection.BuildServiceProvider();
 
             var pathToDist = _datatentSettings.PluginPath;
 
-            var hostFramework = HostFrameworkUtils.GetHostframeworkFromType(typeof(Program));
+            var hostFramework = HostFrameworkUtils.GetHostframeworkFromType(typeof(Datatent));
             _logger.LogInformation($"Search plugins at {pathToDist}");
 
             _loader = serviceProvider.GetRequiredService<IPluginLoader>();

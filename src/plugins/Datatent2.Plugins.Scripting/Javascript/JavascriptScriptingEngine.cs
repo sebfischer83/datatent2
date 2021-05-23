@@ -7,11 +7,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Datatent2.Contracts.Scripting;
+using Esprima.Ast;
 using Jint;
+using Prise.Plugin;
 
-namespace Datatent2.Core.Scripting
+namespace Datatent2.Plugins.Scripting.Javascript
 {
-    internal class JavascriptScriptingEngine : IScriptingEngine
+    [Plugin(PluginType = typeof(IScriptingEngine))]
+    public class JavascriptScriptingEngine : IScriptingEngine
     {
         private readonly string _script;
         private Engine _engine;
@@ -21,6 +25,12 @@ namespace Datatent2.Core.Scripting
             _script = script;
             _engine = new Engine();
         }
+
+        public string Name => "Jint";
+
+        private static Guid ID = Guid.Parse("4cdf32fc-eee4-48b6-bfab-4ab0b26bfe40");
+
+        public Guid Id => ID;
 
         public void Dispose()
         {
