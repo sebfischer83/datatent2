@@ -37,6 +37,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Datatent2.Plugins.Compressi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Datatent2.Plugins.Scripting", "src\plugins\Datatent2.Plugins.Scripting\Datatent2.Plugins.Scripting.csproj", "{BD98EF47-A17C-43F4-A340-72523BB067B7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Datatent2.Plugins.Tests", "tests\Datatent2.Plugins.Tests\Datatent2.Plugins.Tests.csproj", "{F2E474BA-0CD2-4A2E-B154-4B000338118B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,6 +79,10 @@ Global
 		{BD98EF47-A17C-43F4-A340-72523BB067B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD98EF47-A17C-43F4-A340-72523BB067B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD98EF47-A17C-43F4-A340-72523BB067B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2E474BA-0CD2-4A2E-B154-4B000338118B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2E474BA-0CD2-4A2E-B154-4B000338118B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2E474BA-0CD2-4A2E-B154-4B000338118B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2E474BA-0CD2-4A2E-B154-4B000338118B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -91,6 +97,7 @@ Global
 		{3F00CBEC-57ED-46E6-833D-1356A8A14288} = {6E673203-4682-4A89-B42B-F4979D3A3CE7}
 		{D2919BBE-C280-4E85-9D86-FCF2B4AF530A} = {3F00CBEC-57ED-46E6-833D-1356A8A14288}
 		{BD98EF47-A17C-43F4-A340-72523BB067B7} = {3F00CBEC-57ED-46E6-833D-1356A8A14288}
+		{F2E474BA-0CD2-4A2E-B154-4B000338118B} = {664813E2-99F5-49A4-A7B5-87B2787B3666}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1F86833F-5411-48E6-8983-B0C86A0AB0AB}

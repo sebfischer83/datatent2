@@ -14,6 +14,7 @@ using Datatent2.Core.Services.Cache;
 using Datatent2.Core.Services.Data;
 using Datatent2.Core.Services.Disk;
 using Datatent2.Core.Services.Page;
+using Datatent2.Core.Services.Transactions;
 using Datatent2.Core.Table;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,6 +36,7 @@ namespace Datatent2.Core
         private PageService? _pageService;
         private DataService? _dataService;
         private CacheService _cacheService;
+        private TransactionManager _transactionManager;
 
         public Datatent(DatatentSettings datatentSettings, ILoggerFactory loggerFactory)
         {
@@ -56,7 +58,7 @@ namespace Datatent2.Core
             _logger.LogInformation($"Operating System {Environment.OSVersion}");
         }
 
-        public async Task Init()
+        private async Task Init()
         {
             _logger.LogInformation(_datatentSettings.ToString());
             await LoadPlugins();
@@ -79,11 +81,13 @@ namespace Datatent2.Core
             var nopCompressionService =
                 compressionPlugins.First(service => service?.Id == Constants.NopCompressionPluginId);
 
+            _transactionManager = new TransactionManager(_loggerFactory.CreateLogger("Transactions"));
+
             _pageService = await
                 PageService.Create(DiskService.Create(_datatentSettings, _loggerFactory.CreateLogger("DiskService")), _cacheService,
                     _loggerFactory.CreateLogger<PageService>());
 
-            _dataService = new DataService(nopCompressionService!, _pageService, _loggerFactory.CreateLogger<DataService>());
+            _dataService = new DataService(nopCompressionService!, _pageService, _transactionManager, _loggerFactory.CreateLogger<DataService>());
         }
 
         private async Task LoadPlugins()

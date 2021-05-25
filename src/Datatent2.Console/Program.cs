@@ -34,55 +34,55 @@ namespace Datatent2.Console
 
         static async Task Main(string[] args)
         {
-            //ReusableTaskCompletionSource<int> reusableTaskCompletionSource = new ReusableTaskCompletionSource<int>();
-            //Task task = Task.Run(() =>
+            ////ReusableTaskCompletionSource<int> reusableTaskCompletionSource = new ReusableTaskCompletionSource<int>();
+            ////Task task = Task.Run(() =>
+            ////{
+            ////    Thread.Sleep(2000);
+            ////    reusableTaskCompletionSource.SetResult(50);
+            ////});
+
+            ////task = Task.Run(() =>
+            ////{
+            ////    Thread.Sleep(2000);
+            ////    reusableTaskCompletionSource.SetResult(50);
+            ////});
+
+            ////var res = await reusableTaskCompletionSource.Task;
+
+            ////System.Console.WriteLine(res);
+
+            //DatatentSettings datatentSettingsMapRead = new DatatentSettings()
             //{
-            //    Thread.Sleep(2000);
-            //    reusableTaskCompletionSource.SetResult(50);
-            //});
-
-            //task = Task.Run(() =>
+            //    DatabasePath = Path.Combine(Path.GetTempPath(), "readmap.file"),
+            //    IOSettings = new DatatentSettings.IO()
+            //    {
+            //        IOSystem = DatatentSettings.IOSystem.FileStream,
+            //        UseReadAheadCache = false
+            //    }
+            //};
+            //BufferPoolFactory.Init(datatentSettingsMapRead, NullLogger.Instance);
+            //var buffer = BufferPool.Shared.Rent(Constants.PAGE_SIZE);
+            //buffer.Span.Fill(0xFF);
+            //var memoryMappedDiskService =
+            //    new MemoryMappedDiskService(datatentSettingsMapRead, NullLogger.Instance);
+            //for (uint i = 0; i < PAGES; i++)
             //{
-            //    Thread.Sleep(2000);
-            //    reusableTaskCompletionSource.SetResult(50);
-            //});
 
-            //var res = await reusableTaskCompletionSource.Task;
+            //    await memoryMappedDiskService.WriteBuffer(new WriteRequest(buffer, i));
+            //}
+            //Random random = new Random();
+            //for (int i = 0; i < READS; i++)
+            //{
+            //    _pagesToRead[i] = random.Next(1, 63999);
+            //}
 
-            //System.Console.WriteLine(res);
-
-            DatatentSettings datatentSettingsMapRead = new DatatentSettings()
-            {
-                DatabasePath = Path.Combine(Path.GetTempPath(), "readmap.file"),
-                IOSettings = new DatatentSettings.IO()
-                {
-                    IOSystem = DatatentSettings.IOSystem.FileStream,
-                    UseReadAheadCache = false
-                }
-            };
-            BufferPoolFactory.Init(datatentSettingsMapRead, NullLogger.Instance);
-            var buffer = BufferPool.Shared.Rent(Constants.PAGE_SIZE);
-            buffer.Span.Fill(0xFF);
-            var memoryMappedDiskService =
-                new MemoryMappedDiskService(datatentSettingsMapRead, NullLogger.Instance);
-            for (uint i = 0; i < PAGES; i++)
-            {
-
-                await memoryMappedDiskService.WriteBuffer(new WriteRequest(buffer, i));
-            }
-            Random random = new Random();
-            for (int i = 0; i < READS; i++)
-            {
-                _pagesToRead[i] = random.Next(1, 63999);
-            }
-
-            for (int i = 0; i < READS; i++)
-            {
-                _pagesToReadLinear[i] = i;
-                if (i > 63999)
-                    _pagesToReadLinear[i] = i - 63999;
-            }
-            await ReadAsync(memoryMappedDiskService, datatentSettingsMapRead);
+            //for (int i = 0; i < READS; i++)
+            //{
+            //    _pagesToReadLinear[i] = i;
+            //    if (i > 63999)
+            //        _pagesToReadLinear[i] = i - 63999;
+            //}
+            //await ReadAsync(memoryMappedDiskService, datatentSettingsMapRead);
 
             //    IntSkipList intSkipList = new IntSkipList();
             //    foreach (var i in Enumerable.Range(0,99))
@@ -91,36 +91,36 @@ namespace Datatent2.Console
             //    }
 
 
-            //    var logger = new LoggerConfiguration().Enrich.FromLogContext().WriteTo.Async(configuration => configuration.File("log.txt", outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] {Message} {NewLine}{Exception}").MinimumLevel.Is(LogEventLevel.Information)).Enrich.FromLogContext().CreateLogger();
-            //    var factory = LoggerFactory.Create(builder =>
-            //    {
-            //        builder.AddSerilog(logger);
-            //        builder.SetMinimumLevel(LogLevel.Trace);
-            //    });
-            //    var path = Path.Combine(Path.GetDirectoryName(typeof(Program).Assembly.Location)!, "test.db");
-            //    var plugins = "C:\\Development\\Datatent2\\plugins";
+            var logger = new LoggerConfiguration().Enrich.FromLogContext().WriteTo.Async(configuration => configuration.File("log.txt", outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] {Message} {NewLine}{Exception}").MinimumLevel.Is(LogEventLevel.Information)).Enrich.FromLogContext().CreateLogger();
+            var factory = LoggerFactory.Create(builder =>
+            {
+                builder.AddSerilog(logger);
+                builder.SetMinimumLevel(LogLevel.Trace);
+            });
+            var path = Path.Combine(Path.GetDirectoryName(typeof(Program).Assembly.Location)!, "test.db");
+            var plugins = "C:\\Development\\Datatent2\\plugins";
 
-            //    Datatent datatent = await Datatent.Create(new DatatentSettings() { DatabasePath = path, PluginPath = plugins }, factory);
+            Datatent datatent = await Datatent.Create(new DatatentSettings() { DatabasePath = path, PluginPath = plugins }, factory);
 
-            //    var bogus = new Bogus.Randomizer();
+            var bogus = new Bogus.Randomizer();
 
-            //    for (int i = 0; i < 1; i++)
-            //    {
-            //        TestObject testObject = new TestObject();
-            //        testObject.IntProp = i;
-            //        testObject.StringProp = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-            //        try
-            //        {
-            //            //await datatent.Insert(testObject, testObject.IntProp);
-            //        }
-            //        catch (Exception e)
-            //        {
-            //            System.Console.WriteLine(e);
-            //            throw;
-            //        }
-            //    }
-            memoryMappedDiskService.Dispose();
-            File.Delete(datatentSettingsMapRead.DatabasePath);
+            for (int i = 0; i < 1; i++)
+            {
+                TestObject testObject = new TestObject();
+                testObject.IntProp = i;
+                testObject.StringProp = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+                try
+                {
+                    //await datatent.GetTable<TestObject>("testTable")
+                }
+                catch (Exception e)
+                {
+                    System.Console.WriteLine(e);
+                    throw;
+                }
+            }
+            //memoryMappedDiskService.Dispose();
+            //File.Delete(datatentSettingsMapRead.DatabasePath);
         }
 
         private static async Task ReadAsync(MemoryMappedDiskService memoryMappedDiskService, DatatentSettings datatentSettingsMapRead)

@@ -5,7 +5,7 @@ using Datatent2.Plugins.Compression;
 using Shouldly;
 using Xunit;
 
-namespace Datatent2.Core.Tests
+namespace Datatent2.Plugins.Tests.Compression
 {
     public class BrotliCompressionServiceTest
     {

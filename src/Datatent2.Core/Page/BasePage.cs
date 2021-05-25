@@ -11,6 +11,7 @@ using Datatent2.Core.Memory;
 using Datatent2.Core.Page.Data;
 using Datatent2.Core.Page.Data;
 using Datatent2.Core.Page.Table;
+using Datatent2.Core.Services.Transactions;
 using Dawn;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -25,6 +26,8 @@ namespace Datatent2.Core.Page
         public ref PageHeader PageHeader => ref Header;
 
         public bool IsDirty { get; set; }
+
+        public Transaction? Transaction { get; set; }
 
         public virtual bool IsFull => FreeContinuousBytes < (Constants.PAGE_DIRECTORY_ENTRY_SIZE + 1) || MaxFreeUsableBytes <= 8 || HighestDirectoryEntryId == byte.MaxValue;
         public ushort UsedBytes => Header.UsedBytes;

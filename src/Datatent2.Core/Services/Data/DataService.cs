@@ -12,6 +12,7 @@ using Datatent2.Core.Block;
 using Datatent2.Core.Page;
 using Datatent2.Core.Page.Data;
 using Datatent2.Core.Services.Page;
+using Datatent2.Core.Services.Transactions;
 using Microsoft.Extensions.Logging;
 
 namespace Datatent2.Core.Services.Data
@@ -20,12 +21,14 @@ namespace Datatent2.Core.Services.Data
     {
         private readonly ICompressionService _compressionService;
         private readonly PageService _pageService;
+        private readonly TransactionManager _transactionManager;
         private readonly ILogger _logger;
 
-        public DataService(ICompressionService compressionService, PageService pageService, ILogger logger)
+        public DataService(ICompressionService compressionService, PageService pageService, TransactionManager transactionManager, ILogger logger)
         {
             _compressionService = compressionService;
             _pageService = pageService;
+            _transactionManager = transactionManager;
             _logger = logger;
         }
 
@@ -76,7 +79,7 @@ namespace Datatent2.Core.Services.Data
                 bytes.AddRange(block.GetData());
                 address = block.Header.NextBlockAddress;
             } while (!block.Header.NextBlockAddress.IsEmpty());
-            
+
             var array = bytes.Take(bytes.Count - sizeof(uint)).ToArray();
             var check = bytes.Skip(bytes.Count - sizeof(uint)).ToArray();
             checksum = BitConverter.ToUInt32(check);
@@ -90,10 +93,11 @@ namespace Datatent2.Core.Services.Data
         public async Task<List<(object, PageAddress)>> BulkInsert(IList<object> objects)
         {
             List<(object, PageAddress)> list = new();
+            var transaction = _transactionManager.CreateTransaction();
             for (int i = 0; i < objects.Count; i++)
             {
                 var obj = objects[i];
-                var address = await Insert(obj, true);
+                var address = await InsertInternal(obj, transaction);
                 list.Add((obj, address));
             }
 
@@ -101,14 +105,22 @@ namespace Datatent2.Core.Services.Data
             foreach (var id in ids)
             {
                 var page = await _pageService.GetPage<BasePage>(id);
-                if (page != null)
-                    await _pageService.WritePage(page);
             }
 
+            transaction.Commit();
             return list;
         }
 
-        public async Task<PageAddress> Insert(object obj, bool delayWrite = false)
+        public async Task<PageAddress> Insert(object obj)
+        {
+            var transaction = _transactionManager.CreateTransaction();
+            var address = await InsertInternal(obj, transaction);
+            transaction.Commit();
+
+            return address;
+        }
+
+        private async Task<PageAddress> InsertInternal(object obj, Transaction transaction)
         {
             var bytes = PrepareObject(obj);
 #if DEBUG
@@ -121,14 +133,12 @@ namespace Datatent2.Core.Services.Data
             int blockNr = 0;
             DataBlock? lastBlock = null;
             PageAddress pageAddress = PageAddress.Empty;
-            HashSet<BasePage> pages = new();
 
             // get free page and write data until done
             while (remainingBytes > 0)
             {
                 var dataPage = await _pageService.GetDataPageWithFreeSpace();
-                if (!pages.Contains(dataPage))
-                    pages.Add(dataPage);
+                transaction.Assign(dataPage);
                 var bytesThatCanBeWritten = dataPage.MaxFreeUsableBytes - Constants.BLOCK_HEADER_SIZE;
                 if (bytesThatCanBeWritten <= 0)
                 {
@@ -162,13 +172,6 @@ namespace Datatent2.Core.Services.Data
                 blockNr++;
             }
 
-            if (!delayWrite)
-                foreach (var page in pages)
-                {
-                    await _pageService.WritePage(page);
-                }
-
-            //ArrayPool<byte>.Shared.Return(bytes);
             return pageAddress;
         }
     }

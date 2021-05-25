@@ -31,6 +31,7 @@ namespace Datatent2.Core.Services.Page
         private GlobalAllocationMapPage? _globalAllocationMap;
         private AllocationInformationPage? _allocationInformationPage;
         private readonly SemaphoreSlim _semaphoreSlim;
+        private readonly Task _backgroundFlushTask;
 
         public static async Task<PageService> Create(DiskService diskService, CacheService cacheService, ILogger logger)
         {
@@ -41,10 +42,27 @@ namespace Datatent2.Core.Services.Page
 
         public PageService(DiskService diskService, CacheService cacheService, ILogger logger)
         {
+            _backgroundFlushTask = Task.Factory.StartNew(() => FlushBackgroundTaskMethodAsync(), TaskCreationOptions.LongRunning);
             _semaphoreSlim = new SemaphoreSlim(1, 1);
             _diskService = diskService;
             _logger = logger;
             _cacheService = cacheService;
+        }
+
+        private async Task FlushBackgroundTaskMethodAsync()
+        {
+            while (true)
+            {
+                await Task.Delay(5000);
+                foreach (var item in _cacheService)
+                {
+                    if (item.Transaction == null && item.IsDirty)
+                    {
+                        await _diskService.WriteBuffer(new WriteRequest(item.PageBuffer, item.Id));
+                        item.IsDirty = false;
+                    }
+                }
+            }            
         }
 
         /// <summary>
@@ -109,21 +127,7 @@ namespace Datatent2.Core.Services.Page
 
         public async Task<T?> GetPage<T>(uint id) where T : BasePage
         {
-            if (_cacheService.HasPage(id))
-            {
-                return _cacheService.Get<T>(id);
-            }
-
-            var response = await _diskService.GetBuffer(new ReadRequest(id));
-
-            var page = BasePage.Create<T>(response.BufferSegment);
-            if (page != null)
-            {
-                _cacheService.Add(page);
-                return page;
-            }
-
-            return null;
+            return await GetFromCacheOrRead<T>(id).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -131,9 +135,9 @@ namespace Datatent2.Core.Services.Page
         /// </summary>
         /// <returns></returns>
         public async Task CheckPoint()
-        {
+        {            
             foreach (var page in _cacheService)
-            {
+            {                
                 if (page.IsDirty)
                     await WritePage(page);
             }
@@ -209,7 +213,6 @@ namespace Datatent2.Core.Services.Page
                 // search all tablePages
                 // search from current GAM to the previous and all aims if there is a table page with data for this table
                 var gam = _globalAllocationMap!;
-                AllocationInformationPage allocationInformationPage;
                 do
                 {
                     var possibleAimPages = AllocationInformationPage.GetAllAllocationInformationPageIdsForGam(gam.Id);

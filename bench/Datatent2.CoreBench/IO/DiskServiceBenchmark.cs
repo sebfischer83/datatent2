@@ -47,10 +47,15 @@ namespace Datatent2.CoreBench.IO
         [GlobalSetup]
         public async Task SetupAsync()
         {
-            _pathWriteMap = Path.Combine(Path.GetTempPath(), "writemap.file");
-            _pathWriteStream = Path.Combine(Path.GetTempPath(), "writestream.file");
-            _pathReadMap = Path.Combine(Path.GetTempPath(), "readmap.file");
-            _pathReadStream = Path.Combine(Path.GetTempPath(), "readstream.file");
+            _pathWriteMap = Path.Combine("F:\\bench", "writemap.file");
+            _pathWriteStream = Path.Combine("F:\\bench", "writestream.file");
+            _pathReadMap = Path.Combine("F:\\bench", "readmap.file");
+            _pathReadStream = Path.Combine("F:\\bench", "readstream.file");
+
+            //_pathWriteMap = Path.Combine(Path.GetTempPath(), "writemap.file");
+            //_pathWriteStream = Path.Combine(Path.GetTempPath(), "writestream.file");
+            //_pathReadMap = Path.Combine(Path.GetTempPath(), "readmap.file");
+            //_pathReadStream = Path.Combine(Path.GetTempPath(), "readstream.file");
 
             DatatentSettings datatentSettingsStreamRead = new DatatentSettings()
             {

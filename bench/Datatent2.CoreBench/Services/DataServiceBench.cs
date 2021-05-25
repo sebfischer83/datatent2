@@ -14,6 +14,7 @@ using Datatent2.Core.Services.Cache;
 using Datatent2.Core.Services.Data;
 using Datatent2.Core.Services.Disk;
 using Datatent2.Core.Services.Page;
+using Datatent2.Core.Services.Transactions;
 using Datatent2.Plugins.Compression;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -37,8 +38,9 @@ namespace Datatent2.CoreBench.Services
             header.ToBuffer(bufferSegment.Span, 0);
             File.Delete(@"C:\Neuer Ordner\test.db");
             CacheService cacheService = new CacheService();
+            TransactionManager transactionManager = new TransactionManager(NullLogger.Instance);
             PageService pageService = new PageService(DiskService.Create(new DatatentSettings() { DatabasePath = @"C:\Neuer Ordner\test.db" }, NullLogger.Instance), cacheService, NullLogger.Instance);
-            _dataService = new DataService(new NopCompressionService(), pageService, NullLogger<DataService>.Instance);
+            _dataService = new DataService(new NopCompressionService(), pageService, transactionManager, NullLogger<DataService>.Instance);
 
             _objects = new List<TestObject>(50);
             foreach (var i in Enumerable.Range(0, 50))

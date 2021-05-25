@@ -4,13 +4,14 @@
 
 using Datatent2.Core.Page;
 using Datatent2.Core.Page.Data;
+using Datatent2.Core.Services.Transactions;
 using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-
+using System.Threading;
 
 namespace Datatent2.Core.Services.Cache
 {
@@ -21,8 +22,8 @@ namespace Datatent2.Core.Services.Cache
 
         public CacheService()
         {
-        }
 
+        }
 
         public void Add(BasePage page)
         {
@@ -39,13 +40,13 @@ namespace Datatent2.Core.Services.Cache
             return _allPages.ContainsKey(id);
         }
 
-        public T? Get<T>(uint id) where T: BasePage
+        public T? Get<T>(uint id) where T : BasePage
         {
             if (!HasPage(id))
                 return null;
             return (T)_allPages[id];
         }
-        
+
         public DataPage? GetDataPage(bool withFreeSpace = true)
         {
             if (_freeDataPages.Count == 0)
@@ -57,19 +58,19 @@ namespace Datatent2.Core.Services.Cache
             {
                 var pageKey = _freeDataPages.Keys.ElementAt(i);
                 var page = _freeDataPages[pageKey];
-                if (!withFreeSpace)
-                {
-                    dataPage = (DataPage) page;
-                    break;
-                }
-
-                if (page.FillFactor < PageFillFactor.NinetyFiveToNinetyNine)
+                if (!withFreeSpace && page.Transaction == null)
                 {
                     dataPage = (DataPage)page;
                     break;
                 }
 
-                list.Add(pageKey);
+                if (page.FillFactor < PageFillFactor.NinetyFiveToNinetyNine && page.Transaction == null)
+                {
+                    dataPage = (DataPage)page;
+                    break;
+                }
+                if (page.FillFactor > PageFillFactor.NinetyFiveToNinetyNine)
+                    list.Add(pageKey);
             }
 
             for (int i = 0; i < list.Count; i++)
@@ -96,7 +97,7 @@ namespace Datatent2.Core.Services.Cache
             {
                 if (page.Value.Type == pageType)
                 {
-                    yield return (T) (object)page;
+                    yield return (T)(object)page;
                 }
             }
         }

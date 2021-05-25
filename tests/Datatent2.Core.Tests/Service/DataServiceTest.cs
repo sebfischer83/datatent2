@@ -10,6 +10,7 @@ using Datatent2.Core.Services.Cache;
 using Datatent2.Core.Services.Data;
 using Datatent2.Core.Services.Disk;
 using Datatent2.Core.Services.Page;
+using Datatent2.Core.Services.Transactions;
 using Datatent2.Plugins.Compression;
 using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
@@ -24,8 +25,9 @@ namespace Datatent2.Core.Tests.Service
         {
             var bogus = new Bogus.Randomizer();
             CacheService cacheService = new CacheService();
+            TransactionManager transactionManager = new TransactionManager(NullLogger.Instance);
             PageService pageService = await PageService.Create(new InMemoryDiskService(new DatatentSettings()), cacheService, NullLogger<PageService>.Instance);
-            DataService dataService = new DataService(new NopCompressionService(), pageService, NullLogger<DataService>.Instance);
+            DataService dataService = new DataService(new NopCompressionService(), pageService, transactionManager, NullLogger<DataService>.Instance);
 
             TestObject testObject = new TestObject();
             testObject.IntProp = bogus.Int();
@@ -40,9 +42,11 @@ namespace Datatent2.Core.Tests.Service
         public async Task Insert_One_Object_And_Get_Test()
         {
             var bogus = new Bogus.Randomizer();
+
             CacheService cacheService = new CacheService();
+            TransactionManager transactionManager = new TransactionManager(NullLogger.Instance);
             PageService pageService = await PageService.Create(new InMemoryDiskService(new DatatentSettings()), cacheService, NullLogger<PageService>.Instance);
-            DataService dataService = new DataService(new NopCompressionService(), pageService, NullLogger<DataService>.Instance);
+            DataService dataService = new DataService(new NopCompressionService(), pageService, transactionManager, NullLogger<DataService>.Instance);
             TestObject testObject = new TestObject();
             testObject.IntProp = bogus.Int();
             testObject.StringProp = bogus.String2(1000);
@@ -60,8 +64,9 @@ namespace Datatent2.Core.Tests.Service
         {
             var bogus = new Bogus.Randomizer();
             CacheService cacheService = new CacheService();
+            TransactionManager transactionManager = new TransactionManager(NullLogger.Instance);
             PageService pageService = await PageService.Create(new InMemoryDiskService(new DatatentSettings()), cacheService, NullLogger<PageService>.Instance);
-            DataService dataService = new DataService(new NopCompressionService(), pageService, NullLogger<DataService>.Instance);
+            DataService dataService = new DataService(new NopCompressionService(), pageService, transactionManager, NullLogger<DataService>.Instance);
             TestObject testObject = new TestObject();
             testObject.IntProp = bogus.Int();
             testObject.StringProp = bogus.String2(40000);
