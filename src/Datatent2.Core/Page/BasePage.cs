@@ -54,9 +54,9 @@ namespace Datatent2.Core.Page
         /// <summary>
         /// The free bytes in a continuous block
         /// </summary>
-        public ushort FreeContinuousBytes => (ushort)(Constants.PAGE_SIZE - Constants.PAGE_HEADER_SIZE - Header.UsedBytes - Header.UnalignedFreeBytes - (Header.HighestSlotId * Constants.PAGE_DIRECTORY_ENTRY_SIZE));
+        public virtual ushort FreeContinuousBytes => (ushort)(Constants.PAGE_SIZE - Constants.PAGE_HEADER_SIZE - Header.UsedBytes - Header.UnalignedFreeBytes - (Header.HighestSlotId * Constants.PAGE_DIRECTORY_ENTRY_SIZE));
 
-        public ushort MaxFreeUsableBytes
+        public virtual ushort MaxFreeUsableBytes
         {
             get
             {
@@ -85,6 +85,7 @@ namespace Datatent2.Core.Page
             Buffer = buffer;
             Header = new PageHeader(id, pageType);
             HighestDirectoryEntryId = Header.HighestSlotId;
+            IsDirty = true;
         }
 
         public void SetPreviousPage(uint pageId)
@@ -131,6 +132,14 @@ namespace Datatent2.Core.Page
         internal virtual void SaveHeader()
         {
             Header.ToBuffer(PageBuffer.Span);
+        }
+
+        public void ConvertToFreePage()
+        {
+            Buffer.Span.Clear();
+            var pageHeader = new PageHeader(Header.PageId, PageType.Free);
+            pageHeader.ToBuffer(Buffer.Span);
+            IsDirty = true;
         }
 
         public virtual void Defrag()

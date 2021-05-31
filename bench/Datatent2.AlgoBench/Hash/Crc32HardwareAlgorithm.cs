@@ -22,7 +22,7 @@ namespace Datatent2.AlgoBench.Hash
         /// <summary>
         /// We can further optimize the algorithm when X64 is available.
         /// </summary>
-        private bool _x64Available;
+        private readonly bool _x64Available;
 
         /// <summary>
         /// Default constructor

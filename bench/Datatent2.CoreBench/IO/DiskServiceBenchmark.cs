@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BenchmarkDotNet.Jobs;
 using Datatent2.Contracts;
 using Datatent2.Core;
 using Datatent2.Core.Memory;
@@ -15,7 +16,7 @@ namespace Datatent2.CoreBench.IO
 {
     [HtmlExporter, CsvExporter(), CsvMeasurementsExporter(), RPlotExporter(),
          RankColumn(), KurtosisColumn, SkewnessColumn, StdDevColumn, MeanColumn, MedianColumn, BaselineColumn,
-         MemoryDiagnoser, MediumRunJob]
+         MemoryDiagnoser, MediumRunJob()]
     public class DiskServiceBenchmark
     {
         private string _pathWriteMap;
@@ -47,15 +48,15 @@ namespace Datatent2.CoreBench.IO
         [GlobalSetup]
         public async Task SetupAsync()
         {
-            _pathWriteMap = Path.Combine("F:\\bench", "writemap.file");
-            _pathWriteStream = Path.Combine("F:\\bench", "writestream.file");
-            _pathReadMap = Path.Combine("F:\\bench", "readmap.file");
-            _pathReadStream = Path.Combine("F:\\bench", "readstream.file");
+            //_pathWriteMap = Path.Combine("F:\\bench", "writemap.file");
+            //_pathWriteStream = Path.Combine("F:\\bench", "writestream.file");
+            //_pathReadMap = Path.Combine("F:\\bench", "readmap.file");
+            //_pathReadStream = Path.Combine("F:\\bench", "readstream.file");
 
-            //_pathWriteMap = Path.Combine(Path.GetTempPath(), "writemap.file");
-            //_pathWriteStream = Path.Combine(Path.GetTempPath(), "writestream.file");
-            //_pathReadMap = Path.Combine(Path.GetTempPath(), "readmap.file");
-            //_pathReadStream = Path.Combine(Path.GetTempPath(), "readstream.file");
+            _pathWriteMap = Path.Combine(Path.GetTempPath(), "writemap.file");
+            _pathWriteStream = Path.Combine(Path.GetTempPath(), "writestream.file");
+            _pathReadMap = Path.Combine(Path.GetTempPath(), "readmap.file");
+            _pathReadStream = Path.Combine(Path.GetTempPath(), "readstream.file");
 
             DatatentSettings datatentSettingsStreamRead = new DatatentSettings()
             {

@@ -55,7 +55,6 @@ namespace Datatent2.Core.Page.AllocationInformation
 
         public AllocationInformationPage(IBufferSegment buffer) : base(buffer)
         {
-            //_allocationInformationPageHeader = AllocationInformationPageHeader.FromBuffer(buffer.Span);
         }
 
         public AllocationInformationPage(IBufferSegment buffer, uint id) : base(buffer, id, PageType.AllocationInformation)
@@ -67,8 +66,6 @@ namespace Datatent2.Core.Page.AllocationInformation
             // remove header page, all indexes here are relative to the GAM page with index 1
             var aim = Array.IndexOf(PositionsInGam, (int)posInGam);
 
-            //_allocationInformationPageHeader = new AllocationInformationPageHeader((ushort)aim, gam);
-            //_allocationInformationPageHeader.ToBuffer(Buffer.Span);
             AddAllocationInformation(this);
         }
 
@@ -126,6 +123,23 @@ namespace Datatent2.Core.Page.AllocationInformation
             }
 
             return -1;
+        }
+
+        public uint[] FindPagesOfType(PageType pageType)
+        {
+            List<uint> list = new List<uint>();
+            var span = MemoryMarshal.Cast<byte, AllocationInformationEntry>(Buffer.Span.Slice(Constants.PAGE_HEADER_SIZE));
+            var elements = Header.UsedBytes / Constants.ALLOCATION_INFORMATION_ENTRY_SIZE;
+            for (int i = 0; i < elements; i++)
+            {
+                ref AllocationInformationEntry entry = ref span[i];
+                if (entry.PageType == pageType)
+                {
+                    list.Add(entry.PageId);
+                }
+            }
+
+            return list.ToArray();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

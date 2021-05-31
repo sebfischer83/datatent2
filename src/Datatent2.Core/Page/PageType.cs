@@ -12,7 +12,10 @@ namespace Datatent2.Core.Page
         Index = 3,
         GlobalAllocationMap = 4,
         AllocationInformation = 5,
-        Table = 6
+        Table = 6,
+        Overflow = 7,
+        FreePageList = 8,
+        Free = 255
     }
 
     internal enum PageFillFactor : byte

@@ -14,23 +14,23 @@ namespace Datatent2.Core.Table
         {
             if (obj == null)
                 return;
-            await Insert(obj.GetType().Name, obj, key);
+            await Insert(obj, key);
         }
 
-        public async Task Insert<TObj, TKey>(string table, TObj obj, TKey key)
+        public async Task Insert<TObj>(TObj obj)
         {
             if (obj == null)
                 return;
-            await InsertObject(table, obj, key);
+            //await InsertObject(obj, key);
         }
 
-        public async Task InsertObject<TObj, TKey>(string table, TObj obj, TKey key)
+        public async Task InsertObject<TObj, TKey>(TObj obj, TKey key)
         {
             if (obj == null) throw new ArgumentNullException(nameof(obj));
             var address = await _dataService!.Insert(obj);
 
 #if DEBUG
-            _logger.LogDebug($"[{_name}] object of type {obj.GetType().Name} written to table {table} at {address} with key {key}");
+            _logger.LogDebug($"[{_name}] object of type {obj.GetType().Name} written to table {this.Name} at {address} with key {key}");
 #endif
         }
     }

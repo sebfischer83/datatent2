@@ -62,7 +62,7 @@ namespace Datatent2.Core.Services.Page
                         item.IsDirty = false;
                     }
                 }
-            }            
+            }
         }
 
         /// <summary>
@@ -135,9 +135,9 @@ namespace Datatent2.Core.Services.Page
         /// </summary>
         /// <returns></returns>
         public async Task CheckPoint()
-        {            
+        {
             foreach (var page in _cacheService)
-            {                
+            {
                 if (page.IsDirty)
                     await WritePage(page);
             }
@@ -206,7 +206,7 @@ namespace Datatent2.Core.Services.Page
                 foreach (var tablePage in _cacheService.GetAllPagesOfType<TablePage>(PageType.Table))
                 {
                     searchedIds.Add(tablePage.Id);
-                    if (tablePage.ContainsTable(name))
+                    if (tablePage.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
                         return tablePage;
                 }
 
@@ -216,11 +216,31 @@ namespace Datatent2.Core.Services.Page
                 do
                 {
                     var possibleAimPages = AllocationInformationPage.GetAllAllocationInformationPageIdsForGam(gam.Id);
-                    
 
-                } while (gam.PageHeader.PrevPageId == UInt32.MaxValue);
+                    for (int i = 0; i < possibleAimPages.Length; i++)
+                    {
+                        var aimId = possibleAimPages[i];
+                        var allocationInformationPage = await GetFromCacheOrRead<AllocationInformationPage>(aimId, false);
+                        if (allocationInformationPage == null)
+                            continue;
+                        var possibleTablePages = allocationInformationPage.FindPagesOfType(PageType.Table);
+                        for (int t = 0; t < possibleTablePages.Length; t++)
+                        {
+                            var tableId = possibleTablePages[i];
+                            var tablePage = await GetFromCacheOrRead<TablePage>(tableId, false);
+                            if (tablePage != null && tablePage.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                return tablePage;
+                            }
+                        }
+                    }
 
-                throw new NotImplementedException();
+                } while (gam.PageHeader.PrevPageId != UInt32.MaxValue);
+
+                // not found we need a new one
+                var newTablePage = await CreateNewPageAsync<TablePage>(name);
+
+                return newTablePage;
             }
             finally
             {
@@ -228,17 +248,19 @@ namespace Datatent2.Core.Services.Page
             }
         }
 
-        private async ValueTask<T> GetFromCacheOrRead<T>(uint pageId) where T : BasePage
+        private async ValueTask<T?> GetFromCacheOrRead<T>(uint pageId, bool throwIfNotExists = true) where T : BasePage
         {
             if (_cacheService.HasPage(pageId))
                 return (T)(object)_cacheService.Get<T>(pageId)!;
 
             var response = await _diskService.GetBuffer(new ReadRequest(pageId));
             var page = BasePage.Create<T>(response.BufferSegment);
-            if (page == null || page.PageHeader.Type == PageType.Undefined)
+            if ((page == null || page.PageHeader.Type == PageType.Undefined) && throwIfNotExists)
             {
                 throw new PageNotFoundException($"The requested page {pageId} not exists in the current database!", pageId);
             }
+            if (page != null)
+                _cacheService.Add(page);
 
             return page;
         }
@@ -261,7 +283,6 @@ namespace Datatent2.Core.Services.Page
                 if (freePageId == -1)
                 {
                     var page = await CreateNewPageAsync<DataPage>();
-                    _cacheService.Add(page);
                     return page;
                 }
 
@@ -280,7 +301,7 @@ namespace Datatent2.Core.Services.Page
             }
         }
 
-        private async Task<T> CreateNewPageAsync<T>() where T : BasePage
+        private async Task<T> CreateNewPageAsync<T>(string? strParam = null) where T : BasePage
         {
             if (_globalAllocationMap!.IsFull)
             {
@@ -308,6 +329,15 @@ namespace Datatent2.Core.Services.Page
             {
                 var page = (T)(object)new DataPage(BufferPoolFactory.Get().Rent(), nextId);
                 _allocationInformationPage.AddAllocationInformation(page);
+                _cacheService.Add(page);
+
+                return page;
+            }
+            if (typeof(T) == typeof(TablePage))
+            {
+                var page = (T)(object)new TablePage(BufferPoolFactory.Get().Rent(), nextId, strParam!);
+                _allocationInformationPage.AddAllocationInformation(page);
+                _cacheService.Add(page);
 
                 return page;
             }

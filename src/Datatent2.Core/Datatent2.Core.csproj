@@ -74,10 +74,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Algo\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Datatent2.Contracts\Datatent2.Contracts.csproj" />
   </ItemGroup>
 

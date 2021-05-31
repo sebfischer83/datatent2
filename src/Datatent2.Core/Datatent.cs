@@ -118,14 +118,11 @@ namespace Datatent2.Core
             return datatent;
         }
 
-        public Table<T> GetTable<T>(string name) where T : class
+        public async Task<Table<T>> GetTable<T>(string name) where T : class
         {
-            if (!Table<T>.Exists(name))
-            {
+            var table = await Table<T>.GetAsync(name, _dataService!, _pageService!, _cacheService, _loggerFactory.CreateLogger<Table<T>>());
 
-            }
-
-            throw new NotImplementedException();
+            return table;
         }
     }
 }
