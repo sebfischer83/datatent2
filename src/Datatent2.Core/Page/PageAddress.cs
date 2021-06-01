@@ -45,7 +45,7 @@ namespace Datatent2.Core.Page
         public static PageAddress FromBuffer(Span<byte> span, int offset)
         {
             Guard.Argument(offset).GreaterThan(0);
-            return FromBuffer(span.Slice(offset));
+            return FromBuffer(span[offset..]);
         }
 
         public void ToBuffer(Span<byte> span)

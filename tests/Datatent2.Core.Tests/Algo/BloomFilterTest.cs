@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Datatent2.Core.Algo;
+using Datatent2.Core.Algo.Bloom;
 using Shouldly;
 using Xunit;
 

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using Bogus.DataSets;
 using Datatent2.Core.Algo;
+using Datatent2.Core.Algo.Bloom;
 
 namespace Datatent2.CoreBench.Algo
 {

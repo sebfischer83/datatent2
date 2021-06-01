@@ -218,5 +218,19 @@ namespace Datatent2.Core
             var b = BitConverter.GetBytes(val);
             span.WriteBytes(offset, b);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public static void WriteUInt64(this Span<byte> span, int offset, ulong val)
+        {
+            var b = BitConverter.GetBytes(val);
+            span.WriteBytes(offset, b);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public static void WriteInt64(this Span<byte> span, int offset, long val)
+        {
+            var b = BitConverter.GetBytes(val);
+            span.WriteBytes(offset, b);
+        }
     }
 }

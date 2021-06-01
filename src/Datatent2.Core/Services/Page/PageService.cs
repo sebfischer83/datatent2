@@ -14,6 +14,7 @@ using Datatent2.Core.Page;
 using Datatent2.Core.Page.AllocationInformation;
 using Datatent2.Core.Page.Data;
 using Datatent2.Core.Page.GlobalAllocationMap;
+using Datatent2.Core.Page.Index;
 using Datatent2.Core.Page.Table;
 using Datatent2.Core.Services.Cache;
 using Datatent2.Core.Services.Disk;
@@ -238,7 +239,7 @@ namespace Datatent2.Core.Services.Page
                 } while (gam.PageHeader.PrevPageId != UInt32.MaxValue);
 
                 // not found we need a new one
-                var newTablePage = await CreateNewPageAsync<TablePage>(name);
+                var newTablePage = await CreateNewPage<TablePage>(name);
 
                 return newTablePage;
             }
@@ -282,7 +283,7 @@ namespace Datatent2.Core.Services.Page
 
                 if (freePageId == -1)
                 {
-                    var page = await CreateNewPageAsync<DataPage>();
+                    var page = await CreateNewPage<DataPage>();
                     return page;
                 }
 
@@ -301,7 +302,7 @@ namespace Datatent2.Core.Services.Page
             }
         }
 
-        private async Task<T> CreateNewPageAsync<T>(string? strParam = null) where T : BasePage
+        internal async Task<T> CreateNewPage<T>(string? strParam = null) where T : BasePage
         {
             if (_globalAllocationMap!.IsFull)
             {
@@ -336,6 +337,14 @@ namespace Datatent2.Core.Services.Page
             if (typeof(T) == typeof(TablePage))
             {
                 var page = (T)(object)new TablePage(BufferPoolFactory.Get().Rent(), nextId, strParam!);
+                _allocationInformationPage.AddAllocationInformation(page);
+                _cacheService.Add(page);
+
+                return page;
+            }
+            if (typeof(T) == typeof(IndexPage))
+            {
+                var page = (T)(object)new IndexPage(BufferPoolFactory.Get().Rent(), nextId);
                 _allocationInformationPage.AddAllocationInformation(page);
                 _cacheService.Add(page);
 
