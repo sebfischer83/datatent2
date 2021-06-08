@@ -10,6 +10,7 @@ using Datatent2.Contracts;
 using Datatent2.Core.Memory;
 using Datatent2.Core.Page;
 using Datatent2.Core.Page.Data;
+using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 using Xunit;
 
@@ -17,6 +18,11 @@ namespace Datatent2.Core.Tests.Page
 {
     public class BasePageTest
     {
+        public BasePageTest()
+        {
+            BufferPoolFactory.Init(new DatatentSettings(), NullLogger.Instance);
+        }
+
         [Fact]
         public void InsertTest_Continuous()
         {

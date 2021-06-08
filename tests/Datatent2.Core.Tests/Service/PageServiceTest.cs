@@ -18,6 +18,11 @@ namespace Datatent2.Core.Tests.Service
 {
     public class PageServiceTest
     {
+        public PageServiceTest()
+        {
+            BufferPoolFactory.Init(new DatatentSettings(), NullLogger.Instance);
+        }
+
         [Fact()]
         public async void Subsequent_GetDataPageWithFreeSpace_Call_Test()
         {

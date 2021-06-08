@@ -15,6 +15,8 @@ namespace Datatent2.Core.Index
 {
     internal abstract class Index
     {
+        public uint IndexPage => FirstIndexPage;
+
         protected readonly uint FirstIndexPage;
         protected readonly PageService PageService;
         protected readonly ILogger Logger;
@@ -28,11 +30,12 @@ namespace Datatent2.Core.Index
             Logger = logger;
         }
 
-        public abstract Task<PageAddress> Find<T>(T key);
+        public abstract Task<PageAddress?> Find<T>(T key);
 
         public abstract Task Insert<T>(T key, PageAddress pageAddress);
 
         public abstract Task Delete<T>(T key);
+        
         public static async Task<Index> CreateIndex(PageService pageService, IndexType indexType, ILogger logger)
         {
             var indexPage = await pageService.CreateNewPage<IndexPage>();

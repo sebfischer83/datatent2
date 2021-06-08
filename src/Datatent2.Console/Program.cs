@@ -112,6 +112,7 @@ namespace Datatent2.Console
                 try
                 {
                     var table = await datatent.GetTable<TestObject>("testTable");
+                    await table.InsertObject(testObject, testObject.IntProp);
                 }
                 catch (Exception e)
                 {
@@ -119,6 +120,7 @@ namespace Datatent2.Console
                     throw;
                 }
             }
+            datatent.Dispose();
             //memoryMappedDiskService.Dispose();
             //File.Delete(datatentSettingsMapRead.DatabasePath);
         }

@@ -8,6 +8,7 @@ using Datatent2.Contracts;
 using Datatent2.Contracts.Exceptions;
 using Datatent2.Core.Memory;
 using Datatent2.Core.Page.GlobalAllocationMap;
+using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 using Xunit;
 
@@ -15,6 +16,11 @@ namespace Datatent2.Core.Tests.Page
 {
     public class GlobalAllocationMapPageTest
     {
+        public GlobalAllocationMapPageTest()
+        {
+            BufferPoolFactory.Init(new DatatentSettings(), NullLogger.Instance);
+        }
+
         [Fact]
         public void Is_Allocated_Test()
         {

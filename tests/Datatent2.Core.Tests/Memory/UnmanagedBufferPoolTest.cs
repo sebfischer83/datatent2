@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Datatent2.Contracts;
 using Datatent2.Core.Memory;
+using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 using Xunit;
 
@@ -16,8 +17,9 @@ namespace Datatent2.Core.Tests.Memory
         [Fact]
         public void RentAndReturnTest()
         {
+            UnmanagedBufferPool.InitFunction = () => (new DatatentSettings(), NullLogger.Instance);
             UnmanagedBufferPool unmanagedBufferPool = UnmanagedBufferPool.Shared;
-
+            
             var rented = unmanagedBufferPool.Rent();
             rented.ShouldNotBeNull();
             rented.Length.ShouldBe((uint)Constants.PAGE_SIZE);
@@ -28,6 +30,7 @@ namespace Datatent2.Core.Tests.Memory
         [Fact]
         public unsafe void GetPointerTest()
         {
+            UnmanagedBufferPool.InitFunction = () => (new DatatentSettings(), NullLogger.Instance);
             UnmanagedBufferPool unmanagedBufferPool = UnmanagedBufferPool.Shared;
 
             var rented = (UnmanagedBufferSegment) unmanagedBufferPool.Rent();

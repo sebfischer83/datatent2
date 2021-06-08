@@ -20,6 +20,11 @@ namespace Datatent2.Core.Tests.Service
 {
     public class DataServiceTest
     {
+        public DataServiceTest()
+        {
+            BufferPoolFactory.Init(new DatatentSettings(), NullLogger.Instance);
+        }
+
         [Fact()]
         public async Task Insert_One_Object_Test()
         {

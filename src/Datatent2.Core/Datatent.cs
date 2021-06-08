@@ -26,7 +26,7 @@ using Prise.Utils;
 
 namespace Datatent2.Core
 {
-    public class Datatent
+    public class Datatent : IDisposable
     {
         private readonly DatatentSettings _datatentSettings;
         private readonly ILoggerFactory _loggerFactory;
@@ -120,9 +120,14 @@ namespace Datatent2.Core
 
         public async Task<Table<T>> GetTable<T>(string name) where T : class
         {
-            var table = await Table<T>.GetAsync(name, _dataService!, _pageService!, _cacheService, _loggerFactory.CreateLogger<Table<T>>());
+            var table = await Table<T>.Get(name, _dataService!, _pageService!, _cacheService, _loggerFactory.CreateLogger<Table<T>>());
 
             return table;
+        }
+
+        public void Dispose()
+        {
+            _pageService?.CheckPoint();
         }
     }
 }

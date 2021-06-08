@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -14,14 +14,34 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Files\JEOPARDY_CSV.csv" />
+    <None Remove="Files\words.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Files\JEOPARDY_CSV.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Files\words.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.13.0" />
     <PackageReference Include="Crc32.NET" Version="1.2.0" />
     <PackageReference Include="Cryptisk.Utf8Json" Version="1.4.0" />
+    <PackageReference Include="CsvHelper" Version="27.1.0" />
     <PackageReference Include="Jil" Version="3.0.0-alpha2" />
     <PackageReference Include="Jint" Version="3.0.0-beta-2032" />
     <PackageReference Include="K4os.Compression.LZ4" Version="1.2.10-beta" />
     <PackageReference Include="MessagePack" Version="2.2.85" />
     <PackageReference Include="Moq" Version="4.16.1" />
+    <PackageReference Include="NReco.Text.AhoCorasickDoubleArrayTrie" Version="1.0.2" />
+    <PackageReference Include="Spreads" Version="2019.0.412" />
+    <PackageReference Include="Spreads.Collections" Version="2019.0.412" />
+    <PackageReference Include="Spreads.Native" Version="2021.1.331" />
+    <PackageReference Include="Spreads.Unsafe" Version="2021.1.331" />
     <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
     <PackageReference Include="System.Linq.Expressions" Version="4.3.0" />
   </ItemGroup>
@@ -31,6 +51,13 @@
     <ProjectReference Include="..\..\src\Datatent2.Core\Datatent2.Core.csproj" />
     <ProjectReference Include="..\..\src\plugins\Datatent2.Plugins.Compression\Datatent2.Plugins.Compression.csproj" />
     <ProjectReference Include="..\..\src\plugins\Datatent2.Plugins.Scripting\Datatent2.Plugins.Scripting.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Files\JEOPARDY_CSV.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Files\words.txt" />
   </ItemGroup>
 
 </Project>
