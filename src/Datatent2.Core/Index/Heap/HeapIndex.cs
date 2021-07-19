@@ -28,9 +28,17 @@ namespace Datatent2.Core.Index.Heap
             IndexPage page = firstPage;
             while (true)
             {
+                // go through all entries
+                var address = page.SearchHeapIndexKey(key);
+                if (address != null)
+                    return address;
 
-                if (page.PageHeader.NextPageId == UInt32.MaxValue)
+                if (page.PageHeader.NextPageId == uint.MaxValue)
                     break;
+                var pageTemp = await PageService.GetPage<IndexPage>(page.PageHeader.NextPageId);
+                if (pageTemp == null)
+                    break;
+                page = pageTemp;
             }
 
             return null;

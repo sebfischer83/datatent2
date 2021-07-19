@@ -64,6 +64,11 @@ namespace Datatent2.Core.Index
 
             return returnIndex;
         }
+
+        public override string ToString()
+        {
+            return $"{Enum.GetName(typeof(IndexType), Type)}:{IndexPage}";
+        }
     }
 
     internal enum IndexType : byte

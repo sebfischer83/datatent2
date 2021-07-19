@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>Datatent2.Plugins.Compression</id>
+    <version>1.0.0</version>
+    <title>Datatent2.Plugins.Compression</title>
+    <authors>Sebastian Fischer</authors>
+    <owners>Sebastian Fischer</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Datatent2.Plugins.Compression</description>
+    <copyright>Copyright 2021</copyright>
+  </metadata>
+</package>

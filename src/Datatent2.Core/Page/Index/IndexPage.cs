@@ -72,13 +72,13 @@ namespace Datatent2.Core.Page.Index
                     case short:
                     case int:
                     case long:
-                        if (((long) (object) key) == foundKey.NumericalValue)
+                        if ((long)System.Convert.ChangeType(key, TypeCode.Int64) == foundKey.NumericalValue)
                             return foundKey.PageAddress;
                         break;
                     case ushort:
                     case uint:
                     case ulong:
-                        if (((ulong)(object)key) == foundKey.UnsignedNumericalValue)
+                        if ((ulong)System.Convert.ChangeType(key, TypeCode.UInt64) == foundKey.UnsignedNumericalValue)
                             return foundKey.PageAddress;
                         break;
                     case Guid g:

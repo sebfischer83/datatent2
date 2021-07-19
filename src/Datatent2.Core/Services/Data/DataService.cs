@@ -7,7 +7,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Collections.Pooled;
 using Datatent2.Contracts;
+using Datatent2.Contracts.Exceptions;
 using Datatent2.Core.Block;
 using Datatent2.Core.Page;
 using Datatent2.Core.Page.Data;
@@ -62,7 +64,7 @@ namespace Datatent2.Core.Services.Data
 #if DEBUG
             _logger.LogInformation($"Get object {typeof(T)} at {pageAddress}");
 #endif
-            List<byte> bytes = new List<byte>();
+            Collections.Pooled.PooledList<byte> bytes = new PooledList<byte>(Constants.PAGE_SIZE, ClearMode.Never);
             DataPage? page;
             DataBlock block;
             PageAddress address = pageAddress;
@@ -73,7 +75,7 @@ namespace Datatent2.Core.Services.Data
                 page = await _pageService.GetPage<DataPage>(address.PageId);
                 if (page == null)
                 {
-                    throw new Exception();
+                    throw new InvalidPageException("GET", address.PageId);
                 }
                 block = new DataBlock(page, address.SlotId);
                 bytes.AddRange(block.GetData());
