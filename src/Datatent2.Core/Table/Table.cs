@@ -42,8 +42,12 @@ namespace Datatent2.Core.Table
 
         private bool IsCreated()
         {
-            var firstPageSpan = _tablePage.PageBuffer.Span[Constants.PAGE_HEADER_SIZE..];
-            return firstPageSpan[0] == 0x0F;
+            // TODO: doesnt work because not loaded, maybe flag at first byte in page?
+            var created = _mainIndexPageAddress != 0;
+#if DEBUG
+            _logger.LogDebug($"Table seems to have already initialized {created}");
+#endif
+            return created;
         }
 
         private async Task LoadPageDataOrGenerate()
@@ -64,22 +68,26 @@ namespace Datatent2.Core.Table
         {
             var index = await Index.Index.CreateIndex(_pageService, IndexType.Heap, _logger);
             _mainIndexPageAddress = index.IndexPage;
-
+            WritePage();
         }
 
         private void LoadPage()
         {
-            throw new NotImplementedException();
+            _mainIndexPageAddress = _tablePage.MainIndexPageAddress;
         }
 
-        private void WriteTable()
+        private void WritePage()
         {
-
+            _tablePage.MainIndexPageAddress = _mainIndexPageAddress;
+            _tablePage.Save();
         }
 
         internal static async Task<Table<T>> Get(string name, DataService dataService, PageService pageService, CacheService cacheService, ILogger<Table<T>> logger)
         {
             var tablePage = await pageService.GetTablePageForTable(name);
+#if DEBUG
+            logger.LogDebug($"Retrieved TablePage {tablePage.Id}");
+#endif
             Table<T> table = new Table<T>(name, dataService, pageService, cacheService, tablePage, logger);
             await table.LoadPageDataOrGenerate();
 
@@ -88,7 +96,7 @@ namespace Datatent2.Core.Table
 
         public ValueTask DisposeAsync()
         {
-            WriteTable();
+            WritePage();
             return ValueTask.CompletedTask;
         }
     }

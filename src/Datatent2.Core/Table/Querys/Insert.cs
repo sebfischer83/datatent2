@@ -21,19 +21,17 @@ namespace Datatent2.Core.Table
         //{
         //    if (obj == null)
         //        return;
-        //    //await InsertObject(obj, key);
+        //    //await Insert(obj, key);
         //}
 
-        public async Task InsertObject<TObj, TKey>(TObj obj, TKey key)
+        public async Task Insert<TObj, TKey>(TObj obj, TKey key)
         {
             if (obj == null) throw new ArgumentNullException(nameof(obj));
             var address = await _dataService!.Insert(obj);
             var index = await Index.Index.LoadIndex(this._mainIndexPageAddress, _pageService, _logger);
             await index.Insert(key, address);
 
-#if DEBUG
-            _logger.LogDebug($"[{_name}] object of type {obj.GetType().Name} written to table {this.Name} at {address} with key {key}");
-#endif
+            _logger.LogInformation($"[{_name}] object of type {obj.GetType().Name} written to table {this.Name} at {address} with key {key}");
         }
     }
 }

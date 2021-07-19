@@ -126,7 +126,7 @@ namespace Datatent2.Core.Services.Data
         {
             var bytes = PrepareObject(obj);
 #if DEBUG
-            _logger.LogInformation($"Insert object {obj.GetType().Name} with size {bytes.Data.Length} checksum {bytes.Checksum}");
+            _logger.LogDebug($"Insert object {obj.GetType().Name} with size {bytes.Data.Length} checksum {bytes.Checksum}");
 #endif
             Memory<byte> tempSpan = bytes.Data;
 
