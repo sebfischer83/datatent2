@@ -15,22 +15,24 @@ namespace Datatent2.Core.Index
 {
     internal abstract class Index
     {
-        public uint IndexPage => FirstIndexPage;
+        public uint PageIndex => FirstPageIndex;
 
-        protected readonly uint FirstIndexPage;
+        protected readonly uint FirstPageIndex;
         protected readonly PageService PageService;
         protected readonly ILogger Logger;
 
         public abstract IndexType Type { get; }
 
-        protected Index(uint firstIndexPage, PageService pageService, ILogger logger)
+        protected Index(uint firstPageIndex, PageService pageService, ILogger logger)
         {
-            FirstIndexPage = firstIndexPage;
+            FirstPageIndex = firstPageIndex;
             PageService = pageService;
             Logger = logger;
         }
 
         public abstract Task<PageAddress?> Find<T>(T key);
+
+        public abstract Task<PageAddress[]> FindMany<T>(T key);
 
         public abstract Task Insert<T>(T key, PageAddress pageAddress);
 
@@ -67,14 +69,15 @@ namespace Datatent2.Core.Index
 
         public override string ToString()
         {
-            return $"{Enum.GetName(typeof(IndexType), Type)}:{IndexPage}";
+            return $"{Enum.GetName(typeof(IndexType), Type)}:{PageIndex}";
         }
     }
 
     internal enum IndexType : byte
     {
         Heap = 1,
-        SkipList = 2,
+        HeapUnique = 2,
+        SkipList = 3,
         Bloom = 4
     }
 }

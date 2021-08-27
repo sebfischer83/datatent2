@@ -42,10 +42,9 @@ namespace Datatent2.Core.Table
 
         private bool IsCreated()
         {
-            // TODO: doesnt work because not loaded, maybe flag at first byte in page?
-            var created = _mainIndexPageAddress != 0;
+            var created = _tablePage.MainIndexPageAddress != 0;
 #if DEBUG
-            _logger.LogDebug($"Table seems to have already initialized {created}");
+            _logger.LogDebug($"Table seems to have already initialized: {created}");
 #endif
             return created;
         }
@@ -67,7 +66,7 @@ namespace Datatent2.Core.Table
         private async Task GeneratePage()
         {
             var index = await Index.Index.CreateIndex(_pageService, IndexType.Heap, _logger);
-            _mainIndexPageAddress = index.IndexPage;
+            _mainIndexPageAddress = index.PageIndex;
             WritePage();
         }
 

@@ -16,11 +16,11 @@ namespace Datatent2.Core.Services.Disk
          /// <summary>
         /// 10000 pages per chunk
         /// </summary>
-        private const uint _chunkMultiplicator = 10000;
+        private const uint CHUNK_MULTIPLICATOR = 10000;
 
         private MappedRange _mapRange;
 
-        private MemoryMappedFile _mapFile;
+        private MemoryMappedFile? _mapFile;
 
         private MemoryMappedDirectAccessor _mapAccessor;
 
@@ -28,8 +28,11 @@ namespace Datatent2.Core.Services.Disk
 
         public MemoryMappedDiskService(DatatentSettings settings, ILogger logger) : base(settings, logger)
         {
-            var initalMap = 0u;
+            var initialMap = 0u;
             // if file dont exist, create
+            if (!Directory.Exists(Path.GetDirectoryName(settings.DatabasePath)))
+                Directory.CreateDirectory(Path.GetDirectoryName(settings.DatabasePath)!);
+
             if (!File.Exists(settings.DatabasePath))
             {
                 logger.LogInformation($"No file exists at {settings.DatabasePath}, create new one");
@@ -39,25 +42,28 @@ namespace Datatent2.Core.Services.Disk
             {
                 // file is there, so we need to map the complete file at start
                 var file = new FileInfo(settings.DatabasePath!);
-                initalMap = (uint)file.Length / Constants.PAGE_SIZE;
-                logger.LogInformation($"Existings file found of size {file.Length} bytes, set {nameof(initalMap)} to {initalMap}");
+                initialMap = (uint)file.Length / Constants.PAGE_SIZE;
+                logger.LogInformation($"Existing file found of size {file.Length} bytes, set {nameof(initialMap)} to {initialMap}");
             }
             _internalStream = new FileStream(Settings.DatabasePath!, FileMode.Open);
-            CreateMapping(initalMap);
+            CreateMapping(initialMap);
         }
 
+        /// <summary>
+        /// Create a new mapping, that includes the given page
+        /// </summary>
+        /// <param name="pageId"></param>
         private void CreateMapping(uint pageId)
         {
             var startPage = 0u;
-            var calc = pageId == 0 ? _chunkMultiplicator : pageId + 1;
-            var endPage = (uint) Math.Ceiling((double)(calc) / _chunkMultiplicator) *_chunkMultiplicator - 1;
+            var calc = pageId == 0 ? CHUNK_MULTIPLICATOR : pageId + 1;
+            var endPage = (uint) Math.Ceiling((double)(calc) / CHUNK_MULTIPLICATOR) *CHUNK_MULTIPLICATOR - 1;
 
             _mapRange = new MappedRange() { From = startPage, To = endPage };
             if (_mapFile != null)
             {
                 _mapAccessor.Flush();
                 _mapAccessor.Dispose();
-                //_mapFile.Dispose();
                 Stream.Close();
             }
             //Logger.LogInformation($"Create new map for {_mapFile}");
@@ -68,6 +74,7 @@ namespace Datatent2.Core.Services.Disk
 
         protected override Stream GetStream(uint pageId)
         {
+            // if the pageId is in this range already mapped return the stream ... otherwise create a new mapping
             if (_mapRange.InRange(pageId))
             {
                 return Stream;
@@ -85,6 +92,9 @@ namespace Datatent2.Core.Services.Disk
             _mapFile?.Dispose();
         }
 
+        /// <summary>
+        /// Information about the range of pages that are mapped
+        /// </summary>
         private class MappedRange
         {
             public uint From { get; set; }

@@ -50,8 +50,8 @@ namespace Datatent2.Core.Services.Disk
         /// <summary>
         /// The implementation for the read ahead cache
         /// </summary>
-        protected IReadAheadPageCache _diskPageCache;
-        private int _cacheSize;
+        protected IReadAheadPageCache DiskPageCache;
+        private readonly int _cacheSize;
 
         /// <summary>
         /// Holds references to current pending read operations
@@ -108,13 +108,13 @@ namespace Datatent2.Core.Services.Disk
 
         protected DiskService(DatatentSettings settings, ILogger logger)
         {
-            _diskPageCache = new NullReadAheadPageCache();
+            DiskPageCache = new NullReadAheadPageCache();
             Stream = Stream.Null;
             Settings = settings;
             Logger = logger;
             if (Settings.IOSettings.UseReadAheadCache)
             {
-                _diskPageCache = new DiskReadAheadPageCache(settings, logger);
+                DiskPageCache = new DiskReadAheadPageCache(settings, logger);
             }
             _cacheSize = Constants.PAGE_SIZE * Constants.MAX_AMOUNT_OF_READ_AHEAD_PAGES;
             _cacheBytes = new byte[Settings.IOSettings.UseReadAheadCache ? _cacheSize : 1];
@@ -243,10 +243,10 @@ namespace Datatent2.Core.Services.Disk
 
         protected virtual IBufferSegment ReadPageBufferReadAheadCache(uint pageId)
         {
-            var cachedBuffer = _diskPageCache.GetIfExists(pageId);
+            var cachedBuffer = DiskPageCache.GetIfExists(pageId);
             if (cachedBuffer != null)
             {
-                _diskPageCache.Remove(pageId);
+                DiskPageCache.Remove(pageId);
                 return cachedBuffer;
             }
 
@@ -261,12 +261,12 @@ namespace Datatent2.Core.Services.Disk
             uint nextPageId = pageId + 1;
             for (int i = 1; i < Constants.MAX_AMOUNT_OF_READ_AHEAD_PAGES; i++)
             {
-                if (!_diskPageCache.Contains(nextPageId))
+                if (!DiskPageCache.Contains(nextPageId))
                 {
                     var bufferCacheSegment = BufferPoolFactory.Get().Rent(Constants.PAGE_SIZE);
                     var spanCache = bufferCacheSegment.Span;
                     spanCache.WriteBytes(0, tempSpan.Slice(i * Constants.PAGE_SIZE, Constants.PAGE_SIZE));
-                    _diskPageCache.Add(nextPageId, bufferCacheSegment);
+                    DiskPageCache.Add(nextPageId, bufferCacheSegment);
                 }
                 nextPageId++;
             }

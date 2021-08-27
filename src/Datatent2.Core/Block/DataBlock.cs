@@ -32,7 +32,7 @@ namespace Datatent2.Core.Block
         public override void SetFollowingBlock(PageAddress pageAddress)
         {
             Header = new BlockHeader(pageAddress, Header.IsFollowingBlock);
-            Header.ToBuffer(Page.GetDataByIndex(_entryId));
+            Header.ToBuffer(Page.GetDataByIndex(EntryId));
         }
     }
 }

@@ -22,7 +22,7 @@ namespace Datatent2.Core.Page.Table
 
         public uint MainIndexPageAddress { get; set; }
 
-        public override ushort MaxFreeUsableBytes => (ushort) (Constants.PAGE_SIZE - _offsetAfterName);
+        public override ushort MaxFreeUsableBytes => (ushort)(Constants.PAGE_SIZE - _offsetAfterName);
 
 #pragma warning disable CS8618
         public TablePage(IBufferSegment buffer) : base(buffer) => Load();
@@ -42,9 +42,12 @@ namespace Datatent2.Core.Page.Table
             Name = name;
             _nameBytes = Encoding.UTF8.GetBytes(name);
             _offsetAfterName = (byte)(Constants.PAGE_HEADER_SIZE + 1 + _nameBytes.Length);
+
+            Header = new PageHeader(id, PageType.Table);
+
             Save();
         }
-        
+
         // Definition of fields
         // 0 Length of name in bytes x
         // 1 - x Name as bytes
@@ -63,10 +66,11 @@ namespace Datatent2.Core.Page.Table
 
         public void Save()
         {
+            Header.ToBuffer(Buffer.Span);
             var bytes = Buffer.Span[Constants.PAGE_HEADER_SIZE..];
             bytes.WriteByte(0, (byte)_nameBytes.Length);
             bytes.WriteBytes(1, _nameBytes);
-            
+
             bytes = bytes[_offsetAfterName..];
             bytes.WriteUInt32(MAININDEXPAGEADDRESS, MainIndexPageAddress);
         }

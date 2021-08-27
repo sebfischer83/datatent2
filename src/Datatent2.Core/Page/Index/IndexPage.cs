@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Datatent2.Contracts;
@@ -12,8 +13,14 @@ using Dawn;
 
 namespace Datatent2.Core.Page.Index
 {
+    /// <summary>
+    /// Holds data from an index
+    /// </summary>
     internal class IndexPage : BasePage
     {
+        /// <summary>
+        /// Is this the first page of the index?
+        /// </summary>
         public bool IsStartPage => Header.PrevPageId == uint.MaxValue;
 
         public override ushort FreeContinuousBytes =>
@@ -31,7 +38,11 @@ namespace Datatent2.Core.Page.Index
 
         }
 
-        public void AddHeapIndexKey(HeapKey heapKey)
+        /// <summary>
+        /// Adds a value to a HeapIndex
+        /// </summary>
+        /// <param name="heapKey"></param>
+        public bool AddHeapIndexKey(in HeapKey heapKey)
         {
             if (IndexPageHeader.Type != IndexType.Heap)
                 throw new InvalidPageException($"Access index of type {Enum.GetName(typeof(IndexType), IndexPageHeader.Type)} with heap index methods is forbidden!", Header.PageId);
@@ -39,6 +50,9 @@ namespace Datatent2.Core.Page.Index
             var usedBytes = (ushort) (Header.UsedBytes + heapKey.Length);
             var nextFreePosition = (ushort) (Header.NextFreePosition + heapKey.Length);
 
+            if (usedBytes > FreeContinuousBytes)
+                return false;
+            
             heapKey.Write(Buffer.Span, Header.NextFreePosition);
             
             Header = new PageHeader(Header.PageId, Header.Type, Header.PrevPageId, Header.NextPageId,
@@ -46,44 +60,114 @@ namespace Datatent2.Core.Page.Index
                 nextFreePosition, Header.UnalignedFreeBytes, Header.HighestSlotId);
             IndexPageHeader = new IndexPageHeader(IndexPageHeader.Type, (ushort) (IndexPageHeader.NodesCount + 1));
             IsDirty = true;
+
+            return true;
         }
 
-        public PageAddress? SearchHeapIndexKey<T>(T key)
+        /// <summary>
+        /// Search if a key exists in this index page, when true returns the <see cref="PageAddress"/>
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key">The key to search</param>
+        /// <param name="singleResult">Return the first result that is found.</param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        private PageAddress[] SearchHeapIndexKeyInternal<T>(T key, bool singleResult)
         {
-            if (IndexPageHeader.Type != IndexType.Heap)
-                throw new InvalidPageException($"Access index of type {Enum.GetName(typeof(IndexType), IndexPageHeader.Type)} with heap index methods is forbidden!", Header.PageId);
+            List<PageAddress>? pageAddresses = null;
 
+            // don't waste memory for creating a list that will never be used
+            if (!singleResult)
+                pageAddresses = new();
             int offset = 0;
             var span = Buffer.Span[Constants.PAGE_HEADER_SIZE..];
             for (int i = 0; i < IndexPageHeader.NodesCount; i++)
             {
                 var foundKey = HeapKey.Read(span, offset);
-                if (foundKey == null)
+                if (foundKey.Type == HeapKeyType.Empty)
                     break;
 
                 switch (key)
                 {
                     case string s:
                         if (s == foundKey.StringValue)
-                            return foundKey.PageAddress;
+                        {
+                            if (singleResult)
+                                return new[] { foundKey.PageAddress };
+                            pageAddresses!.Add(foundKey.PageAddress);
+                        }
                         break;
-                    case sbyte:
-                    case byte:
-                    case short:
-                    case int:
-                    case long:
-                        if ((long)System.Convert.ChangeType(key, TypeCode.Int64) == foundKey.NumericalValue)
-                            return foundKey.PageAddress;
+                    case sbyte sb:
+                        if (sb == foundKey.NumericalValue)
+                        {
+                            if (singleResult)
+                                return new[] { foundKey.PageAddress };
+                            pageAddresses!.Add(foundKey.PageAddress);
+                        }
                         break;
-                    case ushort:
-                    case uint:
+                    case byte b:
+                        if (b == foundKey.UnsignedNumericalValue)
+                        {
+                            if (singleResult)
+                                return new[] { foundKey.PageAddress };
+                            pageAddresses!.Add(foundKey.PageAddress);
+                        }
+                        break;
+                    case short sh:
+                        if (sh == foundKey.NumericalValue)
+                        {
+                            if (singleResult)
+                                return new[] { foundKey.PageAddress };
+                            pageAddresses!.Add(foundKey.PageAddress);
+                        }
+                        break;
+                    case int it:
+                        if (it == foundKey.NumericalValue)
+                        {
+                            if (singleResult)
+                                return new[] { foundKey.PageAddress };
+                            pageAddresses!.Add(foundKey.PageAddress);
+                        }
+                        break;
+                    case long l:
+                        if (l == foundKey.NumericalValue)
+                        {
+                            if (singleResult)
+                                return new[] { foundKey.PageAddress };
+                            pageAddresses!.Add(foundKey.PageAddress);
+                        }
+                        break;
+                    case ushort us:
+                        if (us == foundKey.UnsignedNumericalValue)
+                        {
+                            if (singleResult)
+                                return new[] { foundKey.PageAddress };
+                            pageAddresses!.Add(foundKey.PageAddress);
+                        }
+                        break;
+                    case uint ui:
+                        if (ui == foundKey.UnsignedNumericalValue)
+                        {
+                            if (singleResult)
+                                return new[] { foundKey.PageAddress };
+                            pageAddresses!.Add(foundKey.PageAddress);
+                        }
+                        break;
                     case ulong:
                         if ((ulong)System.Convert.ChangeType(key, TypeCode.UInt64) == foundKey.UnsignedNumericalValue)
-                            return foundKey.PageAddress;
+                        {
+                            if (singleResult)
+                                return new[] { foundKey.PageAddress };
+                            pageAddresses!.Add(foundKey.PageAddress);
+                        }
                         break;
                     case Guid g:
                         if (g == foundKey.GuidValue)
-                            return foundKey.PageAddress;
+                        {
+                            if (singleResult)
+                                return new[] { foundKey.PageAddress };
+                            pageAddresses!.Add(foundKey.PageAddress);
+                        }
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(key));
@@ -92,7 +176,27 @@ namespace Datatent2.Core.Page.Index
                 offset += foundKey.Length;
             }
 
-            return null;
+            if (pageAddresses == null)
+                return Array.Empty<PageAddress>();
+
+            return pageAddresses!.ToArray();
+        }
+
+        public PageAddress[] SearchHeapIndexKeyMany<T>(T key)
+        {
+            if (IndexPageHeader.Type != IndexType.Heap)
+                throw new InvalidEngineStateException($"Only {nameof(IndexType.Heap)} index is supported but method is called on {nameof(IndexPageHeader.Type)} at page {PageHeader.PageId}.");
+            
+            return SearchHeapIndexKeyInternal(key, false);
+        }
+
+        public PageAddress? SearchHeapIndexKey<T>(T key)
+        {
+            if (IndexPageHeader.Type != IndexType.Heap && IndexPageHeader.Type != IndexType.HeapUnique)
+                throw new InvalidPageException($"Access index of type {Enum.GetName(typeof(IndexType), IndexPageHeader.Type)} with heap index methods is forbidden!", Header.PageId);
+
+            var result = SearchHeapIndexKeyInternal(key, true);
+            return result.Length > 0 ? result[0] : null;
         }
 
         public void InitHeader(IndexType indexType)

@@ -10,6 +10,7 @@ using Datatent2.Contracts;
 using Datatent2.Core.Memory;
 using Datatent2.Core.Page.Data;
 using Datatent2.Core.Page.Data;
+using Datatent2.Core.Page.Index;
 using Datatent2.Core.Page.Table;
 using Datatent2.Core.Services.Transactions;
 using Dawn;
@@ -549,6 +550,10 @@ namespace Datatent2.Core.Page
             if (typeof(T) == typeof(TablePage))
             {
                 return (T)(object)new TablePage(bufferSegment);
+            }
+            if (typeof(T) == typeof(IndexPage))
+            {
+                return (T)(object)new IndexPage(bufferSegment);
             }
             return null;
         }

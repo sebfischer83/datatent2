@@ -3,11 +3,13 @@
 // # Sebastian Fischer sebfischer@gmx.net
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Datatent2.Contracts.Exceptions;
 using Datatent2.Core.Page;
 using Datatent2.Core.Page.Index;
 using Datatent2.Core.Services.Page;
+using DotNext.Collections.Generic;
 using Microsoft.Extensions.Logging;
 
 namespace Datatent2.Core.Index.Heap
@@ -16,7 +18,7 @@ namespace Datatent2.Core.Index.Heap
     {
         protected IndexPage? IndexPage { get; set; }
 
-        internal HeapIndex(uint firstIndexPage, PageService pageService, ILogger logger) : base(firstIndexPage, pageService, logger)
+        internal HeapIndex(uint firstPageIndex, PageService pageService, ILogger logger) : base(firstPageIndex, pageService, logger)
         {
         }
 
@@ -44,6 +46,30 @@ namespace Datatent2.Core.Index.Heap
             return null;
         }
 
+        public override async Task<PageAddress[]> FindMany<T>(T key)
+        {
+            var firstPage = await GetFirstPage();
+            List<PageAddress> list = new();
+
+            IndexPage page = firstPage;
+            while (true)
+            {
+                // go through all entries
+                var address = page.SearchHeapIndexKeyMany(key);
+                if (address.Length > 0)
+                    list.AddRange(address);
+
+                if (page.PageHeader.NextPageId == uint.MaxValue)
+                    break;
+                var pageTemp = await PageService.GetPage<IndexPage>(page.PageHeader.NextPageId);
+                if (pageTemp == null)
+                    break;
+                page = pageTemp;
+            }
+
+            return list.ToArray();
+        }
+
         public override async Task Insert<T>(T key, PageAddress pageAddress)
         {
             // get first index page and look if there is enough space for this entry
@@ -55,17 +81,29 @@ namespace Datatent2.Core.Index.Heap
                 case string s:
                     heapKey = new HeapKey(pageAddress, s);
                     break;
-                case sbyte:
-                case byte:
-                case short:
-                case int:
-                case long:
-                    heapKey = new HeapKey(pageAddress, (long) System.Convert.ChangeType(key, TypeCode.Int64));
+                case sbyte sb:
+                    heapKey = new HeapKey(pageAddress, sb);
                     break;
-                case ushort:
-                case uint:
-                case ulong:
-                    heapKey = new HeapKey(pageAddress, (ulong)System.Convert.ChangeType(key, TypeCode.UInt64));
+                case byte b:
+                    heapKey = new HeapKey(pageAddress, b);
+                    break;
+                case short sh:
+                    heapKey = new HeapKey(pageAddress, sh);
+                    break;
+                case int i:
+                    heapKey = new HeapKey(pageAddress, i);
+                    break;
+                case long l:
+                    heapKey = new HeapKey(pageAddress, l);
+                    break;
+                case ushort us:
+                    heapKey = new HeapKey(pageAddress, us);
+                    break;
+                case uint ui:
+                    heapKey = new HeapKey(pageAddress, ui);
+                    break;
+                case ulong ul:
+                    heapKey = new HeapKey(pageAddress, ul);
                     break;
                 case Guid g:
                     heapKey = new HeapKey(pageAddress, g);
@@ -80,9 +118,8 @@ namespace Datatent2.Core.Index.Heap
 
             while (true)
             {
-                if (page.FreeContinuousBytes >= keyLength)
+                if (page.FreeContinuousBytes >= keyLength && page.AddHeapIndexKey(heapKey))
                 {
-                    page.AddHeapIndexKey(heapKey);
                     break;
                 }
 
@@ -116,9 +153,9 @@ namespace Datatent2.Core.Index.Heap
         {
             if (IndexPage == null)
             {
-                var page = await PageService.GetPage<IndexPage>(FirstIndexPage);
+                var page = await PageService.GetPage<IndexPage>(FirstPageIndex);
                 if (page == null)
-                    throw new PageNotFoundException($"Index page don't exist!", FirstIndexPage);
+                    throw new PageNotFoundException($"Index page don't exist!", FirstPageIndex);
                 IndexPage = page;
                 return page;
             }
@@ -132,6 +169,7 @@ namespace Datatent2.Core.Index.Heap
         Numeric = 1,
         UnsignedNumeric = 2,
         String = 2,
-        Guid = 3
+        Guid = 3,
+        Empty = 99
     }
 }

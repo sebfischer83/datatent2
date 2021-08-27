@@ -19,4 +19,13 @@
     <ProjectReference Include="..\plugins\Datatent2.Plugins.Compression\Datatent2.Plugins.Compression.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Plugins\Datatent2.Plugins.Compression.1.0.0.nupkg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Plugins\Datatent2.Plugins.Scripting.1.0.0.nupkg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

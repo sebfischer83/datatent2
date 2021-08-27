@@ -18,6 +18,8 @@ namespace Datatent2.Core.Services.Disk
     {
         public FileDiskService(DatatentSettings datatentSettings) : base(datatentSettings, NullLogger.Instance)
         {
+            if (!Directory.Exists(Path.GetDirectoryName(datatentSettings.DatabasePath)))
+                Directory.CreateDirectory(Path.GetDirectoryName(datatentSettings.DatabasePath)!);
             Stream = new FileStream(datatentSettings.DatabasePath!, FileMode.OpenOrCreate, FileAccess.ReadWrite,
                 FileShare.Read, Constants.PAGE_SIZE,
                 FileOptions.RandomAccess);
