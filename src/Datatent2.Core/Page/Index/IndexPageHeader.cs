@@ -6,6 +6,7 @@ using System;
 using System.Runtime.InteropServices;
 using Datatent2.Contracts;
 using Datatent2.Core.Index;
+using Datatent2.Core.Services.Index;
 
 namespace Datatent2.Core.Page.Index
 {

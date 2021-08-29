@@ -9,6 +9,7 @@ using Datatent2.Contracts;
 using Datatent2.Core.Index;
 using Datatent2.Core.Index.Heap;
 using Datatent2.Core.Page;
+using Datatent2.Core.Services.Index;
 
 namespace Datatent2.Core.Table
 {
@@ -65,7 +66,7 @@ namespace Datatent2.Core.Table
 
         private async Task GeneratePage()
         {
-            var index = await Index.Index.CreateIndex(_pageService, IndexType.Heap, _logger);
+            var index = await Services.Index.IndexService.CreateIndex(_pageService, IndexType.Heap, _logger);
             _mainIndexPageAddress = index.PageIndex;
             WritePage();
         }

@@ -9,6 +9,8 @@ using Datatent2.Contracts.Exceptions;
 using Datatent2.Core.Index;
 using Datatent2.Core.Index.Heap;
 using Datatent2.Core.Memory;
+using Datatent2.Core.Services.Index;
+using Datatent2.Core.Services.Index.Heap;
 using Dawn;
 
 namespace Datatent2.Core.Page.Index
@@ -39,7 +41,7 @@ namespace Datatent2.Core.Page.Index
         }
 
         /// <summary>
-        /// Adds a value to a HeapIndex
+        /// Adds a value to a HeapIndexService
         /// </summary>
         /// <param name="heapKey"></param>
         public bool AddHeapIndexKey(in HeapKey heapKey)

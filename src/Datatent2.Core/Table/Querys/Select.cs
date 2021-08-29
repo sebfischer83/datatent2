@@ -16,14 +16,14 @@ namespace Datatent2.Core.Table
     public sealed partial class Table<T> where T : class
     {
         /// <summary>
-        /// Return the object for that key, if there are many the first result is returned. (can happen when there is only a HeapIndex that is not unique)
+        /// Return the object for that key, if there are many the first result is returned. (can happen when there is only a HeapIndexService that is not unique)
         /// </summary>
         /// <typeparam name="TKey"></typeparam>
         /// <param name="key"></param>
         /// <returns></returns>
         public async Task<T?> Get<TKey>(TKey key)
         {
-            var index = await Index.Index.LoadIndex(this._mainIndexPageAddress, _pageService, _logger);
+            var index = await Services.Index.IndexService.LoadIndex(this._mainIndexPageAddress, _pageService, _logger);
             var address = await index.Find(key);
 
             if (!address.HasValue)

@@ -28,7 +28,7 @@ namespace Datatent2.Core.Table
         {
             if (obj == null) throw new ArgumentNullException(nameof(obj));
             var address = await _dataService!.Insert(obj);
-            var index = await Index.Index.LoadIndex(this._mainIndexPageAddress, _pageService, _logger);
+            var index = await Services.Index.IndexService.LoadIndex(this._mainIndexPageAddress, _pageService, _logger);
             await index.Insert(key, address);
 
             _logger.LogInformation($"[{_name}] object of type {obj.GetType().Name} written to table {this.Name} at {address} with key {key}");

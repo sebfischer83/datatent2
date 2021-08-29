@@ -305,6 +305,12 @@ namespace Datatent2.Core.Page
             return (byte.MaxValue, byte.MaxValue);
         }
 
+        /// <summary>
+        /// Retrieves a Span for insertion of data if a specified length.
+        /// </summary>
+        /// <param name="length">The length.</param>
+        /// <param name="entryIndex">The entry index.</param>
+        /// <returns>A Span.</returns>
         public Span<byte> Insert(ushort length, out byte entryIndex)
         {
             Guard.Argument(IsInsertPossible(length)).True();

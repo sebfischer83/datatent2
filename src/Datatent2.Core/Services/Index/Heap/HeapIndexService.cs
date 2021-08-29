@@ -6,19 +6,19 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Datatent2.Contracts.Exceptions;
+using Datatent2.Core.Index.Heap;
 using Datatent2.Core.Page;
 using Datatent2.Core.Page.Index;
 using Datatent2.Core.Services.Page;
-using DotNext.Collections.Generic;
 using Microsoft.Extensions.Logging;
 
-namespace Datatent2.Core.Index.Heap
+namespace Datatent2.Core.Services.Index.Heap
 {
-    internal class HeapIndex : Index
+    internal class HeapIndexService : Services.Index.IndexService
     {
         protected IndexPage? IndexPage { get; set; }
 
-        internal HeapIndex(uint firstPageIndex, PageService pageService, ILogger logger) : base(firstPageIndex, pageService, logger)
+        internal HeapIndexService(uint firstPageIndex, PageService pageService, ILogger logger) : base(firstPageIndex, pageService, logger)
         {
         }
 
@@ -155,7 +155,7 @@ namespace Datatent2.Core.Index.Heap
             {
                 var page = await PageService.GetPage<IndexPage>(FirstPageIndex);
                 if (page == null)
-                    throw new PageNotFoundException($"Index page don't exist!", FirstPageIndex);
+                    throw new PageNotFoundException($"IndexService page don't exist!", FirstPageIndex);
                 IndexPage = page;
                 return page;
             }
