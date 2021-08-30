@@ -4,6 +4,7 @@
  * By Hakim El Hattab, http://hakim.se
  */
 @import url(./fonts/source-sans-pro/source-sans-pro.css);
+@import url("https://fonts.googleapis.com/css2?family=Fira+Sans&display=swap");
 section.has-light-background, section.has-light-background h1, section.has-light-background h2, section.has-light-background h3, section.has-light-background h4, section.has-light-background h5, section.has-light-background h6 {
   color: #222;
 }
@@ -13,12 +14,12 @@ section.has-light-background, section.has-light-background h1, section.has-light
  *********************************************/
 :root {
   --r-background-color: #191919;
-  --r-main-font: Source Sans Pro, Helvetica, sans-serif;
+  --r-main-font: Fira Sans, sans-serif;
   --r-main-font-size: 42px;
   --r-main-color: #fff;
   --r-block-margin: 20px;
   --r-heading-margin: 0 0 20px 0;
-  --r-heading-font: Source Sans Pro, Helvetica, sans-serif;
+  --r-heading-font: Fira Sans, sans-serif;
   --r-heading-color: #fff;
   --r-heading-line-height: 1.2;
   --r-heading-letter-spacing: normal;
@@ -354,4 +355,7 @@ section.has-light-background, section.has-light-background h1, section.has-light
   .backgrounds {
     background-color: var(--r-background-color);
   }
+}
+table {
+  font-size: 50%;
 }
