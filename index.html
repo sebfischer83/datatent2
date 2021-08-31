@@ -11,29 +11,183 @@
   <link rel="stylesheet" href="dist/theme/black.css" />
   <!-- Theme used for syntax highlighted code -->
   <link rel="stylesheet" href="plugin/highlight/monokai.css" />
+  <style>
+    .container {
+      display: flex;
+    }
+
+    .col {
+      flex: 1;
+    }
+  </style>
 </head>
 
 <body>
   <div class="reveal">
     <div class="slides">
       <section>
-        <h2 class="r-fit-text">STARTSEITE</h2>
+        <div class="container">
+
+          <div class="col">
+            <img src="./img/am543Vd_700b.jpg" height="600">
+          </div>
+
+          <div class="col">
+            Column 2 Content
+          </div>
+
+        </div>
       </section>
       <section>
         <h2 class="r-fit-text">Inhaltsverzeichnis</h2>
+        <ol>
+          <li>Pages?</li>
+          <li>Global Allocation Map</li>
+          <li>Wie geht der Insert...</li>
+          <li>... und wie bekomme ich meine Daten wieder?</li>
+          <li>Indexe</li>
+          <li>SkipList</li>
+          <li>Bloom Filter</li>
+          <li>HyperLogLog</li>
+        </ol>
       </section>
       <section>
         <section>
-          <h2 class="r-fit-text">Wo alles beginnt</h2>
+          <h2 class="r-fit-text">Pages?</h2>
+        </section>
+        <section>
+          <ul>
+            <li class="fragment">kleinste "Datenbankeinheit" mit 8192 bytes</li>
+            <li class="fragment">verschiedene Typen existieren</li>
+            <li class="fragment">64 bytes Header (32 allgemein, 32 spezifisch)</li>
+            <li class="fragment">maximale Datenbankgröße $ushort.MaxSize * 8192 \approx 35,1 terrabyte $</li>
+          </ul>
+        </section>
+        <section>
+          <pre style="font-size: small;">
+            <code>
+              Type layout for 'PageHeader'
+Size: 64 bytes. Paddings: 43 bytes (%67 of empty space)
+|============================================|
+|   0-3: UInt32 PageId (4 bytes)             |
+|--------------------------------------------|
+|     4: PageType Type (1 byte)              |
+| |==============================|           |
+| |     0: Byte value__ (1 byte) |           |
+| |==============================|           |
+|--------------------------------------------|
+|   5-8: UInt32 PrevPageId (4 bytes)         |
+|--------------------------------------------|
+|  9-12: UInt32 NextPageId (4 bytes)         |
+|--------------------------------------------|
+| 13-14: UInt16 UsedBytes (2 bytes)          |
+|--------------------------------------------|
+|    15: Byte ItemCount (1 byte)             |
+|--------------------------------------------|
+| 16-17: UInt16 NextFreePosition (2 bytes)   |
+|--------------------------------------------|
+| 18-19: UInt16 UnalignedFreeBytes (2 bytes) |
+|--------------------------------------------|
+|    20: Byte HighestSlotId (1 byte)         |
+|--------------------------------------------|
+| 21-63: padding (43 bytes)                  |
+|============================================|
+            </code>
+          </pre>
         </section>
         <section>
           <h5>Slotted pages</h5>
+          <ul>
+            <li class="fragment">Pages mit slots</li>
+            <li class="fragment">Daten wieder finden per offset in der Page?</li>
+            <li class="fragment">Referenz über SlotId, diese enthält Offset und Länge</li>
+            <li class="fragment">255 Slots per Page (28 bytes per Slot für Daten)</li>
+          </ul>
+        </section>
+        <section>
+          <img src="https://codemonkeyspace.b-cdn.net/post/2021/it_starts_with_a_page/page.svg">
         </section>
         <section>
           <h5>Defragmentierung</h5>
+          <img src="https://codemonkeyspace.b-cdn.net/post/2021/it_starts_with_a_page/defrag.svg" height="500px">
+        </section>
+        <section>
+          <pre style="font-size: small;">
+            <code>
+public virtual void Defrag()
+{
+     // nothing to do
+     if (Header.UnalignedFreeBytes == 0)
+         return;
+
+     var regions = GetFreeRegions();
+     var freeRegions = regions.Count;
+     // maximum number of loops to is the initial number of regions with free space
+     int maxLoops = regions.Count;
+
+     while (freeRegions > 0 && maxLoops > 0)
+     {
+         // take the first free region
+         var region = regions[0];
+
+         // last free region in the file
+         byte nextFreeEntry = HighestDirectoryEntryId;
+         if (regions.Count > 1)
+         {
+             // next free entry starts here, so all between these indexes need to be moved
+             var nextRegion = regions[1];
+             nextFreeEntry = nextRegion.Item1;
+         }
+
+         var between = GetAllDirectoryEntriesBetween(region.Item2, nextFreeEntry);
+         var startOffset = between[0].Entry.DataOffset;
+         var endOffset = between[^1].Entry.EndPositionOfData();
+
+         var entry = SlotEntry.FromBuffer(Buffer.Span,
+             SlotEntry.GetEntryPosition(region.Item1));
+         var spanTarget = Buffer.Span.Slice(entry.EndPositionOfData());
+         var spanSource = Buffer.Span.Slice(startOffset, endOffset - startOffset);
+         // copy all bytes
+         spanTarget.WriteBytes(0, spanSource);
+         Buffer.Span.Slice(endOffset - region.Item3, region.Item3).Clear();
+         for (int i = 0; i < between.Count; i++)
+         {
+             var entryToChange = SlotEntry.FromBuffer(Buffer.Span, between[i].Index);
+             entryToChange = new SlotEntry((ushort) (entryToChange.DataOffset - region.Item3),
+                 entryToChange.DataLength);
+             entryToChange.ToBuffer(Buffer.Span, SlotEntry.GetEntryPosition(between[i].Index));
+         }
+
+
+         var pageHeader = new PageHeader(Header.PageId, Header.Type, Header.PrevPageId, Header.NextPageId,
+             (ushort)(Header.UsedBytes),
+             (byte) (Header.ItemCount - 1),
+             Header.NextFreePosition,
+             (ushort) (regions.Sum(tuple => tuple.Item3) -  region.Item3),
+             HighestDirectoryEntryId);
+         pageHeader.ToBuffer(Buffer.Span, 0);
+         Header = pageHeader;
+
+         regions = GetFreeRegions();
+         freeRegions = regions.Count;
+         maxLoops -= 1;
+     }
+
+     IsDirty = true;
+}
+            </code>
+          </pre>
         </section>
         <section>
           <h5>Page types</h5>
+          <ul>
+            <li class="fragment">Header</li>
+            <li class="fragment">Data</li>
+            <li class="fragment">Global Allocation Map</li>
+            <li class="fragment">Allocation Information</li>
+            <li class="fragment">Index</li>
+            <li class="fragment">Table</li>
+          </ul>
         </section>
         <section>
           <h5>Allocation Information Page</h5>
@@ -241,6 +395,12 @@ public int Unroll4(Span<byte> span)
           </div>
         </section>
         <section>
+          <img src="./img/5lbio7.jpg" height="75%">
+        </section>
+        <section data-transition="zoom-in fade-out">
+          <img src="./img/z8g8xg2dekk51.jpg" height="75%">
+        </section>
+        <section>
           <h5>Binary search</h5>
           <div>
             <span>$\mathcal{O}(n)$</span>
@@ -363,7 +523,7 @@ public int FindBinarySearch(Span<byte> spanByte)
         </section>
         <section>
           <h5>Lookup</h5>
-           <pre class="fragment"><code data-trim data-noescape>
+          <pre class="fragment"><code data-trim data-noescape>
 int res = 0;
 ref var l = ref span[index];
 var count = BitOperations.LeadingZeroCount((ulong)l);
@@ -372,7 +532,7 @@ if (index > 0 && res != -1)
     res += (64 * index);
 return res;
   </code></pre>
-   <pre class="fragment"><code data-trim data-noescape>
+          <pre class="fragment"><code data-trim data-noescape>
 int res = 0;
 ref var l = ref span[index];
 res = _lookup[l];
