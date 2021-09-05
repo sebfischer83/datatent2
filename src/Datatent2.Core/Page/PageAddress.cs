@@ -44,20 +44,17 @@ namespace Datatent2.Core.Page
 
         public static PageAddress FromBuffer(Span<byte> span, int offset)
         {
-            Guard.Argument(offset).GreaterThan(0);
             return FromBuffer(span[offset..]);
         }
 
         public void ToBuffer(Span<byte> span)
         {
-            Guard.Argument(span.Length).Min(Constants.PAGE_ADDRESS_SIZE);
             PageAddress a = this;
             MemoryMarshal.Write(span, ref a);
         }
 
         public void ToBuffer(Span<byte> span, int offset)
         {
-            Guard.Argument(offset).GreaterThan(0);
             ToBuffer(span.Slice(offset));
         }
 

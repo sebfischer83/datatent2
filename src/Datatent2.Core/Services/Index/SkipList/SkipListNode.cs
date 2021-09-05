@@ -78,13 +78,14 @@ namespace Datatent2.Core.Services.Index.SkipList
                         Key = (TKey)(object)String.Empty;
                     break;
                 case SkipListNodeTypeCode.Guid:
-                    Key = (TKey)(object) new Guid(_keyBytes);
+                    Key = BoxingSafeConverter<Guid, TKey>.Instance.Convert(new Guid(_keyBytes));
                     break;
                 case SkipListNodeTypeCode.SByte:
                     Key = BoxingSafeConverter<sbyte, TKey>.Instance.Convert(Unsafe.As<byte[], sbyte>(ref _keyBytes));
                     break;
-                //case SkipListNodeTypeCode.Byte:
-                //    break;
+                case SkipListNodeTypeCode.Byte:
+                    Key = BoxingSafeConverter<byte, TKey>.Instance.Convert(Unsafe.As<byte[], byte>(ref _keyBytes));
+                    break;
                 //case SkipListNodeTypeCode.Int16:
                 //    break;
                 //case SkipListNodeTypeCode.UInt16:
@@ -94,8 +95,10 @@ namespace Datatent2.Core.Services.Index.SkipList
                     break;
                 //case SkipListNodeTypeCode.UInt32:
                 //    break;
-                //case SkipListNodeTypeCode.Int64:
-                //    break;
+                case SkipListNodeTypeCode.Int64:
+                    Key = BoxingSafeConverter<long, TKey>.Instance.Convert(MemoryMarshal.Read<long>(_keyBytes));
+                    //Key = (TKey)(object)Unsafe.As<byte[], long>(ref _keyBytes);
+                    break;
                 //case SkipListNodeTypeCode.UInt64:
                 //    break;
                 //case SkipListNodeTypeCode.Single:
@@ -208,7 +211,7 @@ namespace Datatent2.Core.Services.Index.SkipList
         /// 11-X PageAddresses bytes
         /// X+1 Data Length byte
         /// X+2-Y Data bytes
-        /// </summary>
+        /// </summary> 
         /// <returns></returns>
         public Span<byte> ToBytes()
         {
@@ -226,6 +229,7 @@ namespace Datatent2.Core.Services.Index.SkipList
             for (int i = 0; i < Forward.Length; i++)
             {
                 ref var address = ref Forward[i];
+
                 address.ToBuffer(bytes, pos);
 
                 pos += Constants.PAGE_ADDRESS_SIZE;
