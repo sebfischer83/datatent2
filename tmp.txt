@@ -1,0 +1,33 @@
+
+          <h5>Binary search</h5>
+          <div>
+       
+          </div>
+          <div class="fragment" data-fragment-index="0">
+            $\log_2 8124 \approx 13$
+          </div>
+          <div class="r-stack">
+            <img class="fragment current-visible" data-fragment-index="1"
+              src="https://codemonkeyspace.b-cdn.net/post/2021/gam/bigo.svg" width="400" height="400">
+            <img class="fragment" data-fragment-index="2"
+              src="https://codemonkeyspace.b-cdn.net/post/2021/gam/binarysearch.svg" width="400" height="400">
+          </div>
+        </section>
+        <section>
+          <pre><code data-trim data-noescape data-line-numbers="17-18|20|28-33|42-51">
+
+  </code></pre>
+         
+        </section>
+        <section>
+          <h5>Lookup</h5>
+          <pre class="fragment"><code data-trim data-noescape>
+
+  </code></pre>
+        </section>
+        <section>
+          <h5>Allocation Information Page</h5>
+        </section>
+        <section>
+          <h5>Allocation Information Page</h5>
+        </section>

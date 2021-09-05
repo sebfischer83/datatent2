@@ -1,573 +1,144 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
 
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>reveal.js</title>
+    <link rel="stylesheet" href="dist/reset.css" />
+    <link rel="stylesheet" href="dist/reveal.css" />
+    <link rel="stylesheet" href="dist/theme/black.css" />
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="plugin/highlight/monokai.css" />
+    <style>
+      .container {
+        display: flex;
+      }
 
-  <title>reveal.js</title>
-  <link rel="stylesheet" href="dist/reset.css" />
-  <link rel="stylesheet" href="dist/reveal.css" />
-  <link rel="stylesheet" href="dist/theme/black.css" />
-  <!-- Theme used for syntax highlighted code -->
-  <link rel="stylesheet" href="plugin/highlight/monokai.css" />
-  <style>
-    .container {
-      display: flex;
-    }
+      .col {
+        flex: 1;
+      }
+    </style>
+  </head>
 
-    .col {
-      flex: 1;
-    }
-  </style>
-</head>
-
-<body>
-  <div class="reveal">
-    <div class="slides">
-      <section>
-        <div class="container">
-
-          <div class="col">
-            <img src="./img/am543Vd_700b.jpg" height="600">
-          </div>
-
-          <div class="col">
-            Column 2 Content
-          </div>
-
-        </div>
-      </section>
-      <section>
-        <h2 class="r-fit-text">Inhaltsverzeichnis</h2>
-        <ol>
-          <li>Pages?</li>
-          <li>Global Allocation Map</li>
-          <li>Wie geht der Insert...</li>
-          <li>... und wie bekomme ich meine Daten wieder?</li>
-          <li>Indexe</li>
-          <li>SkipList</li>
-          <li>Bloom Filter</li>
-          <li>HyperLogLog</li>
-        </ol>
-      </section>
-      <section>
+  <body>
+    <div class="reveal">
+      <div class="slides">
         <section>
-          <h2 class="r-fit-text">Pages?</h2>
-        </section>
-        <section>
-          <ul>
-            <li class="fragment">kleinste "Datenbankeinheit" mit 8192 bytes</li>
-            <li class="fragment">verschiedene Typen existieren</li>
-            <li class="fragment">64 bytes Header (32 allgemein, 32 spezifisch)</li>
-            <li class="fragment">maximale Datenbankgröße $ushort.MaxSize * 8192 \approx 35,1 terrabyte $</li>
-          </ul>
-        </section>
-        <section>
-          <pre style="font-size: small;">
-            <code>
-              Type layout for 'PageHeader'
-Size: 64 bytes. Paddings: 43 bytes (%67 of empty space)
-|============================================|
-|   0-3: UInt32 PageId (4 bytes)             |
-|--------------------------------------------|
-|     4: PageType Type (1 byte)              |
-| |==============================|           |
-| |     0: Byte value__ (1 byte) |           |
-| |==============================|           |
-|--------------------------------------------|
-|   5-8: UInt32 PrevPageId (4 bytes)         |
-|--------------------------------------------|
-|  9-12: UInt32 NextPageId (4 bytes)         |
-|--------------------------------------------|
-| 13-14: UInt16 UsedBytes (2 bytes)          |
-|--------------------------------------------|
-|    15: Byte ItemCount (1 byte)             |
-|--------------------------------------------|
-| 16-17: UInt16 NextFreePosition (2 bytes)   |
-|--------------------------------------------|
-| 18-19: UInt16 UnalignedFreeBytes (2 bytes) |
-|--------------------------------------------|
-|    20: Byte HighestSlotId (1 byte)         |
-|--------------------------------------------|
-| 21-63: padding (43 bytes)                  |
-|============================================|
-            </code>
-          </pre>
-        </section>
-        <section>
-          <h5>Slotted pages</h5>
-          <ul>
-            <li class="fragment">Pages mit slots</li>
-            <li class="fragment">Daten wieder finden per offset in der Page?</li>
-            <li class="fragment">Referenz über SlotId, diese enthält Offset und Länge</li>
-            <li class="fragment">255 Slots per Page (28 bytes per Slot für Daten)</li>
-          </ul>
-        </section>
-        <section>
-          <img src="https://codemonkeyspace.b-cdn.net/post/2021/it_starts_with_a_page/page.svg">
-        </section>
-        <section>
-          <h5>Defragmentierung</h5>
-          <img src="https://codemonkeyspace.b-cdn.net/post/2021/it_starts_with_a_page/defrag.svg" height="500px">
-        </section>
-        <section>
-          <pre style="font-size: small;">
-            <code>
-public virtual void Defrag()
-{
-     // nothing to do
-     if (Header.UnalignedFreeBytes == 0)
-         return;
-
-     var regions = GetFreeRegions();
-     var freeRegions = regions.Count;
-     // maximum number of loops to is the initial number of regions with free space
-     int maxLoops = regions.Count;
-
-     while (freeRegions > 0 && maxLoops > 0)
-     {
-         // take the first free region
-         var region = regions[0];
-
-         // last free region in the file
-         byte nextFreeEntry = HighestDirectoryEntryId;
-         if (regions.Count > 1)
-         {
-             // next free entry starts here, so all between these indexes need to be moved
-             var nextRegion = regions[1];
-             nextFreeEntry = nextRegion.Item1;
-         }
-
-         var between = GetAllDirectoryEntriesBetween(region.Item2, nextFreeEntry);
-         var startOffset = between[0].Entry.DataOffset;
-         var endOffset = between[^1].Entry.EndPositionOfData();
-
-         var entry = SlotEntry.FromBuffer(Buffer.Span,
-             SlotEntry.GetEntryPosition(region.Item1));
-         var spanTarget = Buffer.Span.Slice(entry.EndPositionOfData());
-         var spanSource = Buffer.Span.Slice(startOffset, endOffset - startOffset);
-         // copy all bytes
-         spanTarget.WriteBytes(0, spanSource);
-         Buffer.Span.Slice(endOffset - region.Item3, region.Item3).Clear();
-         for (int i = 0; i < between.Count; i++)
-         {
-             var entryToChange = SlotEntry.FromBuffer(Buffer.Span, between[i].Index);
-             entryToChange = new SlotEntry((ushort) (entryToChange.DataOffset - region.Item3),
-                 entryToChange.DataLength);
-             entryToChange.ToBuffer(Buffer.Span, SlotEntry.GetEntryPosition(between[i].Index));
-         }
-
-
-         var pageHeader = new PageHeader(Header.PageId, Header.Type, Header.PrevPageId, Header.NextPageId,
-             (ushort)(Header.UsedBytes),
-             (byte) (Header.ItemCount - 1),
-             Header.NextFreePosition,
-             (ushort) (regions.Sum(tuple => tuple.Item3) -  region.Item3),
-             HighestDirectoryEntryId);
-         pageHeader.ToBuffer(Buffer.Span, 0);
-         Header = pageHeader;
-
-         regions = GetFreeRegions();
-         freeRegions = regions.Count;
-         maxLoops -= 1;
-     }
-
-     IsDirty = true;
-}
-            </code>
-          </pre>
-        </section>
-        <section>
-          <h5>Page types</h5>
-          <ul>
-            <li class="fragment">Header</li>
-            <li class="fragment">Data</li>
-            <li class="fragment">Global Allocation Map</li>
-            <li class="fragment">Allocation Information</li>
-            <li class="fragment">Index</li>
-            <li class="fragment">Table</li>
-          </ul>
-        </section>
-        <section>
-          <h5>Allocation Information Page</h5>
-        </section>
-      </section>
-      <section>
-        <section>
-          <h2 class="r-fit-text">Global Allocation Map</h2>
-        </section>
-        <section>
-          <h5>Allokationen merken</h5>
-        </section>
-        <section>
-          <h5>Die letzte allokierte Seite finden</h5>
-          <p class="fragment">erste Optimierungen</p>
-          <ul>
-            <li class="fragment">Edge cases direkt behandeln (leer und voll)</li>
-            <li class="fragment">als longs Daten betrachten</li>
-            <li class="fragment">Intrinsics nutzen</li>
-          </ul>
-        </section>
-        <section>
-          <h5>erste Version</h5>
-          <pre><code data-trim data-noescape>
-public int DefaultLoop(Span<byte> span)
-{
-    Span<ulong> longSpan = MemoryMarshal.Cast<byte, ulong>(span);
-
-    if (longSpan[0] == 0)
-        return 1;
-
-    if (longSpan[^1] == long.MaxValue)
-        return -1;
-
-    int iterCount = longSpan.Length / 4;
-    for (int i = 0; i < iterCount; i++)
-    {
-        ref ulong l = ref longSpan[i];
-        if (l == ulong.MaxValue)
-            continue;
-        int res = 0;
-        var count = BitOperations.LeadingZeroCount(l);
-        res = (64 - count) + 1;
-        if (i > 0 && res != -1)
-            res += (64 * i);
-        return res;
-    }
-
-    return -1;
-}
-  </code></pre>
-          <div class="fragment">
-            <div style="overflow-x:auto">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Method</th>
-                    <th>Iterations</th>
-                    <th style="text-align:right">Mean</th>
-                    <th style="text-align:right">Error</th>
-                    <th style="text-align:right">StdDev</th>
-                    <th style="text-align:right">Median</th>
-                    <th style="text-align:right">Ratio</th>
-                    <th style="text-align:right">RatioSD</th>
-                    <th>Baseline</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Loop</td>
-                    <td>1000</td>
-                    <td style="text-align:right">138.85 μs</td>
-                    <td style="text-align:right">1.539 μs</td>
-                    <td style="text-align:right">2.303 μs</td>
-                    <td style="text-align:right">138.74 μs</td>
-                    <td style="text-align:right">1.00</td>
-                    <td style="text-align:right">0.00</td>
-                    <td>Yes</td>
-                  </tr>
-                </tbody>
-              </table>
+          <div class="container">
+            <div class="col">
+              <img src="./img/am543Vd_700b.jpg" height="600" />
             </div>
+
+            <div class="col">Column 2 Content</div>
           </div>
         </section>
+        <section
+          data-markdown="./md/toc.md"
+          data-separator="---"
+          data-separator-vertical="----"
+          data-separator-notes="^Note:"
+          data-charset="iso-8859-15"
+        ></section>
         <section>
-          <h5>Loop unrolling</h5>
-          <pre><code data-trim data-noescape>
-public int Unroll4(Span<byte> span)
-{
-    Span<ulong> longSpan = MemoryMarshal.Cast<byte, ulong>(span);
-
-    if (longSpan[0] == 0)
-        return 1;
-
-    if (longSpan[^1] == long.MaxValue)
-        return -1;
-
-    int iterCount = longSpan.Length;
-    for (int i = 0; i < iterCount; i += 4)
-    {
-        ref ulong l4 = ref longSpan[i + 3];
-        // when l4 is max value all others before too
-        if (l4 == ulong.MaxValue)
-            continue;
-
-        ref ulong l1 = ref longSpan[i];
-        ref ulong l2 = ref longSpan[i + 1];
-        ref ulong l3 = ref longSpan[i + 2];
-
-        int res = -1;
-        if (l1 != ulong.MaxValue)
-        {
-            var count = BitOperations.LeadingZeroCount(l1);
-
-            res = (64 - count) + 1;
-        }
-        else if (l2 != ulong.MaxValue)
-        {
-            var count = BitOperations.LeadingZeroCount(l2);
-            res = (64) - count + 64 + 1;
-        }
-        else if (l3 != ulong.MaxValue)
-        {
-            var count = BitOperations.LeadingZeroCount(l3);
-            res = (64) - count + 128 + 1;
-        }
-        else if (l4 != ulong.MaxValue)
-        {
-            var count = BitOperations.LeadingZeroCount(l4);
-            res = (64) - count + 192 + 1;
-        }
-
-        if (i > 0 && res != -1)
-            res += (64 * i);
-
-        return res;
-    }
-
-    return -1;
-}
-  </code></pre>
-
-          <div class="fragment">
-            <table>
-              <thead>
-                <tr>
-                  <th>Method</th>
-                  <th>Iterations</th>
-                  <th style="text-align:right">Mean</th>
-                  <th style="text-align:right">Error</th>
-                  <th style="text-align:right">StdDev</th>
-                  <th style="text-align:right">Median</th>
-                  <th style="text-align:right">Ratio</th>
-                  <th style="text-align:right">RatioSD</th>
-                  <th>Baseline</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Loop</td>
-                  <td>1000</td>
-                  <td style="text-align:right">138.85 μs</td>
-                  <td style="text-align:right">1.539 μs</td>
-                  <td style="text-align:right">2.303 μs</td>
-                  <td style="text-align:right">138.74 μs</td>
-                  <td style="text-align:right">1.00</td>
-                  <td style="text-align:right">0.00</td>
-                  <td>Yes</td>
-                </tr>
-                <tr>
-                  <td>LoopUnrolled4</td>
-                  <td>1000</td>
-                  <td style="text-align:right">102.69 μs</td>
-                  <td style="text-align:right">1.514 μs</td>
-                  <td style="text-align:right">2.171 μs</td>
-                  <td style="text-align:right">102.61 μs</td>
-                  <td style="text-align:right">0.74</td>
-                  <td style="text-align:right">0.02</td>
-                  <td>No</td>
-                </tr>
-                <tr>
-                  <td>LoopUnrolled2</td>
-                  <td>1000</td>
-                  <td style="text-align:right">155.59 μs</td>
-                  <td style="text-align:right">2.035 μs</td>
-                  <td style="text-align:right">2.918 μs</td>
-                  <td style="text-align:right">156.24 μs</td>
-                  <td style="text-align:right">1.12</td>
-                  <td style="text-align:right">0.03</td>
-                  <td>No</td>
-                </tr>
-                <tr>
-                  <td>LoopUnrolled8</td>
-                  <td>1000</td>
-                  <td style="text-align:right">77.82 μs</td>
-                  <td style="text-align:right">1.153 μs</td>
-                  <td style="text-align:right">1.690 μs</td>
-                  <td style="text-align:right">77.90 μs</td>
-                  <td style="text-align:right">0.56</td>
-                  <td style="text-align:right">0.02</td>
-                  <td>No</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <section>
+            <h2 class="r-fit-text">Pages?</h2>
+          </section>
+          <section>
+            <ul>
+              <li class="fragment">
+                kleinste "Datenbankeinheit" mit 8192 bytes
+              </li>
+              <li class="fragment">verschiedene Typen existieren</li>
+              <li class="fragment">
+                64 bytes Header (32 allgemein, 32 spezifisch)
+              </li>
+              <li class="fragment">
+                maximale Datenbankgröße $ushort.MaxSize * 8192 \approx 35,1
+                terrabyte $
+              </li>
+            </ul>
+          </section>
+          <section
+            data-markdown="./md/pageheaderlayout.md"
+            data-separator="#!#"
+            data-separator-vertical="###!###"
+            data-separator-notes="^Note:"
+            data-charset="iso-8859-15"
+          ></section>
+          <section
+            data-markdown="./md/slotted.md"
+            data-separator="#!#"
+            data-separator-vertical="###!###"
+            data-separator-notes="^Note:"
+            data-charset="utf-8"
+          ></section>
+          <section>
+            <img
+              src="https://codemonkeyspace.b-cdn.net/post/2021/it_starts_with_a_page/page.svg"
+            />
+          </section>
+          <section>
+            <h5>Defragmentierung</h5>
+            <img
+              src="https://codemonkeyspace.b-cdn.net/post/2021/it_starts_with_a_page/defrag.svg"
+              height="500px"
+            />
+          </section>
+          <section
+            data-markdown="./md/defragcode.md"
+            data-separator="#!#"
+            data-separator-vertical="###!###"
+            data-separator-notes="^Note:"
+            data-charset="utf-8"
+          ></section>
+          <section>
+            <h5>Page types</h5>
+            <ul>
+              <li class="fragment">Header</li>
+              <li class="fragment">Data</li>
+              <li class="fragment">Global Allocation Map</li>
+              <li class="fragment">Allocation Information</li>
+              <li class="fragment">Index</li>
+              <li class="fragment">Table</li>
+            </ul>
+          </section>
+          <section>
+            <h5>Organisation in der Datenbankdatei</h5>
+            <img
+              src="https://codemonkeyspace.b-cdn.net/post/2021/it_starts_with_a_page/page_org.svg"
+            />
+          </section>
         </section>
-        <section>
-          <img src="./img/5lbio7.jpg" height="75%">
-        </section>
-        <section data-transition="zoom-in fade-out">
-          <img src="./img/z8g8xg2dekk51.jpg" height="75%">
-        </section>
-        <section>
-          <h5>Binary search</h5>
-          <div>
-            <span>$\mathcal{O}(n)$</span>
-            <span>vs.</span>
-            <span>$\mathcal{O}(\log{}n)$</span>
-          </div>
-          <div class="fragment" data-fragment-index="0">
-            $\log_2 8124 \approx 13$
-          </div>
-          <div class="r-stack">
-            <img class="fragment current-visible" data-fragment-index="1"
-              src="https://codemonkeyspace.b-cdn.net/post/2021/gam/bigo.svg" width="400" height="400">
-            <img class="fragment" data-fragment-index="2"
-              src="https://codemonkeyspace.b-cdn.net/post/2021/gam/binarysearch.svg" width="400" height="400">
-          </div>
-        </section>
-        <section>
-          <pre><code data-trim data-noescape data-line-numbers="17-18|20|28-33|42-51">
-public int FindBinarySearch(Span<byte> spanByte)
-{
-    Span<ulong> span = MemoryMarshal.Cast<byte, ulong>(spanByte);
-
-    if (span[0] == 0)
-        return 1;
-
-    if (span[^1] == long.MaxValue)
-        return -1;
-
-    int min = 0;
-    int max = span.Length - 1;
-    int index = -1;
-
-    while (min <= max)
-    {
-        int mid = (int)unchecked((uint)(min + max) >> 1);
-        ref var b = ref span[mid];
-
-        if (b != ulong.MaxValue)
-        {
-            if (mid == 0)
-            {
-                index = 0;
-                break;
-            }
-
-            ref var b1 = ref span[mid - 1];
-            if (b1 == ulong.MaxValue)
-            {
-                index = mid;
-                break;
-            }
-
-            max = mid - 1;
-            continue;
-        }
-
-        min = mid + 1;
-    }
-
-    if (index > -1)
-    {
-        int res = 0;
-        ref var l = ref span[index];
-        var count = BitOperations.LeadingZeroCount((ulong)l);
-        res = (64 - count) + 1;
-        if (index > 0 && res != -1)
-            res += (64 * index);
-        return res;
-    }
-
-    return index;
-}
-  </code></pre>
-          <table class="fragment">
-            <thead>
-              <tr>
-                <th>Method</th>
-                <th>Iterations</th>
-                <th style="text-align:right">Mean</th>
-                <th style="text-align:right">Error</th>
-                <th style="text-align:right">StdDev</th>
-                <th style="text-align:right">Median</th>
-                <th style="text-align:right">Ratio</th>
-                <th style="text-align:right">RatioSD</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Loop</td>
-                <td>1000</td>
-                <td style="text-align:right">138.85 μs</td>
-                <td style="text-align:right">1.539 μs</td>
-                <td style="text-align:right">2.303 μs</td>
-                <td style="text-align:right">138.74 μs</td>
-                <td style="text-align:right">1.00</td>
-                <td style="text-align:right">0.00</td>
-              </tr>
-              <tr>
-                <td>LoopUnrolled8</td>
-                <td>1000</td>
-                <td style="text-align:right">77.82 μs</td>
-                <td style="text-align:right">1.153 μs</td>
-                <td style="text-align:right">1.690 μs</td>
-                <td style="text-align:right">77.90 μs</td>
-                <td style="text-align:right">0.56</td>
-                <td style="text-align:right">0.02</td>
-              </tr>
-              <tr>
-                <td>BinarySearchLike</td>
-                <td>1000</td>
-                <td style="text-align:right">56.73 μs</td>
-                <td style="text-align:right">1.024 μs</td>
-                <td style="text-align:right">1.501 μs</td>
-                <td style="text-align:right">56.48 μs</td>
-                <td style="text-align:right">0.41</td>
-                <td style="text-align:right">0.01</td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
-        <section>
-          <h5>Lookup</h5>
-          <pre class="fragment"><code data-trim data-noescape>
-int res = 0;
-ref var l = ref span[index];
-var count = BitOperations.LeadingZeroCount((ulong)l);
-res = (64 - count) + 1;
-if (index > 0 && res != -1)
-    res += (64 * index);
-return res;
-  </code></pre>
-          <pre class="fragment"><code data-trim data-noescape>
-int res = 0;
-ref var l = ref span[index];
-res = _lookup[l];
-if (index > 0 && res != -1)
-    res += (64 * index);
-return res;
-  </code></pre>
-        </section>
-        <section>
-          <h5>Allocation Information Page</h5>
-        </section>
-        <section>
-          <h5>Allocation Information Page</h5>
-        </section>
-      </section>
+        <section
+          data-markdown="./md/gam.md"
+          data-separator="#!#"
+          data-separator-vertical="!!!"
+          data-separator-notes="^Note:"
+          data-charset="utf-8"
+        ></section>
+      </div>
     </div>
-  </div>
 
-  <script src="dist/reveal.js"></script>
-  <script src="plugin/notes/notes.js"></script>
-  <script src="plugin/markdown/markdown.js"></script>
-  <script src="plugin/highlight/highlight.js"></script>
-  <script src="plugin/math/math.js"></script>
-  <script>
-    //   $\mathcal{O}(n\log{}n)$
-    // More info about initialization & config:
-    // - https://revealjs.com/initialization/
-    // - https://revealjs.com/config/
-    Reveal.initialize({
-      hash: true,
-      slideNumber: true,
-      // Learn about plugins: https://revealjs.com/plugins/
-      plugins: [RevealMarkdown, RevealHighlight, RevealNotes, RevealMath],
-    });
-  </script>
-</body>
-
+    <script src="dist/reveal.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <script src="plugin/markdown/markdown.js"></script>
+    <script src="plugin/highlight/highlight.js"></script>
+    <script src="plugin/math/math.js"></script>
+    <script>
+      //   $\mathcal{O}(n\log{}n)$
+      // More info about initialization & config:
+      // - https://revealjs.com/initialization/
+      // - https://revealjs.com/config/
+      Reveal.initialize({
+        hash: true,
+        slideNumber: true,
+        // Learn about plugins: https://revealjs.com/plugins/
+        plugins: [RevealMarkdown, RevealHighlight, RevealNotes, RevealMath],
+      });
+    </script>
+  </body>
 </html>
