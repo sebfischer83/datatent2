@@ -34,7 +34,7 @@ namespace Datatent2.Core.Services.Index.SkipList
 
 
         /// <summary>
-        /// Initializes a new instance as the starting point for a new SkipList.
+        /// Initializes a new instance as the starting point for a new SkipListIndexService.
         /// </summary>
         /// <param name="level">The level.</param>
         public SkipListNode(int level)

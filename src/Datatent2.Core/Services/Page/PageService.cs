@@ -24,7 +24,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Datatent2.Core.Services.Page
 {
-    internal class PageService
+    internal class PageService : IPageService
     {
         private readonly DiskService _diskService;
         private readonly ILogger _logger;
@@ -302,7 +302,7 @@ namespace Datatent2.Core.Services.Page
             }
         }
 
-        internal async Task<T> CreateNewPage<T>(string? strParam = null) where T : BasePage
+        public async Task<T> CreateNewPage<T>(string? strParam = null) where T : BasePage
         {
             if (_globalAllocationMap!.IsFull)
             {
