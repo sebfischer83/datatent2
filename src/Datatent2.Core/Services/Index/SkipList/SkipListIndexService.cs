@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -141,12 +142,15 @@ namespace Datatent2.Core.Services.Index.SkipList
             page!.UpdateBlock(bytes, pageAddress);
         }
 
+        private static int COUNTER = 0;
+
         private async Task<PageAddress> InsertNode(SkipListNode node)
         {
             if (_currentIndexPage == null)
                 throw new InvalidEngineStateException($"{nameof(_currentIndexPage)} is not allowed to be null!");
             var bytes = node.ToBytes();
-
+            if (COUNTER == 216)
+                Debugger.Break();
             var indexPage = _currentIndexPage;
             var bytesThatCanBeWritten = _currentIndexPage.MaxFreeUsableBytes - Constants.BLOCK_HEADER_SIZE;
             if (bytesThatCanBeWritten < bytes.Length)
@@ -159,6 +163,7 @@ namespace Datatent2.Core.Services.Index.SkipList
 
             var block = indexPage.InsertBlock((ushort)bytes.Length);
             block.FillData(bytes);
+            COUNTER++;
             return block.Position;
         }
 
@@ -172,6 +177,8 @@ namespace Datatent2.Core.Services.Index.SkipList
         {
             throw new NotImplementedException();
         }
+
+
 
         public override async Task Insert<T>(T key, PageAddress pageAddress)
         {
