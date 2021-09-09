@@ -55,6 +55,7 @@ namespace Datatent2.Core.Block
         public void FillData(Span<byte> data, uint checksum = 0)
         {
             var dataArea = Page.GetDataByIndex(EntryId)[Constants.BLOCK_HEADER_SIZE..];
+          
             dataArea.WriteBytes(0, data);
             if (checksum > 0)
                 dataArea.WriteUInt32(dataArea.Length - sizeof(uint), checksum);

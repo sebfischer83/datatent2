@@ -118,9 +118,9 @@ namespace Datatent2.Core
             return datatent;
         }
 
-        public async Task<Table<T>> GetTable<T>(string name) where T : class
+        public async Task<Table<TValue, TKey>> GetTable<TValue, TKey>(string name) where TValue : class
         {
-            var table = await Table<T>.Get(name, _dataService!, _pageService!, _cacheService, _loggerFactory.CreateLogger<Table<T>>());
+            var table = await Table<TValue, TKey>.Get(name, _dataService!, _pageService!, _cacheService, _loggerFactory.CreateLogger("Table"));
 
             return table;
         }

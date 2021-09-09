@@ -3,18 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Datatent2.Contracts;
 using Datatent2.Core.Page;
 using Datatent2.Core.Page.Index;
 
 namespace Datatent2.Core.Block
 {
-    internal class SkipListNodeBlock : Block<IndexPage, BlockHeader>
+    internal class IndexBlock : Block<IndexPage, BlockHeader>
     {
-        public SkipListNodeBlock(IndexPage page, byte entryId) : base(page, entryId)
+        public IndexBlock(IndexPage page, byte entryId) : base(page, entryId)
         {
         }
 
-        public SkipListNodeBlock(IndexPage page, byte entryId, PageAddress nextBlock, bool isFollowingBlock) : base(page, entryId, nextBlock, isFollowingBlock)
+        public IndexBlock(IndexPage page, byte entryId, PageAddress nextBlock, bool isFollowingBlock) : base(page, entryId, nextBlock, isFollowingBlock)
         {
         }
 

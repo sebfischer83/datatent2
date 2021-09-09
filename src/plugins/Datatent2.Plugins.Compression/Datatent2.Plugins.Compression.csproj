@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="Advanced.Algorithms" Version="0.0.470-beta" />
-    <PackageReference Include="K4os.Compression.LZ4" Version="1.2.10-beta" />
+    <PackageReference Include="K4os.Compression.LZ4" Version="1.2.12" />
     <PackageReference Include="Prise.Plugin" Version="2.1.2" />
   </ItemGroup>
 

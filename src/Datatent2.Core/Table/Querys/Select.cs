@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 // ReSharper disable once CheckNamespace
 namespace Datatent2.Core.Table
 {
-    public sealed partial class Table<T> where T : class
+    public sealed partial class Table<TValue, TKey> where TValue : class
     {
         /// <summary>
         /// Return the object for that key, if there are many the first result is returned. (can happen when there is only a HeapIndexService that is not unique)
@@ -21,7 +21,7 @@ namespace Datatent2.Core.Table
         /// <typeparam name="TKey"></typeparam>
         /// <param name="key"></param>
         /// <returns></returns>
-        public async Task<T?> Get<TKey>(TKey key)
+        public async Task<TValue?> Get(TKey key)
         {
             var index = await Services.Index.IndexService.LoadIndex(this._mainIndexPageAddress, _pageService, _logger);
             var address = await index.Find(key);
@@ -32,7 +32,7 @@ namespace Datatent2.Core.Table
                 return null;
             }
 
-            var obj = await _dataService.Get<T>(address.Value);
+            var obj = await _dataService.Get<TValue>(address.Value);
 
             return obj;
         }

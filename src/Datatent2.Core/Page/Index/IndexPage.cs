@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Datatent2.Contracts;
 using Datatent2.Contracts.Exceptions;
+using Datatent2.Core.Block;
 using Datatent2.Core.Index;
 using Datatent2.Core.Index.Heap;
 using Datatent2.Core.Memory;
@@ -210,6 +211,20 @@ namespace Datatent2.Core.Page.Index
         {
             base.SaveHeader();
             IndexPageHeader.ToBuffer(Buffer.Span[Constants.PAGE_COMMON_HEADER_SIZE..]);
+        }
+
+        public IndexBlock InsertBlock(ushort length)
+        {
+            var span = Insert((ushort)(length + Constants.BLOCK_HEADER_SIZE), out var index);
+
+            return new IndexBlock(this, index, PageAddress.Empty, false);
+        }
+
+        public void UpdateBlock(Span<byte> bytes, PageAddress pageAddress)
+        {
+            var block = new IndexBlock(this, pageAddress.SlotId);
+            block.FillData(bytes);
+            IsDirty = true;
         }
     }
 }

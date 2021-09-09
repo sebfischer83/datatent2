@@ -6,8 +6,10 @@ using System;
 using System.Collections.Generic;
 using System.IO.Enumeration;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
+using Datatent2.Contracts;
 using Datatent2.Core.Block;
 using Datatent2.Core.Memory;
 
@@ -24,10 +26,10 @@ namespace Datatent2.Core.Page.Data
         public DataPage(IBufferSegment buffer, uint id) : base(buffer, id, PageType.Data)
         {
         }
-
+        
         public DataBlock InsertBlock(ushort length, bool isFollowingBlock)
         {
-            var span = Insert(length, out var index);
+            var span = Insert((ushort)(length + Constants.BLOCK_HEADER_SIZE), out var index);
 
             return new DataBlock(this, index, PageAddress.Empty, isFollowingBlock);
         }

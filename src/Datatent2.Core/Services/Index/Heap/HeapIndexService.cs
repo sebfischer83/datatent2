@@ -18,7 +18,7 @@ namespace Datatent2.Core.Services.Index.Heap
     {
         protected IndexPage? IndexPage { get; set; }
 
-        internal HeapIndexService(uint firstPageIndex, PageService pageService, ILogger logger) : base(firstPageIndex, pageService, logger)
+        internal HeapIndexService(uint firstPageIndex, IPageService pageService, ILogger logger) : base(firstPageIndex, pageService, logger)
         {
         }
 
@@ -145,6 +145,11 @@ namespace Datatent2.Core.Services.Index.Heap
         }
 
         public override Task Delete<T>(T key)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Task DeleteIndex()
         {
             throw new NotImplementedException();
         }

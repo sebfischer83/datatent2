@@ -28,14 +28,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.13.0" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
     <PackageReference Include="Crc32.NET" Version="1.2.0" />
     <PackageReference Include="Cryptisk.Utf8Json" Version="1.4.0" />
-    <PackageReference Include="CsvHelper" Version="27.1.0" />
+    <PackageReference Include="CsvHelper" Version="27.1.1" />
     <PackageReference Include="Jil" Version="3.0.0-alpha2" />
     <PackageReference Include="Jint" Version="3.0.0-beta-2032" />
-    <PackageReference Include="K4os.Compression.LZ4" Version="1.2.10-beta" />
-    <PackageReference Include="MessagePack" Version="2.2.85" />
+    <PackageReference Include="K4os.Compression.LZ4" Version="1.2.12" />
+    <PackageReference Include="MessagePack" Version="2.3.75" />
     <PackageReference Include="Moq" Version="4.16.1" />
     <PackageReference Include="NReco.Text.AhoCorasickDoubleArrayTrie" Version="1.0.2" />
     <PackageReference Include="Spreads" Version="2019.0.412" />

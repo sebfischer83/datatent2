@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 // ReSharper disable once CheckNamespace
 namespace Datatent2.Core.Table
 {
-    public sealed partial class Table<T> where T : class
+    public sealed partial class Table<TValue, TKey> where TValue : class
     {
         //public async Task Insert<TObj, TKey>(TObj obj, TKey key)
         //{
@@ -24,7 +24,7 @@ namespace Datatent2.Core.Table
         //    //await Insert(obj, key);
         //}
 
-        public async Task Insert<TObj, TKey>(TObj obj, TKey key)
+        public async Task Insert(TValue obj, TKey key)
         {
             if (obj == null) throw new ArgumentNullException(nameof(obj));
             var address = await _dataService!.Insert(obj);

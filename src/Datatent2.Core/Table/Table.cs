@@ -13,7 +13,7 @@ using Datatent2.Core.Services.Index;
 
 namespace Datatent2.Core.Table
 {
-    public sealed partial class Table<T>: IAsyncDisposable where T : class
+    public sealed partial class Table<TValue, TKey>: IAsyncDisposable where TValue : class
     {
         private uint _mainIndexPageAddress;
 
@@ -24,14 +24,14 @@ namespace Datatent2.Core.Table
         private readonly PageService _pageService;
         private readonly CacheService _cacheService;
         private readonly TablePage _tablePage;
-        private readonly ILogger<Table<T>> _logger;
+        private readonly ILogger _logger;
 
         internal Table(string name,
                            DataService dataService,
                            PageService pageService,
                            CacheService cacheService,
                            TablePage tablePage,
-                           ILogger<Table<T>> logger)
+                           ILogger logger)
         {
             _name = name;
             _dataService = dataService;
@@ -82,13 +82,13 @@ namespace Datatent2.Core.Table
             _tablePage.Save();
         }
 
-        internal static async Task<Table<T>> Get(string name, DataService dataService, PageService pageService, CacheService cacheService, ILogger<Table<T>> logger)
+        internal static async Task<Table<TValue, TKey>> Get(string name, DataService dataService, PageService pageService, CacheService cacheService, ILogger logger)
         {
             var tablePage = await pageService.GetTablePageForTable(name);
 #if DEBUG
             logger.LogDebug($"Retrieved TablePage {tablePage.Id}");
 #endif
-            Table<T> table = new Table<T>(name, dataService, pageService, cacheService, tablePage, logger);
+            Table<TValue, TKey> table = new Table<TValue, TKey>(name, dataService, pageService, cacheService, tablePage, logger);
             await table.LoadPageDataOrGenerate();
 
             return table;

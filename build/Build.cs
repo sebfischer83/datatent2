@@ -101,7 +101,7 @@ class Build : NukeBuild
                     .ResetVerbosity()
                     .EnableUseSourceLink()
                     .SetResultsDirectory(TestResultDirectory)
-                    .SetLogger($"trx;LogFileName={project.Name}.trx")
+                    .SetLoggers($"trx;LogFileName={project.Name}.trx")
                     .EnableCollectCoverage()
                     .SetCoverletOutput(TestResultDirectory / $"{project.Name}.xml")
                     .SetCoverletOutputFormat(CoverletOutputFormat.cobertura));

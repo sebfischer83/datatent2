@@ -73,6 +73,16 @@ namespace Datatent2.Core.Page
             return obj is PageAddress other && Equals(other);
         }
 
+        public static bool operator ==(PageAddress a, PageAddress b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(PageAddress a, PageAddress b)
+        {
+            return !(a == b);
+        }
+
         public override int GetHashCode()
         {
             return HashCode.Combine(PageId, SlotId);

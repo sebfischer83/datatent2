@@ -148,7 +148,7 @@ namespace Datatent2.Core.Services.Data
                 }
 
                 var bytesToWrite = Math.Min(bytesThatCanBeWritten, remainingBytes);
-                var block = dataPage.InsertBlock((ushort)((ushort)bytesToWrite + Constants.BLOCK_HEADER_SIZE), blockNr > 0);
+                var block = dataPage.InsertBlock((ushort)bytesToWrite, blockNr > 0);
 
 #if DEBUG
                 _logger.LogInformation($"Write {bytesToWrite} bytes from {remainingBytes} bytes to {block}");

@@ -13,6 +13,11 @@ namespace Datatent2.Core.Services.Page
     {
         Task<T?> GetPage<T>(uint id) where T : BasePage;
 
+        Task<T?> GetPage<T>(PageAddress address) where T : BasePage
+        {
+            return GetPage<T>(address.PageId);
+        }
+
         /// <summary>
         /// Save all dirty pages to the underlying disk and clears all cached pages
         /// </summary>

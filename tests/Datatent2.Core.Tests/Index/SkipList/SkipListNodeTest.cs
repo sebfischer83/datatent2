@@ -15,10 +15,23 @@ namespace Datatent2.Core.Tests.Index.SkipList
         [Fact]
         public void CreateNodeTest()
         {
-            SkipListNode<long> node = new SkipListNode<long>(35, new PageAddress(1, 1), 5);
+            SkipListNode node = new SkipListNode(35, new PageAddress(1, 1), 16);
             
+            node.Forward.Length.ShouldBe(16);
+            node.Key.ShouldBe(35);
+            node.Key.ShouldBeOfType(typeof(int));
+            node.PageAddress.PageId.ShouldBe((uint)1);
+            node.PageAddress.SlotId.ShouldBe((byte)1);
+        }
+
+        [Fact]
+        public void CreateNodeTest2()
+        {
+            SkipListNode node = new SkipListNode((ulong)35, new PageAddress(1, 1), 5);
+
             node.Forward.Length.ShouldBe(5);
             node.Key.ShouldBe(35);
+            node.Key.ShouldBeOfType(typeof(ulong));
             node.PageAddress.PageId.ShouldBe((uint)1);
             node.PageAddress.SlotId.ShouldBe((byte)1);
         }
@@ -26,10 +39,10 @@ namespace Datatent2.Core.Tests.Index.SkipList
         [Fact]
         public void CreateStartNodeTest()
         {
-            SkipListNode<long> node = new SkipListNode<long>( 5);
+            SkipListNode node = new SkipListNode( 5);
 
             node.Forward.Length.ShouldBe(5);
-            node.Key.ShouldBe(0);
+            node.Key.ShouldBe(null);
             node.PageAddress.PageId.ShouldBe((uint)0);
             node.PageAddress.SlotId.ShouldBe((byte)0);
         }
@@ -37,11 +50,19 @@ namespace Datatent2.Core.Tests.Index.SkipList
         [Fact]
         public void ToAndFromByteTest()
         {
-            SkipListNode<int> node = new SkipListNode<int>(35, new PageAddress(1, 1), 5);
+            SkipListNode node = new SkipListNode(35, new PageAddress(1, 1), 5);
+
+            node.Forward[0] = new PageAddress(1, 1);
+            node.Forward[1] = new PageAddress(2, 2);
+            node.Forward[2] = new PageAddress(3, 3);
+            node.Forward[3] = new PageAddress(4, 4);
+            node.Forward[4] = new PageAddress(5, 5);
 
             var bytes = node.ToBytes();
 
-            var node2 = SkipListNode<int>.FromBytes(bytes);
+            var node2 = SkipListNode.FromBytes(bytes);
+            node2.Forward[3].PageId.ShouldBe((uint)4);
+            node2.Forward[3].SlotId.ShouldBe((byte)4);
         }
     }
 }
