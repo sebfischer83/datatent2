@@ -26,8 +26,18 @@ namespace Datatent2.Core.Page.Index
         /// </summary>
         public bool IsStartPage => Header.PrevPageId == uint.MaxValue;
 
-        public override ushort FreeContinuousBytes =>
-            (ushort) ((Constants.PAGE_SIZE - Constants.PAGE_HEADER_SIZE) - Header.UsedBytes);
+        public override ushort FreeContinuousBytes
+        {
+            get
+            {
+                if (IndexPageHeader.Type == IndexType.SkipList)
+                {
+                    return base.FreeContinuousBytes;
+                }
+                return (ushort)((Constants.PAGE_SIZE - Constants.PAGE_HEADER_SIZE) - Header.UsedBytes);
+            }
+        }
+
         public IndexPageHeader IndexPageHeader { get; private set; }
 
         public IndexPage(IBufferSegment buffer) : base(buffer)
@@ -50,18 +60,18 @@ namespace Datatent2.Core.Page.Index
             if (IndexPageHeader.Type != IndexType.Heap)
                 throw new InvalidPageException($"Access index of type {Enum.GetName(typeof(IndexType), IndexPageHeader.Type)} with heap index methods is forbidden!", Header.PageId);
 
-            var usedBytes = (ushort) (Header.UsedBytes + heapKey.Length);
-            var nextFreePosition = (ushort) (Header.NextFreePosition + heapKey.Length);
+            var usedBytes = (ushort)(Header.UsedBytes + heapKey.Length);
+            var nextFreePosition = (ushort)(Header.NextFreePosition + heapKey.Length);
 
             if (usedBytes > FreeContinuousBytes)
                 return false;
-            
+
             heapKey.Write(Buffer.Span, Header.NextFreePosition);
-            
+
             Header = new PageHeader(Header.PageId, Header.Type, Header.PrevPageId, Header.NextPageId,
                 usedBytes, Header.ItemCount,
                 nextFreePosition, Header.UnalignedFreeBytes, Header.HighestSlotId);
-            IndexPageHeader = new IndexPageHeader(IndexPageHeader.Type, (ushort) (IndexPageHeader.NodesCount + 1));
+            IndexPageHeader = new IndexPageHeader(IndexPageHeader.Type, (ushort)(IndexPageHeader.NodesCount + 1));
             IsDirty = true;
 
             return true;
@@ -189,7 +199,7 @@ namespace Datatent2.Core.Page.Index
         {
             if (IndexPageHeader.Type != IndexType.Heap)
                 throw new InvalidEngineStateException($"Only {nameof(IndexType.Heap)} index is supported but method is called on {nameof(IndexPageHeader.Type)} at page {PageHeader.PageId}.");
-            
+
             return SearchHeapIndexKeyInternal(key, false);
         }
 
@@ -215,6 +225,9 @@ namespace Datatent2.Core.Page.Index
 
         public IndexBlock InsertBlock(ushort length)
         {
+            if (IndexPageHeader.Type == IndexType.Undefined)
+                throw new InvalidEngineStateException($"An index needs to be initialized before use!");
+
             var span = Insert((ushort)(length + Constants.BLOCK_HEADER_SIZE), out var index);
 
             return new IndexBlock(this, index, PageAddress.Empty, false);
@@ -222,9 +235,20 @@ namespace Datatent2.Core.Page.Index
 
         public void UpdateBlock(Span<byte> bytes, PageAddress pageAddress)
         {
-            var block = new IndexBlock(this, pageAddress.SlotId);
-            block.FillData(bytes);
-            IsDirty = true;
+            if (IndexPageHeader.Type == IndexType.Undefined)
+                throw new InvalidEngineStateException($"An index needs to be initialized before use!");
+
+            try
+            {
+                var block = new IndexBlock(this, pageAddress.SlotId);
+                block.FillData(bytes);
+                IsDirty = true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
     }
 }

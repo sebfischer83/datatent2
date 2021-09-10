@@ -97,6 +97,7 @@ namespace Datatent2.Core.Services.Index
 
     internal enum IndexType : byte
     {
+        Undefined = 0,
         Heap = 1,
         HeapUnique = 2,
         SkipList = 3,

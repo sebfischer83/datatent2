@@ -39,6 +39,35 @@ namespace Datatent2.Core.Tests.Index.SkipList
         }
 
         [Fact]
+        public async Task Large_Insert_Test()
+        {
+            Random _random = new Random();
+
+            HashSet<int> toInsert = new HashSet<int>();
+            int i = 0;
+            while (i < 100)
+            {
+                var a = _random.Next();
+                if (!toInsert.Contains(a))
+                {
+                    toInsert.Add(a);
+                    i++;
+                }
+            }
+
+            IPageService pageService = new FakePageService();
+
+            var index = await IndexService.CreateIndex(pageService, IndexType.SkipList, NullLogger.Instance);
+
+            foreach (var x in toInsert)
+            {
+                await index.Insert(x, PageAddress.Empty);
+            }
+
+            var s = await index.Print(new PrintStyle() { AttachIndexAddresses = true });
+        }
+
+        [Fact]
         public void TestCoinFlip()
         {
             List<int> list = new();

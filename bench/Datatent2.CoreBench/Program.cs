@@ -8,7 +8,7 @@ namespace Datatent2.CoreBench
     {
         static void Main(string[] args)
         {
-            BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, new DebugInProcessConfig());
+            BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
 
         }
     }

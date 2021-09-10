@@ -23,6 +23,7 @@ using GiGraph.Dot.Types.Nodes;
 using GiGraph.Dot.Types.Records;
 using HPCsharp;
 using Microsoft.Extensions.Logging;
+using Exception = System.Exception;
 
 namespace Datatent2.Core.Services.Index.SkipList
 {
@@ -142,20 +143,19 @@ namespace Datatent2.Core.Services.Index.SkipList
             page!.UpdateBlock(bytes, pageAddress);
         }
 
-        private static int COUNTER = 0;
-
         private async Task<PageAddress> InsertNode(SkipListNode node)
         {
             if (_currentIndexPage == null)
                 throw new InvalidEngineStateException($"{nameof(_currentIndexPage)} is not allowed to be null!");
             var bytes = node.ToBytes();
-            if (COUNTER == 216)
-                Debugger.Break();
+
+
             var indexPage = _currentIndexPage;
             var bytesThatCanBeWritten = _currentIndexPage.MaxFreeUsableBytes - Constants.BLOCK_HEADER_SIZE;
-            if (bytesThatCanBeWritten < bytes.Length)
+            if (bytesThatCanBeWritten < bytes.Length || !indexPage.IsInsertPossible((ushort)bytes.Length))
             {
                 indexPage = await PageService.CreateNewPage<IndexPage>();
+                indexPage.InitHeader(IndexType.SkipList);
                 _currentIndexPage.SetNextPage(indexPage.Id);
                 indexPage.SetPreviousPage(_currentIndexPage.Id);
                 _currentIndexPage = indexPage;
@@ -163,7 +163,7 @@ namespace Datatent2.Core.Services.Index.SkipList
 
             var block = indexPage.InsertBlock((ushort)bytes.Length);
             block.FillData(bytes);
-            COUNTER++;
+
             return block.Position;
         }
 
@@ -220,7 +220,7 @@ namespace Datatent2.Core.Services.Index.SkipList
 
                 if (current == null || !EqualityComparer<T>.Default.Equals((T)current.Value.Key, key))
                 {
-                    var rLevel = 0;//CoinFlip();
+                    var rLevel = CoinFlip();
                     if (rLevel > _level)
                     {
                         for (int i = _level + 1; i < rLevel + 1; i++)
@@ -295,7 +295,7 @@ namespace Datatent2.Core.Services.Index.SkipList
             {
                 builder.AppendField(printStyle.AttachIndexAddresses ? $"• {_head.Forward[i]}" : $"•", $"h{i}");
                 i--;
-            } while (i > 0);
+            } while (i >= 0);
 
             builder.AppendField(printStyle.AttachIndexAddresses ? $"Head {_headPageAddress}" : $"Head");
             graph.Nodes.Add("Head", attributes =>
@@ -314,10 +314,14 @@ namespace Datatent2.Core.Services.Index.SkipList
 
                 builder = new DotRecordBuilder();
 
-                for (int b = current!.Value.Forward.Length - 1; b >= 0; b--)
+                i = current!.Value.Forward.Length - 1;
+                do
                 {
-                    builder.AppendField(printStyle.AttachIndexAddresses ? $"• {current.Value.Forward[b]}" : $"•", $"{a}n{b}");
-                }
+                    builder.AppendField(printStyle.AttachIndexAddresses ? $"• {current.Value.Forward[i]}" : $"•",
+                        $"{a}n{i}");
+
+                    i--;
+                } while (i >= 0);
 
                 builder.AppendField(printStyle.AttachIndexAddresses ? $"{current.Value.Key} {pageAddress}" : $"{current.Value.Key}");
                 graph.Nodes.Add($"{a}n", attributes =>
@@ -333,7 +337,7 @@ namespace Datatent2.Core.Services.Index.SkipList
             // Tail
 
             builder = new DotRecordBuilder();
-            i = 0;
+            i = _level;
             do
             {
                 builder.AppendField($"inf", $"t{i}");
@@ -347,7 +351,7 @@ namespace Datatent2.Core.Services.Index.SkipList
                 attributes.FillColor = new DotColor(Color.LemonChiffon);
             }).ToRecordNode(builder.Build());
 
-            // edges
+            // edges line 1
             var order = dictionary.ToArray().OrderBy(pair => pair.Value).ToList();
             graph.Edges.Add(new DotEndpoint("Head", "h0"), new DotEndpoint("0n", "0n0"));
 
@@ -359,6 +363,46 @@ namespace Datatent2.Core.Services.Index.SkipList
 
             graph.Edges.Add(new DotEndpoint($"{a - 1}n", $"{a - 1}n0"), new DotEndpoint("Tail", "t0"));
 
+
+            //// edges
+            //i = _head.Forward.Length - 1;
+            //SkipListNode? node = _head;
+            //do
+            //{
+            //    pageAddress = node.Value.Forward[i];
+            //    do
+            //    {
+            //        string firstPart = "";
+            //        string firstNode = "";                    
+            //        string endPart = "";
+            //        string endNode = "";
+            //        if (node.Value.TypeCode == SkipListNodeTypeCode.Start)
+            //        {
+            //            firstPart = $"h{i}";
+            //            firstNode = "Head";
+            //        }
+            //        else
+            //        {
+            //            var pos = dictionary.First(pair => pair.Key == pageAddress).Value;
+            //            firstPart = $"{pos}n{i}";
+            //            firstNode = $"{pos}n";
+            //        }
+
+            //        if (pageAddress != PageAddress.Empty)
+            //        {
+            //            node = await GetNodeAtAddress(pageAddress);
+
+            //        }
+
+            //        //graph.Edges.Add(new DotEndpoint($"{order[j].Value}n", $"{order[j].Value}n0"),
+            //        //    new DotEndpoint($"{order[j + 1].Value}n", $"{order[j + 1].Value}n0"));
+
+            //        pageAddress = node!.Value.Forward[i];
+            //        a++;
+            //    } while (pageAddress != PageAddress.Empty);
+            //    i--;
+            //} while (i > 0);
+            
             return graph.Build();
         }
     }

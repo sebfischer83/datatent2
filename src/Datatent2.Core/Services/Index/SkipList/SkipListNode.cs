@@ -28,7 +28,7 @@ namespace Datatent2.Core.Services.Index.SkipList
         /// <summary>
         /// TypeCode of TKey, can expressed as a byte
         /// </summary>
-        private readonly SkipListNodeTypeCode _typeCode;
+        internal readonly SkipListNodeTypeCode TypeCode;
 
         private readonly byte[] _keyBytes;
 
@@ -39,7 +39,7 @@ namespace Datatent2.Core.Services.Index.SkipList
         /// <param name="level">The level.</param>
         public SkipListNode(int level)
         {
-            _typeCode = SkipListNodeTypeCode.Start;
+            TypeCode = SkipListNodeTypeCode.Start;
             _keyBytes = Array.Empty<byte>();
             _dataLength = 0;
             Key = default!;
@@ -50,7 +50,7 @@ namespace Datatent2.Core.Services.Index.SkipList
         private SkipListNode(Span<byte> span)
         {
             int pos = 0;
-            _typeCode = (SkipListNodeTypeCode)span.ReadByte(pos);
+            TypeCode = (SkipListNodeTypeCode)span.ReadByte(pos);
             pos += sizeof(byte);
             PageAddress = PageAddress.FromBuffer(span, pos);
             pos += Constants.PAGE_ADDRESS_SIZE;
@@ -70,7 +70,7 @@ namespace Datatent2.Core.Services.Index.SkipList
             pos += sizeof(byte);
             _keyBytes = span.ReadBytes(pos, _dataLength);
 
-            switch (_typeCode)
+            switch (TypeCode)
             {
                 case SkipListNodeTypeCode.Start:
                     Key = default!;
@@ -129,47 +129,47 @@ namespace Datatent2.Core.Services.Index.SkipList
             switch (key)
             {
                 case sbyte sb:
-                    _typeCode = SkipListNodeTypeCode.SByte;
+                    TypeCode = SkipListNodeTypeCode.SByte;
                     _keyBytes = new byte[sizeof(sbyte)];
                     MemoryMarshal.Write(_keyBytes, ref sb);
                     break;
                 case byte bt:
-                    _typeCode = SkipListNodeTypeCode.Byte;
+                    TypeCode = SkipListNodeTypeCode.Byte;
                     _keyBytes = new byte[sizeof(byte)];
                     MemoryMarshal.Write(_keyBytes, ref bt);
                     break;
                 case short st:
-                    _typeCode = SkipListNodeTypeCode.Int16;
+                    TypeCode = SkipListNodeTypeCode.Int16;
                     _keyBytes = new byte[sizeof(short)];
                     MemoryMarshal.Write(_keyBytes, ref st);
                     break;
                 case int it:
-                    _typeCode = SkipListNodeTypeCode.Int32;
+                    TypeCode = SkipListNodeTypeCode.Int32;
                     _keyBytes = new byte[sizeof(int)];
                     MemoryMarshal.Write(_keyBytes, ref it);
                     break;
                 case long la:
-                    _typeCode = SkipListNodeTypeCode.Int64;
+                    TypeCode = SkipListNodeTypeCode.Int64;
                     _keyBytes = new byte[sizeof(long)];
                     MemoryMarshal.Write(_keyBytes, ref la);
                     break;
                 case ushort us:
-                    _typeCode = SkipListNodeTypeCode.UInt16;
+                    TypeCode = SkipListNodeTypeCode.UInt16;
                     _keyBytes = new byte[sizeof(ushort)];
                     MemoryMarshal.Write(_keyBytes, ref us);
                     break;
                 case uint ut:
-                    _typeCode = SkipListNodeTypeCode.UInt32;
+                    TypeCode = SkipListNodeTypeCode.UInt32;
                     _keyBytes = new byte[sizeof(uint)];
                     MemoryMarshal.Write(_keyBytes, ref ut);
                     break;
                 case ulong ul:
-                    _typeCode = SkipListNodeTypeCode.UInt64;
+                    TypeCode = SkipListNodeTypeCode.UInt64;
                     _keyBytes = new byte[sizeof(ulong)];
                     MemoryMarshal.Write(_keyBytes, ref ul);
                     break;
                 case Guid g:
-                    _typeCode = SkipListNodeTypeCode.Guid;
+                    TypeCode = SkipListNodeTypeCode.Guid;
                     _keyBytes = new byte[Marshal.SizeOf<Guid>()];
                     ((Span<byte>)_keyBytes).WriteGuid(0, g);
                     break;
@@ -212,7 +212,7 @@ namespace Datatent2.Core.Services.Index.SkipList
             var bytes = (Span<byte>)new byte[size];
 
             int pos = 0;
-            bytes.WriteByte(pos, (byte)_typeCode);
+            bytes.WriteByte(pos, (byte)TypeCode);
             pos += sizeof(byte);
             PageAddress.ToBuffer(bytes, pos);
             pos += Constants.PAGE_ADDRESS_SIZE;

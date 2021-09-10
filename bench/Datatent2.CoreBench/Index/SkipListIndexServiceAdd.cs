@@ -18,11 +18,15 @@ namespace Datatent2.CoreBench.Index
 {
     [HtmlExporter, CsvExporter(), CsvMeasurementsExporter(),
      RankColumn(), KurtosisColumn, SkewnessColumn, StdDevColumn, MeanColumn, MedianColumn, BaselineColumn, MediumRunJob, MemoryDiagnoser]
+    //[InProcess()]
     public class SkipListIndexServiceAdd
     {
         Random _random = new Random();
 
         HashSet<int> toInsert = new HashSet<int>();
+
+        //[Params(100, 500, 1000, 2500, 5000, 7500, 10000)]
+        public int Count = 1000;
 
         [GlobalSetup]
         public void Setup()
@@ -30,7 +34,7 @@ namespace Datatent2.CoreBench.Index
             toInsert.Clear();
 
             int i = 0;
-            while (i < 10000)
+            while (i < Count)
             {
                 var a = _random.Next();
                 if (!toInsert.Contains(a))
@@ -42,7 +46,7 @@ namespace Datatent2.CoreBench.Index
         }
 
         [Benchmark]
-        public async Task Add()
+        public async Task AddBenchmark()
         {
             IPageService pageService = new FakePageService();
 
@@ -123,3 +127,11 @@ namespace Datatent2.CoreBench.Index
         }
     }
 }
+
+
+/*
+    Always level 1
+   |       Method |     Mean |    Error |   StdDev |   Median | Kurtosis | Skewness | Rank | Baseline |      Gen 0 | Allocated |
+   |------------- |---------:|---------:|---------:|---------:|---------:|---------:|-----:|--------- |-----------:|----------:|
+   | AddBenchmark | 71.53 ms | 5.442 ms | 8.145 ms | 69.44 ms |    5.176 |    1.578 |    1 |       No | 23625.0000 |     95 MB |
+ */
