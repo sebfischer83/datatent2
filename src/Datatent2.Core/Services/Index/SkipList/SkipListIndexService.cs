@@ -290,7 +290,7 @@ namespace Datatent2.Core.Services.Index.SkipList
 
             var builder = new DotRecordBuilder();
 
-            int i = _level;
+            int i = _level - 1;
             do
             {
                 builder.AppendField(printStyle.AttachIndexAddresses ? $"• {_head.Forward[i]}" : $"•", $"h{i}");
@@ -361,8 +361,58 @@ namespace Datatent2.Core.Services.Index.SkipList
                     new DotEndpoint($"{order[j + 1].Value}n", $"{order[j + 1].Value}n0"));
             }
 
-            graph.Edges.Add(new DotEndpoint($"{a - 1}n", $"{a - 1}n0"), new DotEndpoint("Tail", "t0"));
+            graph.Edges.Add(new DotEndpoint($"{a - 1}n", $"{a - 1}n0"), new DotEndpoint("Tail", "t1"));
 
+            // edges
+            // start at the head 
+            // from the most upper level to the second lowest
+
+            i = _level;
+            do
+            {
+                pageAddress = _head.Forward[i];
+                SkipListNode? last = _head;
+                PageAddress lastPageAddress = PageAddress.Empty;
+
+                while (pageAddress != PageAddress.Empty)
+                {
+                    SkipListNode? node = await GetNodeAtAddress(pageAddress);
+                    string firstPart = "";
+                    string firstNode = "";
+                    string endPart = "";
+                    string endNode = "";
+
+                    if (last!.Value.TypeCode == SkipListNodeTypeCode.Start)
+                    {
+                        firstPart = $"h{i}";
+                        firstNode = "Head";
+                    }
+                    else
+                    {
+                        var pos = dictionary.First(pair => pair.Key == lastPageAddress).Value;
+                        firstPart = $"{pos}n{i}";
+                        firstNode = $"{pos}n";
+                    }
+
+                    var cpos = dictionary.First(pair => pair.Key == pageAddress).Value;
+                    endPart = $"{cpos}n{i}";
+                    endNode = $"{cpos}n";
+
+                    graph.Edges.Add(new DotEndpoint(firstNode, firstPart),
+                       new DotEndpoint(endNode, endPart));
+
+                    last = node;
+                    lastPageAddress = pageAddress;
+                    pageAddress = node!.Value.Forward[i];
+                    if (pageAddress == PageAddress.Empty)
+                    {
+                        graph.Edges.Add(new DotEndpoint(endNode, endPart),
+                            new DotEndpoint("Tail", $"t{i + 1}"));
+                    }
+
+                }
+                i--;
+            } while (i > 0);
 
             //// edges
             //i = _head.Forward.Length - 1;
@@ -402,7 +452,7 @@ namespace Datatent2.Core.Services.Index.SkipList
             //    } while (pageAddress != PageAddress.Empty);
             //    i--;
             //} while (i > 0);
-            
+
             return graph.Build();
         }
     }
