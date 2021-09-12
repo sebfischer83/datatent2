@@ -90,11 +90,8 @@ namespace Datatent2.Core.Services.Index.SkipList
                     _head.Forward[i] = PageAddress.Empty;
                 }
 
-                //_end = new SkipListNode(MaxLevel);
                 var pos = await InsertNode(_head);
                 _headPageAddress = pos;
-                //pos = await InsertNode(_end);
-                //_endPageAddress = pos;
             }
             else
             {
@@ -114,6 +111,9 @@ namespace Datatent2.Core.Services.Index.SkipList
                 lvl++;
                 r = (float)_random.Next() / int.MaxValue;
             }
+
+            if (lvl == MaxLevel)
+                lvl--;
 
             return lvl;
         }
@@ -178,21 +178,18 @@ namespace Datatent2.Core.Services.Index.SkipList
             throw new NotImplementedException();
         }
 
-
-
         public override async Task Insert<T>(T key, PageAddress pageAddress)
         {
             if (key == null)
                 throw new ArgumentNullException(nameof(key));
 
             await SemaphoreSlim.WaitAsync();
-
+            KeyValuePair<SkipListNode, PageAddress?>[] update = new KeyValuePair<SkipListNode, PageAddress?>[MaxLevel + 1];
+            
             try
             {
                 SkipListNode? current = _head;
 
-
-                KeyValuePair<SkipListNode, PageAddress?>[] update = new KeyValuePair<SkipListNode, PageAddress?>[MaxLevel + 1];
                 PageAddress currentPageAddress = _headPageAddress;
 
                 for (int i = _level; i >= 0; i--)
@@ -228,7 +225,7 @@ namespace Datatent2.Core.Services.Index.SkipList
                             update[i] = new KeyValuePair<SkipListNode, PageAddress?>(_head, _headPageAddress);
                         }
 
-                        _level = rLevel + 1;
+                        _level = rLevel;
                     }
 
                     SkipListNode n = new SkipListNode(key!, pageAddress, rLevel + 1);
