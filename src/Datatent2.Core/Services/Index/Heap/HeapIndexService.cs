@@ -25,7 +25,7 @@ namespace Datatent2.Core.Services.Index.Heap
         public override IndexType Type => IndexType.Heap;
         public override async Task<PageAddress?> Find<T>(T key)
         {
-            var firstPage = await GetFirstPage();
+            var firstPage = await GetFirstPage().ConfigureAwait(false);
 
             IndexPage page = firstPage;
             while (true)
@@ -37,7 +37,7 @@ namespace Datatent2.Core.Services.Index.Heap
 
                 if (page.PageHeader.NextPageId == uint.MaxValue)
                     break;
-                var pageTemp = await PageService.GetPage<IndexPage>(page.PageHeader.NextPageId);
+                var pageTemp = await PageService.GetPage<IndexPage>(page.PageHeader.NextPageId).ConfigureAwait(false);
                 if (pageTemp == null)
                     break;
                 page = pageTemp;
@@ -48,7 +48,7 @@ namespace Datatent2.Core.Services.Index.Heap
 
         public override async Task<PageAddress[]> FindMany<T>(T key)
         {
-            var firstPage = await GetFirstPage();
+            var firstPage = await GetFirstPage().ConfigureAwait(false);
             List<PageAddress> list = new();
 
             IndexPage page = firstPage;
@@ -61,7 +61,7 @@ namespace Datatent2.Core.Services.Index.Heap
 
                 if (page.PageHeader.NextPageId == uint.MaxValue)
                     break;
-                var pageTemp = await PageService.GetPage<IndexPage>(page.PageHeader.NextPageId);
+                var pageTemp = await PageService.GetPage<IndexPage>(page.PageHeader.NextPageId).ConfigureAwait(false);
                 if (pageTemp == null)
                     break;
                 page = pageTemp;
@@ -73,7 +73,7 @@ namespace Datatent2.Core.Services.Index.Heap
         public override async Task Insert<T>(T key, PageAddress pageAddress)
         {
             // get first index page and look if there is enough space for this entry
-            var firstPage = await GetFirstPage();
+            var firstPage = await GetFirstPage().ConfigureAwait(false);
 
             HeapKey heapKey;
             switch (key)
@@ -125,7 +125,7 @@ namespace Datatent2.Core.Services.Index.Heap
 
                 if (page.PageHeader.NextPageId != UInt32.MaxValue)
                 {
-                    var p = await PageService.GetPage<IndexPage>(page.PageHeader.NextPageId);
+                    var p = await PageService.GetPage<IndexPage>(page.PageHeader.NextPageId).ConfigureAwait(false);
                     if (p == null)
                     {
                         throw new InvalidPageException($"Linked index page doesn't exist anymore!",
@@ -136,7 +136,8 @@ namespace Datatent2.Core.Services.Index.Heap
                 else
                 {
                     // new index page
-                    var newPage = await PageService.CreateNewPage<IndexPage>();
+                    var newPage = await PageService.CreateNewPage<IndexPage>().ConfigureAwait(false);
+                    newPage.InitHeader(Type);
                     newPage.SetPreviousPage(page.Id);
                     page.SetNextPage(newPage.Id);
                     page = newPage;
@@ -154,11 +155,16 @@ namespace Datatent2.Core.Services.Index.Heap
             throw new NotImplementedException();
         }
 
+        public override IAsyncEnumerable<(T Key, PageAddress Address)> GetAll<T>()
+        {
+            throw new NotImplementedException();
+        }
+
         private async ValueTask<IndexPage> GetFirstPage()
         {
             if (IndexPage == null)
             {
-                var page = await PageService.GetPage<IndexPage>(FirstPageIndex);
+                var page = await PageService.GetPage<IndexPage>(FirstPageIndex).ConfigureAwait(false);
                 if (page == null)
                     throw new PageNotFoundException($"IndexService page don't exist!", FirstPageIndex);
                 IndexPage = page;
@@ -166,6 +172,19 @@ namespace Datatent2.Core.Services.Index.Heap
             }
 
             return IndexPage;
+        }
+
+        public override Task Initialize()
+        {
+            var first = this.GetFirstPage();
+            return Task.CompletedTask;
+        }
+
+        public override Task<string> Print(PrintStyle printStyle)
+        {
+
+
+            return base.Print(printStyle);
         }
     }
 

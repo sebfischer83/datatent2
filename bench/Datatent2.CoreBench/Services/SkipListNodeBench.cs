@@ -24,8 +24,8 @@ namespace Datatent2.CoreBench.Services
             int t = 0;
             var bytes = _intNode.ToBytes();
 
-            var node2 = SkipListNode.FromBytes(bytes);
-            t = bytes.Length + node2.GetHashCode();
+            //var node2 = SkipListNode.FromBytes(bytes);
+            //t = bytes.Length + node2.GetHashCode();
 
             return t;
         }

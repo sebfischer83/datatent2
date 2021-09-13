@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -64,12 +65,12 @@ namespace Datatent2.Core.Services.Index.SkipList
 
             if (FirstPageIndex == 0)
             {
-                _initialPage = await PageService.CreateNewPage<IndexPage>();
+                _initialPage = await PageService.CreateNewPage<IndexPage>().ConfigureAwait(false);
                 _initialPage.InitHeader(IndexType.SkipList);
             }
             else
             {
-                _initialPage = await PageService.GetPage<IndexPage>(FirstPageIndex);
+                _initialPage = await PageService.GetPage<IndexPage>(FirstPageIndex).ConfigureAwait(false);
             }
 
             if (_initialPage!.IndexPageHeader.Type != IndexType.SkipList)
@@ -90,7 +91,7 @@ namespace Datatent2.Core.Services.Index.SkipList
                     _head.Forward[i] = PageAddress.Empty;
                 }
 
-                var pos = await InsertNode(_head);
+                var pos = await InsertNode(_head).ConfigureAwait(false);
                 _headPageAddress = pos;
             }
             else
@@ -116,29 +117,13 @@ namespace Datatent2.Core.Services.Index.SkipList
                 lvl--;
 
             return lvl;
+
         }
-
-        //private async Task<SkipListNode<TKey>> LoadNode(PageAddress pageAddress)
-        //{
-        //    await SemaphoreSlim.WaitAsync();
-        //    try
-        //    {
-        //        var page = await PageService.GetPage<IndexPage>(pageAddress.PageId);
-        //        if (page == null)
-        //            throw new InvalidEngineStateException($"Linked index page {pageAddress} don't exist in database.");
-        //        var block = new IndexBlock(page!, pageAddress.SlotId);
-
-        //    }
-        //    finally
-        //    {
-        //        SemaphoreSlim.Release();
-        //    }
-        //}
 
         private async Task UpdateNode(SkipListNode node, PageAddress pageAddress)
         {
             var bytes = node.ToBytes();
-            var page = await PageService.GetPage<IndexPage>(pageAddress);
+            var page = await PageService.GetPage<IndexPage>(pageAddress).ConfigureAwait(false);
 
             page!.UpdateBlock(bytes, pageAddress);
         }
@@ -154,7 +139,7 @@ namespace Datatent2.Core.Services.Index.SkipList
             var bytesThatCanBeWritten = _currentIndexPage.MaxFreeUsableBytes - Constants.BLOCK_HEADER_SIZE;
             if (bytesThatCanBeWritten < bytes.Length || !indexPage.IsInsertPossible((ushort)bytes.Length))
             {
-                indexPage = await PageService.CreateNewPage<IndexPage>();
+                indexPage = await PageService.CreateNewPage<IndexPage>().ConfigureAwait(false);
                 indexPage.InitHeader(IndexType.SkipList);
                 _currentIndexPage.SetNextPage(indexPage.Id);
                 indexPage.SetPreviousPage(_currentIndexPage.Id);
@@ -162,17 +147,37 @@ namespace Datatent2.Core.Services.Index.SkipList
             }
 
             var block = indexPage.InsertBlock((ushort)bytes.Length);
-            block.FillData(bytes);
+            block.FillData(bytes,  0);
 
             return block.Position;
         }
 
         public override IndexType Type => IndexType.SkipList;
-        public override Task<PageAddress?> Find<T>(T key)
+        public override async Task<PageAddress?> Find<T>(T key)
         {
-            throw new NotImplementedException();
-        }
+            SkipListNode? current = _head;
+            for (int i = _level; i >= 0; i--)
+            {
+                var node = await GetNodeAtAddress(current.Value.Forward[i]).ConfigureAwait(false);
+                while (node.HasValue && current.Value.Forward[i] != PageAddress.Empty &&
+                       Comparer<T>.Default.Compare(key, (T)node!.Value.Key) > 0)
+                {
+                    current = node;
+                    node = await GetNodeAtAddress(current.Value.Forward[i]).ConfigureAwait(false);
+                }
+            }
 
+            var address = current.Value.Forward[0];
+            if (address == PageAddress.Empty)
+                return address;
+            current = await GetNodeAtAddress(current.Value.Forward[0]).ConfigureAwait(false);
+            if (Comparer<T>.Default.Compare(key, (T)current!.Value.Key) == 0)
+            {
+                return current.Value.PageAddress;
+            }
+            return PageAddress.Empty;
+        }
+        
         public override Task<PageAddress[]> FindMany<T>(T key)
         {
             throw new NotImplementedException();
@@ -183,7 +188,7 @@ namespace Datatent2.Core.Services.Index.SkipList
             if (key == null)
                 throw new ArgumentNullException(nameof(key));
 
-            await SemaphoreSlim.WaitAsync();
+            await SemaphoreSlim.WaitAsync().ConfigureAwait(false);
             KeyValuePair<SkipListNode, PageAddress?>[] update = new KeyValuePair<SkipListNode, PageAddress?>[MaxLevel + 1];
             
             try
@@ -194,13 +199,13 @@ namespace Datatent2.Core.Services.Index.SkipList
 
                 for (int i = _level; i >= 0; i--)
                 {
-                    var node = await GetNodeAtAddress(current.Value.Forward[i]);
+                    var node = await GetNodeAtAddress(current.Value.Forward[i]).ConfigureAwait(false);
                     while (node.HasValue && current.Value.Forward[i] != PageAddress.Empty &&
                            Comparer<T>.Default.Compare(key, (T)node!.Value.Key) > 0)
                     {
                         currentPageAddress = current.Value.Forward[i];
                         current = node;
-                        node = await GetNodeAtAddress(current.Value.Forward[i]);
+                        node = await GetNodeAtAddress(current.Value.Forward[i]).ConfigureAwait(false);
                     }
 
                     update[i] = new KeyValuePair<SkipListNode, PageAddress?>(current.Value, currentPageAddress);
@@ -208,7 +213,7 @@ namespace Datatent2.Core.Services.Index.SkipList
 
                 if (current.Value.Forward[0] != PageAddress.Empty)
                 {
-                    current = await GetNodeAtAddress(current.Value.Forward[0]);
+                    current = await GetNodeAtAddress(current.Value.Forward[0]).ConfigureAwait(false);
                 }
                 else
                 {
@@ -229,17 +234,17 @@ namespace Datatent2.Core.Services.Index.SkipList
                     }
 
                     SkipListNode n = new SkipListNode(key!, pageAddress, rLevel + 1);
-                    var pos = await InsertNode(n);
+                    var pos = await InsertNode(n).ConfigureAwait(false);
                     for (int i = 0; i <= rLevel; i++)
                     {
                         var tempPair = update[i];
                         n.Forward[i] = tempPair.Key.Forward[i];
                         update[i].Key.Forward[i] = pos;
                         if (tempPair.Value!.Value != PageAddress.Empty)
-                            await UpdateNode(tempPair.Key, tempPair.Value!.Value);
+                            await UpdateNode(tempPair.Key, tempPair.Value!.Value).ConfigureAwait(false);
                     }
 
-                    await UpdateNode(n, pos);
+                    await UpdateNode(n, pos).ConfigureAwait(false);
                 }
             }
             finally
@@ -248,14 +253,14 @@ namespace Datatent2.Core.Services.Index.SkipList
             }
         }
 
-        private async Task<SkipListNode?> GetNodeAtAddress(PageAddress pageAddress)
+        private async ValueTask<SkipListNode?> GetNodeAtAddress(PageAddress pageAddress)
         {
             if (pageAddress == PageAddress.Empty)
                 return null;
 #if DEBUG
             Logger.LogTrace($"Search index node at {pageAddress}");
 #endif
-            var page = await PageService.GetPage<IndexPage>(pageAddress.PageId);
+            var page = await PageService.GetPage<IndexPage>(pageAddress.PageId).ConfigureAwait(false);
             if (page == null)
                 throw new PageNotFoundException("Index page not found", pageAddress.PageId);
             var indexBlock = new IndexBlock(page, pageAddress.SlotId);
@@ -274,6 +279,22 @@ namespace Datatent2.Core.Services.Index.SkipList
             throw new NotImplementedException();
         }
 
+        public override async IAsyncEnumerable<(T Key, PageAddress Address)> GetAll<T>()
+        {
+            int a = 0;
+
+            PageAddress pageAddress = _head.Forward[0];
+            do
+            {
+                var current = await GetNodeAtAddress(pageAddress).ConfigureAwait(false);
+
+                yield return ((T) current!.Value.Key, current.Value.PageAddress);
+
+                pageAddress = current!.Value.Forward[0];
+                a++;
+            } while (pageAddress != PageAddress.Empty);
+        }
+
         public override async Task<string> Print(PrintStyle printStyle)
         {
             Dictionary<PageAddress, int> dictionary = new();
@@ -287,7 +308,7 @@ namespace Datatent2.Core.Services.Index.SkipList
 
             var builder = new DotRecordBuilder();
 
-            int i = _level - 1;
+            int i = _level;
             do
             {
                 builder.AppendField(printStyle.AttachIndexAddresses ? $"• {_head.Forward[i]}" : $"•", $"h{i}");
@@ -307,7 +328,7 @@ namespace Datatent2.Core.Services.Index.SkipList
             PageAddress pageAddress = _head.Forward[0];
             do
             {
-                var current = await GetNodeAtAddress(pageAddress);
+                var current = await GetNodeAtAddress(pageAddress).ConfigureAwait(false);
 
                 builder = new DotRecordBuilder();
 
@@ -339,7 +360,7 @@ namespace Datatent2.Core.Services.Index.SkipList
             {
                 builder.AppendField($"inf", $"t{i}");
                 i--;
-            } while (i > 0);
+            } while (i >= 0);
 
             builder.AppendField($"Tail");
             graph.Nodes.Add("Tail", attributes =>
@@ -358,7 +379,7 @@ namespace Datatent2.Core.Services.Index.SkipList
                     new DotEndpoint($"{order[j + 1].Value}n", $"{order[j + 1].Value}n0"));
             }
 
-            graph.Edges.Add(new DotEndpoint($"{a - 1}n", $"{a - 1}n0"), new DotEndpoint("Tail", "t1"));
+            graph.Edges.Add(new DotEndpoint($"{a - 1}n", $"{a - 1}n0"), new DotEndpoint("Tail", "t0"));
 
             // edges
             // start at the head 
@@ -373,7 +394,7 @@ namespace Datatent2.Core.Services.Index.SkipList
 
                 while (pageAddress != PageAddress.Empty)
                 {
-                    SkipListNode? node = await GetNodeAtAddress(pageAddress);
+                    SkipListNode? node = await GetNodeAtAddress(pageAddress).ConfigureAwait(false);
                     string firstPart = "";
                     string firstNode = "";
                     string endPart = "";
@@ -404,52 +425,13 @@ namespace Datatent2.Core.Services.Index.SkipList
                     if (pageAddress == PageAddress.Empty)
                     {
                         graph.Edges.Add(new DotEndpoint(endNode, endPart),
-                            new DotEndpoint("Tail", $"t{i + 1}"));
+                            new DotEndpoint("Tail", $"t{i }"));
                     }
 
                 }
                 i--;
             } while (i > 0);
-
-            //// edges
-            //i = _head.Forward.Length - 1;
-            //SkipListNode? node = _head;
-            //do
-            //{
-            //    pageAddress = node.Value.Forward[i];
-            //    do
-            //    {
-            //        string firstPart = "";
-            //        string firstNode = "";                    
-            //        string endPart = "";
-            //        string endNode = "";
-            //        if (node.Value.TypeCode == SkipListNodeTypeCode.Start)
-            //        {
-            //            firstPart = $"h{i}";
-            //            firstNode = "Head";
-            //        }
-            //        else
-            //        {
-            //            var pos = dictionary.First(pair => pair.Key == pageAddress).Value;
-            //            firstPart = $"{pos}n{i}";
-            //            firstNode = $"{pos}n";
-            //        }
-
-            //        if (pageAddress != PageAddress.Empty)
-            //        {
-            //            node = await GetNodeAtAddress(pageAddress);
-
-            //        }
-
-            //        //graph.Edges.Add(new DotEndpoint($"{order[j].Value}n", $"{order[j].Value}n0"),
-            //        //    new DotEndpoint($"{order[j + 1].Value}n", $"{order[j + 1].Value}n0"));
-
-            //        pageAddress = node!.Value.Forward[i];
-            //        a++;
-            //    } while (pageAddress != PageAddress.Empty);
-            //    i--;
-            //} while (i > 0);
-
+            
             return graph.Build();
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Datatent2.Contracts.Exceptions;
@@ -50,20 +51,22 @@ namespace Datatent2.Core.Services.Index
         public abstract Task Delete<T>(T key);
 
         public abstract Task DeleteIndex();
-        
+
+        public abstract IAsyncEnumerable<(T Key, PageAddress Address)> GetAll<T>();
+
         public static async Task<IndexService> CreateIndex(IPageService pageService, IndexType indexType, ILogger logger)
         {
-            var indexPage = await pageService.CreateNewPage<IndexPage>();
+            var indexPage = await pageService.CreateNewPage<IndexPage>().ConfigureAwait(false);
             indexPage.InitHeader(indexType);
             
-            await pageService.WritePage(indexPage);
+            await pageService.WritePage(indexPage).ConfigureAwait(false);
 
-            return await LoadIndex(indexPage.Id, pageService, logger);
+            return await LoadIndex(indexPage.Id, pageService, logger).ConfigureAwait(false);
         }
         
         public static async Task<IndexService> LoadIndex(uint firstIndexPage, IPageService pageService, ILogger logger)
         {
-            var index = await pageService.GetPage<IndexPage>(firstIndexPage);
+            var index = await pageService.GetPage<IndexPage>(firstIndexPage).ConfigureAwait(false);
 
             if (index == null)
                 throw new InvalidPageException($"The page {firstIndexPage} doesn't contain an index!", firstIndexPage);
@@ -79,7 +82,7 @@ namespace Datatent2.Core.Services.Index
                     $"{nameof(index.IndexPageHeader.Type)} {Enum.GetName(typeof(IndexType), index.IndexPageHeader.Type)}")
             };
 
-            await returnIndexService.Initialize();
+            await returnIndexService.Initialize().ConfigureAwait(false);
 
             return returnIndexService;
         }

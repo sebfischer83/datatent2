@@ -72,7 +72,7 @@ namespace Datatent2.Core.Services.Data
 
             do
             {
-                page = await _pageService.GetPage<DataPage>(address.PageId);
+                page = await _pageService.GetPage<DataPage>(address.PageId).ConfigureAwait(false);
                 if (page == null)
                 {
                     throw new InvalidPageException("GET", address.PageId);
@@ -99,14 +99,14 @@ namespace Datatent2.Core.Services.Data
             for (int i = 0; i < objects.Count; i++)
             {
                 var obj = objects[i];
-                var address = await InsertInternal(obj, transaction);
+                var address = await InsertInternal(obj, transaction).ConfigureAwait(false);
                 list.Add((obj, address));
             }
 
             var ids = list.Select(tuple => tuple.Item2.PageId).Distinct();
             foreach (var id in ids)
             {
-                var page = await _pageService.GetPage<BasePage>(id);
+                var page = await _pageService.GetPage<BasePage>(id).ConfigureAwait(false);
             }
 
             transaction.Commit();
@@ -116,7 +116,7 @@ namespace Datatent2.Core.Services.Data
         public async Task<PageAddress> Insert(object obj)
         {
             var transaction = _transactionManager.CreateTransaction();
-            var address = await InsertInternal(obj, transaction);
+            var address = await InsertInternal(obj, transaction).ConfigureAwait(false);
             transaction.Commit();
 
             return address;
@@ -139,7 +139,7 @@ namespace Datatent2.Core.Services.Data
             // get free page and write data until done
             while (remainingBytes > 0)
             {
-                var dataPage = await _pageService.GetDataPageWithFreeSpace();
+                var dataPage = await _pageService.GetDataPageWithFreeSpace().ConfigureAwait(false);
                 transaction.Assign(dataPage);
                 var bytesThatCanBeWritten = dataPage.MaxFreeUsableBytes - Constants.BLOCK_HEADER_SIZE;
                 if (bytesThatCanBeWritten <= 0)
@@ -168,7 +168,7 @@ namespace Datatent2.Core.Services.Data
                 if (pageAddress.IsEmpty())
                     pageAddress = block.Position;
 
-                await _pageService.UpdatePageStatistics(dataPage);
+                await _pageService.UpdatePageStatistics(dataPage).ConfigureAwait(false);
                 lastBlock = block;
                 remainingBytes -= bytesToWrite;
                 blockNr++;

@@ -11,9 +11,9 @@ namespace Datatent2.Core.Services.Page
 {
     internal interface IPageService
     {
-        Task<T?> GetPage<T>(uint id) where T : BasePage;
+        ValueTask<T?> GetPage<T>(uint id) where T : BasePage;
 
-        Task<T?> GetPage<T>(PageAddress address) where T : BasePage
+        ValueTask<T?> GetPage<T>(PageAddress address) where T : BasePage
         {
             return GetPage<T>(address.PageId);
         }

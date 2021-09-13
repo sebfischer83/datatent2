@@ -27,9 +27,9 @@ namespace Datatent2.Core.Table
         public async Task Insert(TValue obj, TKey key)
         {
             if (obj == null) throw new ArgumentNullException(nameof(obj));
-            var address = await _dataService!.Insert(obj);
-            var index = await Services.Index.IndexService.LoadIndex(this._mainIndexPageAddress, _pageService, _logger);
-            await index.Insert(key, address);
+            var address = await _dataService!.Insert(obj).ConfigureAwait(false);
+            var index = await Services.Index.IndexService.LoadIndex(this._mainIndexPageAddress, _pageService, _logger).ConfigureAwait(false);
+            await index.Insert(key, address).ConfigureAwait(false);
 
             _logger.LogInformation($"[{_name}] object of type {obj.GetType().Name} written to table {this.Name} at {address} with key {key}");
         }

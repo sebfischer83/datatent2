@@ -233,22 +233,19 @@ namespace Datatent2.Core.Page.Index
             return new IndexBlock(this, index, PageAddress.Empty, false);
         }
 
-        public void UpdateBlock(Span<byte> bytes, PageAddress pageAddress)
+        public void UpdateBlock(Span<byte> bytes, in PageAddress pageAddress)
         {
             if (IndexPageHeader.Type == IndexType.Undefined)
                 throw new InvalidEngineStateException($"An index needs to be initialized before use!");
 
-            try
-            {
-                var block = new IndexBlock(this, pageAddress.SlotId);
-                block.FillData(bytes);
-                IsDirty = true;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
+            var block = new IndexBlock(this, pageAddress.SlotId);
+            block.FillData(bytes);
+            IsDirty = true;
+        }
+
+        public void UpdateBlock(Span<byte> bytes, uint length, in PageAddress pageAddress)
+        {
+           UpdateBlock(bytes.Slice(0, (int)length), pageAddress);
         }
     }
 }

@@ -46,7 +46,7 @@ namespace Datatent2.Core.Services.Transactions
 
                 if (_transactions.Count == 0)
                     return;
-                await Task.Delay(5000);
+                await Task.Delay(5000).ConfigureAwait(false);
             }
         }
     }

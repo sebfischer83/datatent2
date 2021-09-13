@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Sources;
 using BenchmarkDotNet.Attributes;
 using Datatent2.Contracts;
 using Datatent2.Core.Memory;
@@ -13,6 +14,7 @@ using Datatent2.Core.Page.Table;
 using Datatent2.Core.Services.Index;
 using Datatent2.Core.Services.Page;
 using Microsoft.Extensions.Logging.Abstractions;
+# nullable enable
 
 namespace Datatent2.CoreBench.Index
 {
@@ -25,11 +27,12 @@ namespace Datatent2.CoreBench.Index
 
         HashSet<int> toInsert = new HashSet<int>();
 
-        [Params(100, 500, 1000, 2500, 5000, 7500, 10000)]
-        public int Count;
+        //[Params(1, 100, 500, 1000, 2500, 5000, 7500, 10000)]
+        public int Count = 100;
+        private IndexService _index;
 
         [GlobalSetup]
-        public void Setup()
+        public async Task Setup()
         {
             toInsert.Clear();
 
@@ -43,7 +46,17 @@ namespace Datatent2.CoreBench.Index
                     i++;
                 }
             }
+            IPageService pageService = new FakePageService();
+
+            _index = await IndexService.CreateIndex(pageService, IndexType.SkipList, NullLogger.Instance);
+
         }
+
+        //[Benchmark]
+        //public async Task AddSingleBenchmark()
+        //{
+        //    await _index.Insert(435, PageAddress.Empty);
+        //}
 
         [Benchmark]
         public async Task AddBenchmark()
@@ -52,7 +65,7 @@ namespace Datatent2.CoreBench.Index
 
             var index = await IndexService.CreateIndex(pageService, IndexType.SkipList, NullLogger.Instance);
 
-            foreach (var i in toInsert) 
+            foreach (var i in toInsert)
             {
                 await index.Insert(i, PageAddress.Empty);
             }
@@ -63,14 +76,14 @@ namespace Datatent2.CoreBench.Index
     {
         private Dictionary<uint, BasePage> _pages = new();
 
-        public Task<T?> GetPage<T>(uint id) where T : BasePage
+        public ValueTask<T?> GetPage<T>(uint id) where T : BasePage
         {
             if (_pages.ContainsKey(id))
             {
-                return Task.FromResult((T?)_pages[id]);
+                return new ValueTask<T?>((T?) _pages[id]);
             }
 
-            return Task.FromResult((T?)null);
+            return new ValueTask<T?>((T?)null);
         }
 
         public Task CheckPoint()
@@ -150,5 +163,15 @@ namespace Datatent2.CoreBench.Index
 | AddBenchmark |  5000 | 23,438.8 us | 266.97 us |   399.58 us | 23,397.2 us |    2.891 |   0.2598 |    5 |       No |  7093.7500 |  62.5000 |        - |  58,111 KB |
 | AddBenchmark |  7500 | 36,781.5 us | 530.37 us |   793.83 us | 36,609.4 us |    2.357 |   0.4726 |    6 |       No | 11428.5714 |  71.4286 |        - |  93,792 KB |
 | AddBenchmark | 10000 | 50,754.8 us | 826.90 us | 1,212.05 us | 50,571.6 us |    2.275 |   0.4325 |    7 |       No | 15800.0000 | 200.0000 | 100.0000 | 129,581 KB |
+
+|       Method | Count |        Mean |       Error |      StdDev |      Median | Kurtosis | Skewness | Rank | Baseline |      Gen 0 |    Gen 1 |  Allocated |
+|------------- |------ |------------:|------------:|------------:|------------:|---------:|---------:|-----:|--------- |-----------:|---------:|-----------:|
+| AddBenchmark |   100 |    392.2 us |     6.99 us |    10.03 us |    391.3 us |    2.132 |   0.2194 |    1 |       No |   157.7148 |        - |     645 KB |
+| AddBenchmark |   500 |  2,605.2 us |    68.76 us |   102.92 us |  2,571.2 us |    1.858 |   0.5176 |    2 |       No |  1023.4375 |   3.9063 |   4,189 KB |
+| AddBenchmark |  1000 |  5,804.3 us |   162.78 us |   238.61 us |  5,801.3 us |    2.357 |   0.2874 |    3 |       No |  2281.2500 |   7.8125 |   9,335 KB |
+| AddBenchmark |  2500 | 16,673.1 us |   669.53 us |   981.38 us | 16,669.8 us |    2.396 |   0.5168 |    4 |       No |  6531.2500 |        - |  26,775 KB |
+| AddBenchmark |  5000 | 36,303.1 us | 1,878.72 us | 2,694.41 us | 35,354.2 us |    4.830 |   1.5072 |    5 |       No | 14300.0000 |        - |  58,435 KB |
+| AddBenchmark |  7500 | 56,654.3 us | 2,328.67 us | 3,413.34 us | 56,306.6 us |    3.195 |   0.6943 |    6 |       No | 22333.3333 | 222.2222 |  91,997 KB |
+| AddBenchmark | 10000 | 77,242.7 us | 2,546.76 us | 3,570.21 us | 76,995.1 us |    2.478 |   0.0364 |    7 |       No | 30500.0000 | 500.0000 | 125,514 KB |
 
  */

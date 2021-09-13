@@ -37,7 +37,7 @@ namespace Datatent2.Core.Services.Page
         public static async Task<PageService> Create(DiskService diskService, CacheService cacheService, ILogger logger)
         {
             var service = new PageService(diskService, cacheService, logger);
-            await service.Init();
+            await service.Init().ConfigureAwait(false);
             return service;
         }
 
@@ -54,12 +54,12 @@ namespace Datatent2.Core.Services.Page
         {
             while (true)
             {
-                await Task.Delay(5000);
+                await Task.Delay(5000).ConfigureAwait(false);
                 foreach (var item in _cacheService)
                 {
                     if (item.Transaction == null && item.IsDirty)
                     {
-                        await _diskService.WriteBuffer(new WriteRequest(item.PageBuffer, item.Id));
+                        await _diskService.WriteBuffer(new WriteRequest(item.PageBuffer, item.Id)).ConfigureAwait(false);
                         item.IsDirty = false;
                     }
                 }
@@ -74,7 +74,7 @@ namespace Datatent2.Core.Services.Page
         {
             using var scope = _logger.BeginScope($"Init {nameof(PageService)}");
             // create the first GAM page => only when new database
-            var firstGamBuffer = await _diskService.GetBuffer(new ReadRequest(1));
+            var firstGamBuffer = await _diskService.GetBuffer(new ReadRequest(1)).ConfigureAwait(false);
             var header = PageHeader.FromBuffer(firstGamBuffer.BufferSegment.Span);
             _logger.LogDebug($"First GAM has id of {header.PageId}");
 
@@ -86,7 +86,7 @@ namespace Datatent2.Core.Services.Page
                 _cacheService.Add(_globalAllocationMap);
 
                 var nextId = _globalAllocationMap.AcquirePageId();
-                var newInfo = await _diskService.GetBuffer(new ReadRequest(nextId));
+                var newInfo = await _diskService.GetBuffer(new ReadRequest(nextId)).ConfigureAwait(false);
                 _allocationInformationPage = new AllocationInformationPage(newInfo.BufferSegment, nextId);
                 _cacheService.Add(_allocationInformationPage);
 
@@ -97,11 +97,11 @@ namespace Datatent2.Core.Services.Page
                 // existing database, search last GAM page in database
                 while (header.NextPageId != uint.MaxValue)
                 {
-                    var res = await _diskService.GetBuffer(new ReadRequest(header.NextPageId));
+                    var res = await _diskService.GetBuffer(new ReadRequest(header.NextPageId)).ConfigureAwait(false);
                     header = PageHeader.FromBuffer(res.BufferSegment.Span);
                 }
                 _logger.LogDebug($"Last GAM found at id {header.PageId}");
-                var gamBuffer = await _diskService.GetBuffer(new ReadRequest(header.PageId));
+                var gamBuffer = await _diskService.GetBuffer(new ReadRequest(header.PageId)).ConfigureAwait(false);
                 _globalAllocationMap = new GlobalAllocationMapPage(gamBuffer.BufferSegment);
                 _cacheService.Add(_globalAllocationMap);
 
@@ -116,7 +116,7 @@ namespace Datatent2.Core.Services.Page
                 uint aimPageId = possibleIndexes[0];
                 do
                 {
-                    aimReadResponse = await _diskService.GetBuffer(new ReadRequest(aimPageId));
+                    aimReadResponse = await _diskService.GetBuffer(new ReadRequest(aimPageId)).ConfigureAwait(false);
                     aimPageHeader = PageHeader.FromBuffer(aimReadResponse.BufferSegment.Span, 0);
                     aimPageId = aimPageHeader.NextPageId;
                 } while (aimPageHeader.NextPageId != uint.MaxValue);
@@ -126,7 +126,7 @@ namespace Datatent2.Core.Services.Page
             }
         }
 
-        public async Task<T?> GetPage<T>(uint id) where T : BasePage
+        public async ValueTask<T?> GetPage<T>(uint id) where T : BasePage
         {
             return await GetFromCacheOrRead<T>(id).ConfigureAwait(false);
         }
@@ -140,7 +140,7 @@ namespace Datatent2.Core.Services.Page
             foreach (var page in _cacheService)
             {
                 if (page.IsDirty)
-                    await WritePage(page);
+                    await WritePage(page).ConfigureAwait(false);
             }
             await _diskService.WriteBuffer(new WriteRequest(_globalAllocationMap!.PageBuffer, _globalAllocationMap.Id)).ConfigureAwait(false);
             await _diskService.WriteBuffer(new WriteRequest(_allocationInformationPage!.PageBuffer, _allocationInformationPage.Id)).ConfigureAwait(false);
@@ -158,7 +158,7 @@ namespace Datatent2.Core.Services.Page
                 return;
 
             page.SaveHeader();
-            await _diskService.WriteBuffer(new WriteRequest(page.PageBuffer, page.Id));
+            await _diskService.WriteBuffer(new WriteRequest(page.PageBuffer, page.Id)).ConfigureAwait(false);
             page.IsDirty = false;
         }
 
@@ -199,7 +199,7 @@ namespace Datatent2.Core.Services.Page
 
         public async Task<TablePage> GetTablePageForTable(string name)
         {
-            await _semaphoreSlim.WaitAsync();
+            await _semaphoreSlim.WaitAsync().ConfigureAwait(false);
             try
             {
                 List<uint> searchedIds = new();
@@ -221,14 +221,14 @@ namespace Datatent2.Core.Services.Page
                     for (int i = 0; i < possibleAimPages.Length; i++)
                     {
                         var aimId = possibleAimPages[i];
-                        var allocationInformationPage = await GetFromCacheOrRead<AllocationInformationPage>(aimId, false);
+                        var allocationInformationPage = await GetFromCacheOrRead<AllocationInformationPage>(aimId, false).ConfigureAwait(false);
                         if (allocationInformationPage == null)
                             continue;
                         var possibleTablePages = allocationInformationPage.FindPagesOfType(PageType.Table);
                         for (int t = 0; t < possibleTablePages.Length; t++)
                         {
                             var tableId = possibleTablePages[i];
-                            var tablePage = await GetFromCacheOrRead<TablePage>(tableId, false);
+                            var tablePage = await GetFromCacheOrRead<TablePage>(tableId, false).ConfigureAwait(false);
                             if (tablePage != null && tablePage.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
                             {
                                 return tablePage;
@@ -239,7 +239,7 @@ namespace Datatent2.Core.Services.Page
                 } while (gam.PageHeader.PrevPageId != UInt32.MaxValue);
 
                 // not found we need a new one
-                var newTablePage = await CreateNewPage<TablePage>(name);
+                var newTablePage = await CreateNewPage<TablePage>(name).ConfigureAwait(false);
 
                 return newTablePage;
             }
@@ -254,7 +254,7 @@ namespace Datatent2.Core.Services.Page
             if (_cacheService.HasPage(pageId))
                 return (T)(object)_cacheService.Get<T>(pageId)!;
 
-            var response = await _diskService.GetBuffer(new ReadRequest(pageId));
+            var response = await _diskService.GetBuffer(new ReadRequest(pageId)).ConfigureAwait(false);
             var page = BasePage.Create<T>(response.BufferSegment);
             if ((page == null || page.PageHeader.Type == PageType.Undefined) && throwIfNotExists)
             {
@@ -272,7 +272,7 @@ namespace Datatent2.Core.Services.Page
         /// <returns></returns>
         public async ValueTask<DataPage> GetDataPageWithFreeSpace()
         {
-            await _semaphoreSlim.WaitAsync();
+            await _semaphoreSlim.WaitAsync().ConfigureAwait(false);
             try
             {
                 var freePage = _cacheService.GetDataPage();
@@ -283,7 +283,7 @@ namespace Datatent2.Core.Services.Page
 
                 if (freePageId == -1)
                 {
-                    var page = await CreateNewPage<DataPage>();
+                    var page = await CreateNewPage<DataPage>().ConfigureAwait(false);
                     return page;
                 }
 
@@ -291,7 +291,7 @@ namespace Datatent2.Core.Services.Page
                 if (cachedPage != null)
                     return cachedPage;
 
-                var ioResponse = await _diskService.GetBuffer(new ReadRequest((uint)freePageId));
+                var ioResponse = await _diskService.GetBuffer(new ReadRequest((uint)freePageId)).ConfigureAwait(false);
                 var diskPage = new DataPage(ioResponse.BufferSegment);
                 _cacheService.Add(diskPage);
                 return diskPage;
@@ -318,7 +318,7 @@ namespace Datatent2.Core.Services.Page
                 _allocationInformationPage.SetNextPage(nextId);
                 var prevId = _allocationInformationPage.Id;
                 await _diskService.WriteBuffer(new WriteRequest(_allocationInformationPage.PageBuffer,
-                    _allocationInformationPage.Id));
+                    _allocationInformationPage.Id)).ConfigureAwait(false);
                 _allocationInformationPage = new AllocationInformationPage(BufferPoolFactory.Get().Rent(), nextId);
                 _allocationInformationPage.SetPreviousPage(prevId);
                 _cacheService.Add(_allocationInformationPage);
@@ -376,7 +376,7 @@ namespace Datatent2.Core.Services.Page
             prevId = _allocationInformationPage.Id;
             await _diskService.WriteBuffer(new WriteRequest(_allocationInformationPage!.PageBuffer, _allocationInformationPage.Id)).ConfigureAwait(false);
 
-            var newInfo = await _diskService.GetBuffer(new ReadRequest(nextId));
+            var newInfo = await _diskService.GetBuffer(new ReadRequest(nextId)).ConfigureAwait(false);
             _allocationInformationPage = new AllocationInformationPage(newInfo.BufferSegment, nextId);
             _allocationInformationPage.SetPreviousPage(prevId);
             _cacheService.Add(_allocationInformationPage);

@@ -34,8 +34,35 @@ namespace Datatent2.Core.Tests.Index.SkipList
             await index.Insert(17, new PageAddress(17, 17));
             await index.Insert(27, new PageAddress(27, 27));
             await index.Insert(9, new PageAddress(9, 9));
+            await index.Insert(91, new PageAddress(9, 9));
+            await index.Insert(19, new PageAddress(9, 9));
+            await index.Insert(329, new PageAddress(9, 9));
+            await index.Insert(95, new PageAddress(9, 9));
 
             var s = await index.Print(new PrintStyle() { AttachIndexAddresses = true });
+            var address = await index.Find<int>(329);
+        }
+
+        [Fact]
+        public async Task Search_SkipList_Index()
+        {
+            IPageService pageService = new FakePageService();
+
+            var index = await IndexService.CreateIndex(pageService, IndexType.SkipList, NullLogger.Instance);
+
+            await index.Insert(5, new PageAddress(5, 5));
+
+            await index.Insert(3, new PageAddress(3, 3));
+            await index.Insert(7, new PageAddress(7, 7));
+            await index.Insert(17, new PageAddress(17, 17));
+            await index.Insert(27, new PageAddress(27, 27));
+            await index.Insert(9, new PageAddress(9, 9));
+            await index.Insert(9, new PageAddress(9, 9));
+
+            var address = await index.Find<int>(7);
+            address.ShouldNotBe(PageAddress.Empty);
+            address = await index.Find<int>(43553553);
+            address.ShouldBe(PageAddress.Empty);
         }
 
         [Fact]
@@ -45,7 +72,7 @@ namespace Datatent2.Core.Tests.Index.SkipList
 
             HashSet<int> toInsert = new HashSet<int>();
             int i = 0;
-            while (i < 100)
+            while (i < 250)
             {
                 var a = _random.Next();
                 if (!toInsert.Contains(a))
@@ -64,7 +91,49 @@ namespace Datatent2.Core.Tests.Index.SkipList
                 await index.Insert(x, PageAddress.Empty);
             }
 
-            var s = await index.Print(new PrintStyle() { AttachIndexAddresses = true });
+            var sortedToInsert = toInsert.OrderBy(i1 => i1).ToList();
+            var list = new List<int>();
+
+            await foreach (var a in index.GetAll<int>())
+            {
+                list.Add(a.Key);
+            }
+
+            sortedToInsert.ShouldBeInOrder();
+            list.ShouldBeInOrder();
+            list.SequenceEqual(sortedToInsert).ShouldBe(true);
+        }
+
+        [Fact]
+        public async Task Large_Insert_Search_Test()
+        {
+            Random _random = new Random();
+
+            HashSet<int> toInsert = new HashSet<int>();
+            int i = 0;
+            while (i < 25000)
+            {
+                var a = _random.Next();
+                if (!toInsert.Contains(a))
+                {
+                    toInsert.Add(a);
+                    i++;
+                }
+            }
+
+            IPageService pageService = new FakePageService();
+
+            var index = await IndexService.CreateIndex(pageService, IndexType.SkipList, NullLogger.Instance);
+
+            foreach (var x in toInsert)
+            {
+                await index.Insert(x, PageAddress.Empty);
+            }
+
+            var sortedToInsert = toInsert.OrderBy(i1 => i1).ToList();
+            var last = sortedToInsert[^1];
+
+            var s = await index.Find(last);
         }
 
         [Fact]

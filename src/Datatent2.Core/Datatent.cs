@@ -61,7 +61,7 @@ namespace Datatent2.Core
         private async Task Init()
         {
             _logger.LogInformation(_datatentSettings.ToString());
-            await LoadPlugins();
+            await LoadPlugins().ConfigureAwait(false);
             var compressionPlugins = await Task.WhenAll(
                 _availablePlugins!.Select(async result =>
                 {
@@ -76,7 +76,7 @@ namespace Datatent2.Core
                     }
 
                     return null;
-                }));
+                })).ConfigureAwait(false);
 
             var nopCompressionService =
                 compressionPlugins.First(service => service?.Id == Constants.NopCompressionPluginId);
@@ -85,7 +85,7 @@ namespace Datatent2.Core
 
             _pageService = await
                 PageService.Create(DiskService.Create(_datatentSettings, _loggerFactory.CreateLogger("DiskService")), _cacheService,
-                    _loggerFactory.CreateLogger<PageService>());
+                    _loggerFactory.CreateLogger<PageService>()).ConfigureAwait(false);
 
             _dataService = new DataService(nopCompressionService!, _pageService, _transactionManager, _loggerFactory.CreateLogger<DataService>());
         }
@@ -106,7 +106,7 @@ namespace Datatent2.Core
 
             _loader = serviceProvider.GetRequiredService<IPluginLoader>();
 
-            _availablePlugins = (await _loader.FindPlugins<ICompressionService>(pathToDist)).ToList();
+            _availablePlugins = (await _loader.FindPlugins<ICompressionService>(pathToDist).ConfigureAwait(false)).ToList();
             _logger.LogInformation($"Found {_availablePlugins.Count} plugins");
         }
 
@@ -120,7 +120,7 @@ namespace Datatent2.Core
 
         public async Task<Table<TValue, TKey>> GetTable<TValue, TKey>(string name) where TValue : class
         {
-            var table = await Table<TValue, TKey>.Get(name, _dataService!, _pageService!, _cacheService, _loggerFactory.CreateLogger("Table"));
+            var table = await Table<TValue, TKey>.Get(name, _dataService!, _pageService!, _cacheService, _loggerFactory.CreateLogger("Table")).ConfigureAwait(false);
 
             return table;
         }

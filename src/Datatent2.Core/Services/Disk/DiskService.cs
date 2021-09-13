@@ -147,7 +147,7 @@ namespace Datatent2.Core.Services.Disk
         protected async void Reader()
         {
             var reader = ReadChannel.Reader;
-            while (await reader.WaitToReadAsync())
+            while (await reader.WaitToReadAsync().ConfigureAwait(false))
             {
                 while (reader.TryRead(out var item))
                 {
@@ -162,7 +162,7 @@ namespace Datatent2.Core.Services.Disk
         protected async void Writer()
         {
             var reader = WriteChannel.Reader;
-            while (await reader.WaitToReadAsync())
+            while (await reader.WaitToReadAsync().ConfigureAwait(false))
             {
                 while (reader.TryRead(out var item))
                 {
@@ -176,7 +176,7 @@ namespace Datatent2.Core.Services.Disk
 
         public async Task<ReadResponse> GetBuffer(ReadRequest readRequest)
         {
-            var source = await LineUpReadRequestOrUseExisting(readRequest);
+            var source = await LineUpReadRequestOrUseExisting(readRequest).ConfigureAwait(false);
             var response = await source.Task.ConfigureAwait(false);
             return response;
         }
@@ -190,12 +190,12 @@ namespace Datatent2.Core.Services.Disk
             }
             var writer = ReadChannel.Writer;
 
-            while (await writer.WaitToWriteAsync())
+            while (await writer.WaitToWriteAsync().ConfigureAwait(false))
             {
                 TaskCompletionSource<ReadResponse> source = new TaskCompletionSource<ReadResponse>();
                 ValueTuple<ReadRequest, TaskCompletionSource<ReadResponse>> tuple = (readRequest, source);
                 ConcurrentDictionaryRead.TryAdd(readRequest.PageId, source);
-                await writer.WriteAsync(tuple);
+                await writer.WriteAsync(tuple).ConfigureAwait(false);
                 return source;
             }
 
@@ -204,7 +204,7 @@ namespace Datatent2.Core.Services.Disk
 
         public async Task<WriteRespone> WriteBuffer(WriteRequest writeRequest)
         {
-            var source = await LineUpWriteRequestOrUseExisting(writeRequest);
+            var source = await LineUpWriteRequestOrUseExisting(writeRequest).ConfigureAwait(false);
             var response = await source.Task.ConfigureAwait(false);
             return response;
         }
@@ -218,12 +218,12 @@ namespace Datatent2.Core.Services.Disk
             }
             var writer = WriteChannel.Writer;
 
-            while (await writer.WaitToWriteAsync())
+            while (await writer.WaitToWriteAsync().ConfigureAwait(false))
             {
                 TaskCompletionSource<WriteRespone> source = new TaskCompletionSource<WriteRespone>();
                 ValueTuple<WriteRequest, TaskCompletionSource<WriteRespone>> tuple = (writeRequest, source);
                 ConcurrentDictionaryWrite.TryAdd(writeRequest.PageId, source);
-                await writer.WriteAsync(tuple);
+                await writer.WriteAsync(tuple).ConfigureAwait(false);
                 return source;
             }
 

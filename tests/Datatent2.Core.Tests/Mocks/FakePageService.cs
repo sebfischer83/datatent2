@@ -20,14 +20,14 @@ namespace Datatent2.Core.Tests.Mocks
     {
         private Dictionary<uint, BasePage> _pages = new();
 
-        public Task<T?> GetPage<T>(uint id) where T : BasePage
+        public ValueTask<T?> GetPage<T>(uint id) where T : BasePage
         {
             if (_pages.ContainsKey(id))
             {
-                return Task.FromResult((T?) _pages[id]);
+                return new ValueTask<T?>((T?)_pages[id]);
             }
 
-            return Task.FromResult((T?)null);
+            return new ValueTask<T?>((T?)null);
         }
 
         public Task CheckPoint()

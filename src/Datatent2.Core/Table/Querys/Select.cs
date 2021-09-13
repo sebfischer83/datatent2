@@ -23,8 +23,8 @@ namespace Datatent2.Core.Table
         /// <returns></returns>
         public async Task<TValue?> Get(TKey key)
         {
-            var index = await Services.Index.IndexService.LoadIndex(this._mainIndexPageAddress, _pageService, _logger);
-            var address = await index.Find(key);
+            var index = await Services.Index.IndexService.LoadIndex(this._mainIndexPageAddress, _pageService, _logger).ConfigureAwait(false);
+            var address = await index.Find(key).ConfigureAwait(false);
 
             if (!address.HasValue)
             {
@@ -32,7 +32,7 @@ namespace Datatent2.Core.Table
                 return null;
             }
 
-            var obj = await _dataService.Get<TValue>(address.Value);
+            var obj = await _dataService.Get<TValue>(address.Value).ConfigureAwait(false);
 
             return obj;
         }
