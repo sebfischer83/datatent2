@@ -34,6 +34,20 @@ namespace Datatent2.Console
 
         static async Task Main(string[] args)
         {
+            var filter = new CuckooFilter((uint)10000, 0.03, randomSeed: 0);
+            filter.Insert(BitConverter.GetBytes(4));
+            filter.Insert(BitConverter.GetBytes(31244));
+            filter.Insert(BitConverter.GetBytes(411));
+            filter.Insert(BitConverter.GetBytes(454));
+            filter.Insert(BitConverter.GetBytes(14));
+            var x = filter.Contains(BitConverter.GetBytes(411));
+            x = filter.Contains(BitConverter.GetBytes(1411));
+
+            SimpleStreamSerializer serializer = new SimpleStreamSerializer();
+            MemoryStream memoryStream = new MemoryStream();
+            serializer.Serialize(memoryStream, filter);
+            var by = memoryStream.ToArray();
+            return;
             ////ReusableTaskCompletionSource<int> reusableTaskCompletionSource = new ReusableTaskCompletionSource<int>();
             ////Task task = Task.Run(() =>
             ////{
