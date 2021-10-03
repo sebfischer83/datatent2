@@ -43,7 +43,7 @@ namespace Datatent2.Core.Services.Page
 
         public PageService(DiskService diskService, CacheService cacheService, ILogger logger)
         {
-            _backgroundFlushTask = Task.Factory.StartNew(() => FlushBackgroundTaskMethodAsync(), TaskCreationOptions.LongRunning);
+            _backgroundFlushTask = Task.Factory.StartNew(FlushBackgroundTaskMethodAsync, TaskCreationOptions.LongRunning);
             _semaphoreSlim = new SemaphoreSlim(1, 1);
             _diskService = diskService;
             _logger = logger;
@@ -137,7 +137,8 @@ namespace Datatent2.Core.Services.Page
         /// <returns></returns>
         public async Task CheckPoint()
         {
-            foreach (var page in _cacheService)
+            var pages = _cacheService.ToList();
+            foreach (var page in pages)
             {
                 if (page.IsDirty)
                     await WritePage(page).ConfigureAwait(false);
@@ -154,6 +155,10 @@ namespace Datatent2.Core.Services.Page
         /// <returns></returns>
         public async Task WritePage(BasePage page)
         {
+#if DEBUG
+            _logger.LogDebug($"{nameof(WritePage)} for id {page.Id} with type {page.Type.ToString()}");
+#endif
+
             if (!page.IsDirty)
                 return;
 
@@ -310,6 +315,9 @@ namespace Datatent2.Core.Services.Page
             }
 
             var nextId = _globalAllocationMap.AcquirePageId();
+#if DEBUG
+            _logger.LogInformation($"Create new page {typeof(T).Name} at {nextId}");
+#endif
             if (_allocationInformationPage!.IsFull)
             {
 #if DEBUG
@@ -324,6 +332,7 @@ namespace Datatent2.Core.Services.Page
                 _cacheService.Add(_allocationInformationPage);
 
                 nextId = _globalAllocationMap.AcquirePageId();
+                _logger.LogInformation($"Switch id for new page {typeof(T).Name} to {nextId}");
             }
 
             if (typeof(T) == typeof(DataPage))

@@ -211,6 +211,9 @@ namespace Datatent2.Core.Services.Disk
 
         private async Task<TaskCompletionSource<WriteRespone>> LineUpWriteRequestOrUseExisting(WriteRequest writeRequest)
         {
+#if DEBUG
+            Logger.LogDebug($"{nameof(LineUpWriteRequestOrUseExisting)} for page {writeRequest.PageId}");
+#endif
             ConcurrentDictionaryWrite.TryGetValue(writeRequest.PageId, out var completionSource);
             if (completionSource != null)
             {
@@ -276,6 +279,9 @@ namespace Datatent2.Core.Services.Disk
 
         protected virtual void WritePageBuffer(uint pageId, IBufferSegment bufferSegment)
         {
+#if DEBUG
+            Logger.LogDebug($"Write {pageId} to disk");
+#endif
             var stream = GetStream(pageId);
             stream.Seek(BasePage.PageOffset(pageId), SeekOrigin.Begin);
             stream.Write(bufferSegment.Span);

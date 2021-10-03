@@ -26,7 +26,7 @@ using Prise.Utils;
 
 namespace Datatent2.Core
 {
-    public class Datatent : IDisposable
+    public class Datatent : IAsyncDisposable
     {
         private readonly DatatentSettings _datatentSettings;
         private readonly ILoggerFactory _loggerFactory;
@@ -125,9 +125,19 @@ namespace Datatent2.Core
             return table;
         }
 
-        public void Dispose()
+        public void GetDatabaseLayout()
         {
-            _pageService?.CheckPoint();
+
+        }
+
+        /// <summary>
+        /// Disposes the instance.
+        /// </summary>
+        /// <returns>A ValueTask.</returns>
+        public async ValueTask DisposeAsync()
+        {
+            if (_pageService != null)
+                await (_pageService.CheckPoint()).ConfigureAwait(false);
         }
     }
 }

@@ -34,20 +34,20 @@ namespace Datatent2.Console
 
         static async Task Main(string[] args)
         {
-            var filter = new CuckooFilter((uint)10000, 0.03, randomSeed: 0);
-            filter.Insert(BitConverter.GetBytes(4));
-            filter.Insert(BitConverter.GetBytes(31244));
-            filter.Insert(BitConverter.GetBytes(411));
-            filter.Insert(BitConverter.GetBytes(454));
-            filter.Insert(BitConverter.GetBytes(14));
-            var x = filter.Contains(BitConverter.GetBytes(411));
-            x = filter.Contains(BitConverter.GetBytes(1411));
+            //var filter = new CuckooFilter((uint)10000, 0.03, randomSeed: 0);
+            //filter.Insert(BitConverter.GetBytes(4));
+            //filter.Insert(BitConverter.GetBytes(31244));
+            //filter.Insert(BitConverter.GetBytes(411));
+            //filter.Insert(BitConverter.GetBytes(454));
+            //filter.Insert(BitConverter.GetBytes(14));
+            //var x = filter.Contains(BitConverter.GetBytes(411));
+            //x = filter.Contains(BitConverter.GetBytes(1411));
 
-            SimpleStreamSerializer serializer = new SimpleStreamSerializer();
-            MemoryStream memoryStream = new MemoryStream();
-            serializer.Serialize(memoryStream, filter);
-            var by = memoryStream.ToArray();
-            return;
+            //SimpleStreamSerializer serializer = new SimpleStreamSerializer();
+            //MemoryStream memoryStream = new MemoryStream();
+            //serializer.Serialize(memoryStream, filter);
+            //var by = memoryStream.ToArray();
+            //return;
             ////ReusableTaskCompletionSource<int> reusableTaskCompletionSource = new ReusableTaskCompletionSource<int>();
             ////Task task = Task.Run(() =>
             ////{
@@ -121,7 +121,7 @@ namespace Datatent2.Console
             var bogus = new Bogus.Randomizer();
             var table = await datatent.GetTable<TestObject, int>("testTable");
 
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 500; i++)
             {
                 TestObject testObject = new TestObject();
                 testObject.IntProp = i;
@@ -137,13 +137,13 @@ namespace Datatent2.Console
                 }
             }
 
-            for (int i = 0; i < 5; i++)
+            for (int i = 400; i < 500; i++)
             {
                 var obj = await table.Get(i);
                 
             }
 
-            datatent.Dispose();
+            await datatent.DisposeAsync();
             //memoryMappedDiskService.Dispose();
             //File.Delete(datatentSettingsMapRead.DatabasePath);
         }
