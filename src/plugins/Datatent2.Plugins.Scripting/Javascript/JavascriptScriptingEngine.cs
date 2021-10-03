@@ -14,29 +14,40 @@ using Prise.Plugin;
 
 namespace Datatent2.Plugins.Scripting.Javascript
 {
+    /// <summary>
+    /// A javascript based engine
+    /// </summary>
     [Plugin(PluginType = typeof(IScriptingEngine))]
     public class JavascriptScriptingEngine : IScriptingEngine
     {
         private readonly string _script;
-        private Engine _engine;
+        private readonly Engine _engine;
 
+        /// <summary>
+        /// Ctor
+        /// </summary>
+        /// <param name="script"></param>
         public JavascriptScriptingEngine(string script)
         {
             _script = script;
             _engine = new Engine();
         }
 
+        /// <inheritdoc />
         public string Name => "Jint";
 
-        private static Guid ID = Guid.Parse("4cdf32fc-eee4-48b6-bfab-4ab0b26bfe40");
+        private static readonly Guid ID = Guid.Parse("4cdf32fc-eee4-48b6-bfab-4ab0b26bfe40");
 
+        /// <inheritdoc />
         public Guid Id => ID;
 
+        /// <inheritdoc />
         public void Dispose()
         {
-            
+            // engine need no dispose
         }
 
+        /// <inheritdoc />
         public T Execute<T>(object obj)
         {
             _engine.SetValue("dataObject", obj);

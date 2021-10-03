@@ -7,14 +7,29 @@ using Datatent2.Core.Page.Data;
 
 namespace Datatent2.Core.Block
 {
+    /// <summary>
+    /// A block that holds the database entries
+    /// </summary>
     internal class DataBlock : Block<DataPage, BlockHeader>
     {
+        /// <summary>
+        /// ctor
+        /// </summary>
+        /// <param name="page"></param>
+        /// <param name="entryId"></param>
         public DataBlock(DataPage page, byte entryId) : base(page, entryId)
         {
             var memory = page.GetDataByIndex(entryId);
             Header = BlockHeader.FromBuffer(memory, 0);
         }
 
+        /// <summary>
+        /// ctor
+        /// </summary>
+        /// <param name="page"></param>
+        /// <param name="entryId"></param>
+        /// <param name="nextBlock"></param>
+        /// <param name="isFollowingBlock"></param>
         public DataBlock(DataPage page,
             byte entryId,
             PageAddress nextBlock,
@@ -28,7 +43,7 @@ namespace Datatent2.Core.Block
             Header.ToBuffer(memory);
         }
 
-
+        /// <inheritdoc />
         public override void SetFollowingBlock(PageAddress pageAddress)
         {
             Header = new BlockHeader(pageAddress, Header.IsFollowingBlock);

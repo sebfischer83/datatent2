@@ -26,6 +26,10 @@ namespace Datatent2.Core.Memory
         private readonly T* _pointer;
         private readonly int _length;
 
+        /// <summary>
+        /// ctor
+        /// </summary>
+        /// <param name="span"></param>
         public UnmanagedMemoryManager(Span<T> span)
         {
             fixed (T* ptr = &MemoryMarshal.GetReference(span))
@@ -35,6 +39,11 @@ namespace Datatent2.Core.Memory
             }
         }
 
+        /// <summary>
+        /// Ctor
+        /// </summary>
+        /// <param name="pointer"></param>
+        /// <param name="length"></param>
         public UnmanagedMemoryManager(T* pointer, int length)
         {
             Guard.Argument(length).Min(0);
@@ -42,21 +51,31 @@ namespace Datatent2.Core.Memory
             _length = length;
         }
 
+        /// <summary>
+        /// Ctor
+        /// </summary>
+        /// <param name="pointer"></param>
+        /// <param name="length"></param>
         public UnmanagedMemoryManager(IntPtr pointer, int length) : this((T*)pointer.ToPointer(), length) { }
 
+
+        /// <inheritdoc />
         protected override void Dispose(bool disposing)
         {
             
         }
 
+        /// <inheritdoc />
         public override Span<T> GetSpan() => new Span<T>(_pointer, _length);
 
+        /// <inheritdoc />
         public override MemoryHandle Pin(int elementIndex = 0)
         {
             Guard.Argument(elementIndex < 0 || elementIndex >= _length);
             return new MemoryHandle(_pointer + elementIndex);
         }
 
+        /// <inheritdoc />
         public override void Unpin()
         {
             

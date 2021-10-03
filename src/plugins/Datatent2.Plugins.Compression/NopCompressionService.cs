@@ -10,28 +10,30 @@ using Prise.Plugin;
 
 namespace Datatent2.Plugins.Compression
 {
+    /// <summary>
+    /// A nop compression service
+    /// </summary>
     [Plugin(PluginType = typeof(ICompressionService))]
     public class NopCompressionService : ICompressionService
     {
+        /// <inheritdoc />
         public Guid Id => new("B7647CEF-6338-477B-B514-9A48B1E2205A");
 
+        /// <inheritdoc />
         public string Name => "NopCompression";
 
+        /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public Span<byte> Compress(Span<byte> bytes, Span<byte> target)
         {
-            Unsafe.CopyBlock(ref target[0], ref bytes[0], (uint)bytes.Length);
-            target = target.Slice(0, bytes.Length);
-            return target.Slice(0, bytes.Length);
+            return bytes;
         }
 
+        /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public byte[] Compress(Span<byte> bytes)
+        public Span<byte> Compress(Span<byte> bytes)
         {
-            var target = ArrayPool<byte>.Shared.Rent(Constants.PAGE_SIZE + 500);
-            Compress(bytes, target);
-
-            return target;
+            return Compress(bytes, Array.Empty<byte>());
         }
     }
 }

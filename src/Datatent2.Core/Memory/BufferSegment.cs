@@ -14,13 +14,23 @@ namespace Datatent2.Core.Memory
     {
         private byte[]? _rental;
 
+        /// <summary>
+        /// The length of the buffer
+        /// </summary>
         public uint Length => (uint)(_rental?.Length ?? 0);
 
+        /// <summary>
+        /// ctor
+        /// </summary>
+        /// <param name="minBufferSize"></param>
         public BufferSegment(int minBufferSize)
         {
             _rental = ArrayPool<byte>.Shared.Rent(minBufferSize);
         }
 
+        /// <summary>
+        /// Returns the buffer as a span
+        /// </summary>
         public Span<byte> Span
         {
             get
@@ -31,6 +41,9 @@ namespace Datatent2.Core.Memory
             }
         }
 
+        /// <summary>
+        /// Returns the buffer as a memory
+        /// </summary>
         public Memory<byte> Memory
         {
             get
@@ -42,11 +55,15 @@ namespace Datatent2.Core.Memory
             }
         }
 
+        /// <summary>
+        /// Clears the buffer
+        /// </summary>
         public void Clear()
         {
             Span.Clear();
         }
 
+        /// <inheritdoc />
         public void Dispose()
         {
             if (_rental != null)

@@ -3,24 +3,23 @@
 // # Sebastian Fischer sebfischer@gmx.net
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Datatent2.Contracts.Scripting
 {
-    public interface IScriptingEngine : IDisposable
+    /// <summary>
+    /// Interface for scripting engines
+    /// </summary>
+    public interface IScriptingEngine : IService, IDisposable
     {
-        public string Name { get; }
-
-        public Guid Id { get; }
-
+        /// <summary>
+        /// Executes the specified script
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         T Execute<T>(object obj);
-    }
-
-    public interface IMultithreadedScriptingEngine : IScriptingEngine
-    {
-        List<ValueTuple<object, T>> Execute<T>(List<object> objects);
     }
 }

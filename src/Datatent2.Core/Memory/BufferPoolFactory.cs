@@ -13,11 +13,19 @@ using Microsoft.Extensions.Logging;
 
 namespace Datatent2.Core.Memory
 {
+    /// <summary>
+    /// Returns the buffer pool that is configured
+    /// </summary>
     internal static class BufferPoolFactory
     {
         private static DatatentSettings? _settings;
         private static ILogger? _logger;
 
+        /// <summary>
+        /// Init the pool factory
+        /// </summary>
+        /// <param name="datatentSettings"></param>
+        /// <param name="logger"></param>
         public static void Init(DatatentSettings datatentSettings, ILogger logger)
         {
             _settings = datatentSettings;
@@ -25,6 +33,10 @@ namespace Datatent2.Core.Memory
             UnmanagedBufferPool.InitFunction = () => (datatentSettings, logger);
         }
 
+        /// <summary>
+        /// Get the configured buffer pool
+        /// </summary>
+        /// <returns></returns>
         public static BufferPoolBase Get()
         {
             if (_settings == null)

@@ -14,22 +14,32 @@ using Prise.Plugin;
 
 namespace Datatent2.Plugins.Scripting. Lua
 {
+    /// <summary>
+    /// A lua scripting engine
+    /// </summary>
     [Plugin(PluginType = typeof(IMultithreadedScriptingEngine))]
     public class LuaScriptingEngine : IMultithreadedScriptingEngine
     {
         private readonly string _script;
 
+        /// <inheritdoc />
         public string Name => "NLua";
 
-        private static Guid ID = Guid.Parse("0e022cd2-3a12-4ae5-9bb4-d45f16d17869");
+        private static readonly Guid ID = Guid.Parse("0e022cd2-3a12-4ae5-9bb4-d45f16d17869");
 
+        /// <inheritdoc />
         public Guid Id => ID;
 
+        /// <summary>
+        /// Ctor
+        /// </summary>
+        /// <param name="script"></param>
         public LuaScriptingEngine(string script)
         {
             _script = script;
         }
 
+        /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Execute<T>(object obj)
         {
@@ -39,6 +49,7 @@ namespace Datatent2.Plugins.Scripting. Lua
             return (T)lua.GetObjectFromPath("res");
         }
 
+        /// <inheritdoc />
         public List<ValueTuple<object, T>> Execute<T>(List<object> objects)
         {
             var list = new List<ValueTuple<object, T>>(objects.Count);
@@ -60,8 +71,10 @@ namespace Datatent2.Plugins.Scripting. Lua
             return list;
         }
 
+        /// <inheritdoc />
         public void Dispose()
         {
+            // nothing to do here, lua engine is always created... because otherwise it shows a very poor performance
         }
     }
 }
