@@ -7,9 +7,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using ConsoleTableExt;
 using Datatent2.Contracts;
 using Datatent2.Core.Memory;
+using Datatent2.Core.Page;
 using Datatent2.Core.Services.Cache;
 using Datatent2.Core.Services.Data;
 using Datatent2.Core.Services.Disk;
@@ -46,16 +49,29 @@ namespace Datatent2.Core
             _availablePlugins = null;
             _logger = loggerFactory.CreateLogger<Datatent>();
             _logger.LogInformation(Environment.NewLine + Figgle.FiggleFonts.Epic.Render("Datatent2"));
-            _logger.LogInformation(typeof(Datatent).Assembly.GetName().Version!.ToString());
+
+
             var infVersion = typeof(Datatent).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                 ?.InformationalVersion;
-            if (!string.IsNullOrWhiteSpace(infVersion))
-                _logger.LogInformation(infVersion);
-            _cacheService = new CacheService();
+            var tableData = new List<List<object>>()
+            {
+                new List<object>{"Assembly", typeof(Datatent).Assembly.GetName().Version!.ToString()},
+                new List<object>{"Version", infVersion ?? "" },
+                new List<object>{".Net Runtime", RuntimeInformation.FrameworkDescription },
+                new List<object>{ "Operating System", RuntimeInformation.OSDescription },
+                new List<object>{ "Architecture", RuntimeInformation.ProcessArchitecture.ToString()  },
+            };
 
-            _logger.LogInformation($".Net {Environment.Version}");
-            _logger.LogInformation($"64Bit {Environment.Is64BitOperatingSystem} {Environment.Is64BitProcess}");
-            _logger.LogInformation($"Operating System {Environment.OSVersion}");
+            var infos = HardwareInformation.MachineInformationGatherer.GatherInformation(false);
+            
+
+            var table = ConsoleTableBuilder
+                .From(tableData)
+                .WithColumn("Property", "Value").Export().ToString();
+
+            _logger.LogInformation(table);
+         
+            _cacheService = new CacheService();
         }
 
         private async Task Init()

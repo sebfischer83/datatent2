@@ -14,15 +14,27 @@ using Datatent2.Contracts;
 
 namespace Datatent2.Core.Page.AllocationInformation
 {
+    /// <summary>
+    /// Holds informations about the allocated page
+    /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = Constants.ALLOCATION_INFORMATION_ENTRY_SIZE)]
     internal readonly struct AllocationInformationEntry
     {
+        /// <summary>
+        /// The page id
+        /// </summary>
         [FieldOffset(PAGE_ID)]
         public readonly uint PageId;
 
+        /// <summary>
+        /// The type of the allocated page
+        /// </summary>
         [FieldOffset(PAGE_TYPE)]
         public readonly PageType PageType;
 
+        /// <summary>
+        /// The fill factor of the page
+        /// </summary>
         [FieldOffset(PAGE_FILL_FACTOR)]
         public readonly PageFillFactor PageFillFactor;
 

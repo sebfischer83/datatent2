@@ -24,11 +24,18 @@ using Dawn;
 namespace Datatent2.Core.Page.GlobalAllocationMap
 {
     /// <summary>
-    /// 65024 pages
+    /// Tracks which pages are allocated
     /// </summary>
+    /// <remarks>
+    /// 65024 pages
+    /// </remarks>
     internal class GlobalAllocationMapPage : BasePage
     {
         protected SpinLock SpinLock;
+
+        /// <summary>
+        /// 65024 pages currently
+        /// </summary>
         public const int PAGES_PER_GAM = (Constants.PAGE_SIZE - Constants.PAGE_HEADER_SIZE) * 8;
 
         protected long LastIssuedId = -1;

@@ -44,6 +44,7 @@ namespace Datatent2.Core.Algo.Bloom
             _size = arraySize;
             _numberOfHashFunctions = numberOfHashFunctions;
             _bytes = new byte[_size];
+            
             _stringHashFunction = MurmurHash3Factory.Instance.Create(new MurmurHash3Config() {HashSizeInBits = 32});
 
             if (typeof(T) == typeof(string))
