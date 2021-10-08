@@ -67,6 +67,7 @@ namespace Datatent2.Core
         {
             InMemory,
             FileStream,
+            RandomAccess,
             MemoryMappedFile
         }
     }

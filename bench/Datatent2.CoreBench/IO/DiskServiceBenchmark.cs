@@ -14,7 +14,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Datatent2.CoreBench.IO
 {
-    [HtmlExporter, CsvExporter(), CsvMeasurementsExporter(), RPlotExporter(),
+    [HtmlExporter, CsvExporter(), CsvMeasurementsExporter(),
          RankColumn(), KurtosisColumn, SkewnessColumn, StdDevColumn, MeanColumn, MedianColumn, BaselineColumn,
          MemoryDiagnoser, MediumRunJob()]
     public class DiskServiceBenchmark
@@ -27,6 +27,8 @@ namespace Datatent2.CoreBench.IO
         private FileDiskService _fileDiskServiceWrite;
         private MemoryMappedDiskService _memoryMappedDiskServiceRead;
         private MemoryMappedDiskService _memoryMappedDiskServiceWrite;
+        private RandomAccessDiskService _randomAccessDiskServiceRead;
+        private RandomAccessDiskService _randomAccessDiskServiceWrite;
 
         public enum SeekMethod
         {
@@ -44,6 +46,8 @@ namespace Datatent2.CoreBench.IO
         int[] _pagesToRead = new int[READS];
         int[] _pagesToReadLinear = new int[READS];
         private IBufferSegment _buffer;
+        private string _pathReadRandom;
+        private string _pathWriteRandom;
 
         [GlobalSetup]
         public async Task SetupAsync()
@@ -55,8 +59,10 @@ namespace Datatent2.CoreBench.IO
 
             _pathWriteMap = Path.Combine(Path.GetTempPath(), "writemap.file");
             _pathWriteStream = Path.Combine(Path.GetTempPath(), "writestream.file");
+            _pathWriteRandom = Path.Combine(Path.GetTempPath(), "writerandom.file");
             _pathReadMap = Path.Combine(Path.GetTempPath(), "readmap.file");
             _pathReadStream = Path.Combine(Path.GetTempPath(), "readstream.file");
+            _pathReadRandom = Path.Combine(Path.GetTempPath(), "readrandom.file");
 
             DatatentSettings datatentSettingsStreamRead = new DatatentSettings()
             {
@@ -94,6 +100,25 @@ namespace Datatent2.CoreBench.IO
                     UseReadAheadCache = false
                 }
             };
+
+            DatatentSettings datatentSettingsRandRead = new DatatentSettings()
+            {
+                DatabasePath = _pathReadRandom,
+                IOSettings = new DatatentSettings.IO()
+                {
+                    IOSystem = DatatentSettings.IOSystem.RandomAccess,
+                    UseReadAheadCache = false
+                }
+            };
+            DatatentSettings datatentSettingsRandWrite = new DatatentSettings()
+            {
+                DatabasePath = _pathWriteRandom,
+                IOSettings = new DatatentSettings.IO()
+                {
+                    IOSystem = DatatentSettings.IOSystem.RandomAccess,
+                    UseReadAheadCache = false
+                }
+            };
             BufferPoolFactory.Init(datatentSettingsStreamRead, NullLogger.Instance);
             _fileDiskServiceRead = new FileDiskService(datatentSettingsStreamRead);
             _fileDiskServiceWrite = new FileDiskService(datatentSettingsStreamWrite);
@@ -103,6 +128,9 @@ namespace Datatent2.CoreBench.IO
 
             _memoryMappedDiskServiceWrite =
                 new MemoryMappedDiskService(datatentSettingsMapWrite, NullLogger.Instance);
+
+            _randomAccessDiskServiceRead = new RandomAccessDiskService(datatentSettingsRandRead, NullLogger.Instance);
+            _randomAccessDiskServiceWrite = new RandomAccessDiskService(datatentSettingsRandWrite, NullLogger.Instance);
 
             Random random = new Random();
 
@@ -116,6 +144,7 @@ namespace Datatent2.CoreBench.IO
 
                 await _fileDiskServiceRead.WriteBuffer(new WriteRequest(_buffer, i));
                 await _memoryMappedDiskServiceRead.WriteBuffer(new WriteRequest(_buffer, i));
+                await _randomAccessDiskServiceRead.WriteBuffer(new WriteRequest(_buffer, i));
             }
             
             for (int i = 0; i < READS; i++)
@@ -138,10 +167,14 @@ namespace Datatent2.CoreBench.IO
             _fileDiskServiceWrite.Dispose();
             _memoryMappedDiskServiceRead.Dispose();
             _memoryMappedDiskServiceWrite.Dispose();
+            _randomAccessDiskServiceRead.Dispose();
+            _randomAccessDiskServiceWrite.Dispose();
             File.Delete(_pathReadMap);
             File.Delete(_pathReadStream);
             File.Delete(_pathWriteMap);
             File.Delete(_pathWriteStream);
+            File.Delete(_pathWriteRandom);
+            File.Delete(_pathReadRandom);
         }
 
         [Benchmark(OperationsPerInvoke = READS)]
@@ -179,7 +212,24 @@ namespace Datatent2.CoreBench.IO
 
             return i;
         }
+        
+        [Benchmark(OperationsPerInvoke = READS)]
+        public async Task<uint> RandomDiskServiceRead()
+        {
+            uint i = 0;
 
+            for (int j = 0; j < READS; j++)
+            {
+                var page = Seek == ReadAheadCacheBench.SeekMethod.Linear
+                    ? _pagesToReadLinear[j]
+                    : _pagesToRead[j];
+                var res = await _randomAccessDiskServiceRead.GetBuffer(new ReadRequest((uint)page));
+                i += res.PageId;
+                res.BufferSegment.Dispose();
+            }
+
+            return i;
+        }
 
         [Benchmark(OperationsPerInvoke = READS)]
         public async Task<uint> StreamDiskServiceWrite()
@@ -209,6 +259,22 @@ namespace Datatent2.CoreBench.IO
                     ? _pagesToReadLinear[j]
                     : _pagesToRead[j];
                 await _memoryMappedDiskServiceWrite.WriteBuffer(new WriteRequest(_buffer, (uint)page));
+            }
+
+            return i;
+        }
+
+        [Benchmark(OperationsPerInvoke = READS)]
+        public async Task<uint> RandomDiskServiceWrite()
+        {
+            uint i = 0;
+
+            for (int j = 0; j < READS; j++)
+            {
+                var page = Seek == ReadAheadCacheBench.SeekMethod.Linear
+                    ? _pagesToReadLinear[j]
+                    : _pagesToRead[j];
+                await _randomAccessDiskServiceWrite.WriteBuffer(new WriteRequest(_buffer, (uint)page));
             }
 
             return i;
