@@ -40,6 +40,7 @@ namespace Datatent2.Core.Page.GlobalAllocationMap
 
         protected long LastIssuedId = -1;
 
+        /// <inheritdoc />
         public override bool IsFull
         {
             get
