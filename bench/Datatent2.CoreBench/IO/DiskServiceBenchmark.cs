@@ -67,7 +67,7 @@ namespace Datatent2.CoreBench.IO
             DatatentSettings datatentSettingsStreamRead = new DatatentSettings()
             {
                 DatabasePath = _pathReadStream,
-                IOSettings = new DatatentSettings.IO()
+                IOSettings = new DatatentSettings.IOSettings()
                 {
                     IOSystem = DatatentSettings.IOSystem.FileStream,
                     UseReadAheadCache = false
@@ -76,7 +76,7 @@ namespace Datatent2.CoreBench.IO
             DatatentSettings datatentSettingsStreamWrite = new DatatentSettings()
             {
                 DatabasePath = _pathWriteStream,
-                IOSettings = new DatatentSettings.IO()
+                IOSettings = new DatatentSettings.IOSettings()
                 {
                     IOSystem = DatatentSettings.IOSystem.FileStream,
                     UseReadAheadCache = false
@@ -85,7 +85,7 @@ namespace Datatent2.CoreBench.IO
             DatatentSettings datatentSettingsMapRead = new DatatentSettings()
             {
                 DatabasePath = _pathReadMap,
-                IOSettings = new DatatentSettings.IO()
+                IOSettings = new DatatentSettings.IOSettings()
                 {
                     IOSystem = DatatentSettings.IOSystem.FileStream,
                     UseReadAheadCache = false
@@ -94,7 +94,7 @@ namespace Datatent2.CoreBench.IO
             DatatentSettings datatentSettingsMapWrite = new DatatentSettings()
             {
                 DatabasePath = _pathWriteMap,
-                IOSettings = new DatatentSettings.IO()
+                IOSettings = new DatatentSettings.IOSettings()
                 {
                     IOSystem = DatatentSettings.IOSystem.FileStream,
                     UseReadAheadCache = false
@@ -104,7 +104,7 @@ namespace Datatent2.CoreBench.IO
             DatatentSettings datatentSettingsRandRead = new DatatentSettings()
             {
                 DatabasePath = _pathReadRandom,
-                IOSettings = new DatatentSettings.IO()
+                IOSettings = new DatatentSettings.IOSettings()
                 {
                     IOSystem = DatatentSettings.IOSystem.RandomAccess,
                     UseReadAheadCache = false
@@ -113,7 +113,7 @@ namespace Datatent2.CoreBench.IO
             DatatentSettings datatentSettingsRandWrite = new DatatentSettings()
             {
                 DatabasePath = _pathWriteRandom,
-                IOSettings = new DatatentSettings.IO()
+                IOSettings = new DatatentSettings.IOSettings()
                 {
                     IOSystem = DatatentSettings.IOSystem.RandomAccess,
                     UseReadAheadCache = false

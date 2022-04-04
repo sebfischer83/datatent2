@@ -27,13 +27,13 @@ namespace Datatent2.Core.Tests.Service
         public async void Subsequent_GetDataPageWithFreeSpace_Call_Test()
         {
             using BufferSegment headerBufferSegment = new BufferSegment(Constants.PAGE_SIZE);
-            var headerPage = HeaderPage.CreateHeaderPage(headerBufferSegment);
+            var headerPage = HeaderPage.CreateHeaderPage(headerBufferSegment, new DatatentSettings());
 
             using BufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
             PageHeader header = new PageHeader(2, PageType.Data);
             header.ToBuffer(bufferSegment.Span, 0);
             CacheService cacheService = new CacheService();
-            PageService pageService = await PageService.Create(new InMemoryDiskService(new DatatentSettings()), cacheService, NullLogger<PageService>.Instance);
+            PageService pageService = await PageService.Create(new DatatentSettings(), new InMemoryDiskService(new DatatentSettings()), cacheService, NullLogger<PageService>.Instance);
 
             var dataPage = await pageService.GetDataPageWithFreeSpace();
 

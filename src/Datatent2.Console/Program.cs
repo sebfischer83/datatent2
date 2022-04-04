@@ -34,76 +34,6 @@ namespace Datatent2.Console
 
         static async Task Main(string[] args)
         {
-            //var filter = new CuckooFilter((uint)10000, 0.03, randomSeed: 0);
-            //filter.Insert(BitConverter.GetBytes(4));
-            //filter.Insert(BitConverter.GetBytes(31244));
-            //filter.Insert(BitConverter.GetBytes(411));
-            //filter.Insert(BitConverter.GetBytes(454));
-            //filter.Insert(BitConverter.GetBytes(14));
-            //var x = filter.Contains(BitConverter.GetBytes(411));
-            //x = filter.Contains(BitConverter.GetBytes(1411));
-
-            //SimpleStreamSerializer serializer = new SimpleStreamSerializer();
-            //MemoryStream memoryStream = new MemoryStream();
-            //serializer.Serialize(memoryStream, filter);
-            //var by = memoryStream.ToArray();
-            //return;
-            ////ReusableTaskCompletionSource<int> reusableTaskCompletionSource = new ReusableTaskCompletionSource<int>();
-            ////Task task = Task.Run(() =>
-            ////{
-            ////    Thread.Sleep(2000);
-            ////    reusableTaskCompletionSource.SetResult(50);
-            ////});
-
-            ////task = Task.Run(() =>
-            ////{
-            ////    Thread.Sleep(2000);
-            ////    reusableTaskCompletionSource.SetResult(50);
-            ////});
-
-            ////var res = await reusableTaskCompletionSource.Task;
-
-            ////System.Console.WriteLine(res);
-
-            //DatatentSettings datatentSettingsMapRead = new DatatentSettings()
-            //{
-            //    DatabasePath = Path.Combine(Path.GetTempPath(), "readmap.file"),
-            //    IOSettings = new DatatentSettings.IO()
-            //    {
-            //        IOSystem = DatatentSettings.IOSystem.FileStream,
-            //        UseReadAheadCache = false
-            //    }
-            //};
-            //BufferPoolFactory.Init(datatentSettingsMapRead, NullLogger.Instance);
-            //var buffer = BufferPool.Shared.Rent(Constants.PAGE_SIZE);
-            //buffer.Span.Fill(0xFF);
-            //var memoryMappedDiskService =
-            //    new MemoryMappedDiskService(datatentSettingsMapRead, NullLogger.Instance);
-            //for (uint i = 0; i < PAGES; i++)
-            //{
-
-            //    await memoryMappedDiskService.WriteBuffer(new WriteRequest(buffer, i));
-            //}
-            //Random random = new Random();
-            //for (int i = 0; i < READS; i++)
-            //{
-            //    _pagesToRead[i] = random.Next(1, 63999);
-            //}
-
-            //for (int i = 0; i < READS; i++)
-            //{
-            //    _pagesToReadLinear[i] = i;
-            //    if (i > 63999)
-            //        _pagesToReadLinear[i] = i - 63999;
-            //}
-            //await ReadAsync(memoryMappedDiskService, datatentSettingsMapRead);
-
-            //    IntSkipList intSkipList = new IntSkipList();
-            //    foreach (var i in Enumerable.Range(0,99))
-            //    {
-            //        intSkipList.Insert(i);
-            //    }
-
 
             var logger = new LoggerConfiguration().MinimumLevel.Verbose().Enrich.FromLogContext().WriteTo.Async(configuration => configuration.File("log.txt", outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] {Message} {NewLine}{Exception}").MinimumLevel.Is(LogEventLevel.Verbose)).Enrich.FromLogContext().CreateLogger();
             var factory = LoggerFactory.Create(builder =>
@@ -112,14 +42,20 @@ namespace Datatent2.Console
                 builder.SetMinimumLevel(LogLevel.Trace);
             });
             var path = Path.GetDirectoryName(typeof(Program).Assembly.Location)!;
-            var plugins = Path.Combine(path, "Plugins");
+            var plugins = Path.Combine(@"C:\Development\datatent2", "plugins");
             path = Path.Combine(path, "database");
             path = Path.Combine(path, "test.db");
 
-            Datatent datatent = await Datatent.Create(new DatatentSettings() { DatabasePath = path, PluginPath = plugins }, factory);
+            Datatent datatent = await Datatent.Create(new DatatentSettings() 
+            { 
+                DatabasePath = path, 
+                PluginPath = plugins                
+            }, factory);
 
             var bogus = new Bogus.Randomizer();
             var table = await datatent.GetTable<TestObject, int>("testTable");
+
+            //var t = await table.Get(1);
 
             for (int i = 0; i < 500; i++)
             {

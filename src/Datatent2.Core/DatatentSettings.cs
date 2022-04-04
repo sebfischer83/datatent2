@@ -11,9 +11,11 @@ namespace Datatent2.Core
 {
     public sealed class DatatentSettings
     {
-        public IO IOSettings { get; set; }
+        public IOSettings IO { get; set; }
 
-        public Engine EngineSettings { get; set; }
+        public EngineSettings Engine { get; set; }
+
+        public PluginSettings Plugins { get; set; }
 
         public string? DatabasePath { get; set; }
 
@@ -27,8 +29,9 @@ namespace Datatent2.Core
                 .Location;
             var pathToExecutingDir = Path.GetDirectoryName(pathToThisProgram);
             PluginPath = Path.GetFullPath(Path.Combine(pathToExecutingDir!, "plugins"));
-            IOSettings = new IO();
-            EngineSettings = new Engine();
+            IO = new IOSettings();
+            Engine = new EngineSettings();
+            Plugins = new PluginSettings();
         }
 
         public override string ToString()
@@ -37,13 +40,12 @@ namespace Datatent2.Core
             stringBuilder.AppendLine("Settings:");
             stringBuilder.AppendLine($"DatabasePath: {DatabasePath}");
             stringBuilder.AppendLine($"BufferPool: {System.Enum.GetName(typeof(BufferPoolImplementation), BufferPoolImplementation)}");
-
-            stringBuilder.AppendLine($"IOSystem: {System.Enum.GetName(typeof(IOSystem), IOSettings.IOSystem )}");
+            stringBuilder.AppendLine($"IOSystem: {System.Enum.GetName(typeof(IOSystem), IO.IOSystem )}");
 
             return stringBuilder.ToString();
         }
 
-        public class Engine
+        public class EngineSettings
         {
             /// <summary>
             /// Default approx. 128mb
@@ -51,7 +53,7 @@ namespace Datatent2.Core
             public int MaxPageCacheSize { get; set; } = 16384;
         }
 
-        public class IO
+        public class IOSettings
         {
             public IOSystem IOSystem { get; set; } = IOSystem.FileStream;
             

@@ -14,6 +14,7 @@ using Datatent2.Core.Page;
 using Datatent2.Core.Page.AllocationInformation;
 using Datatent2.Core.Page.Data;
 using Datatent2.Core.Page.GlobalAllocationMap;
+using Datatent2.Core.Page.Header;
 using Datatent2.Core.Page.Index;
 using Datatent2.Core.Page.Table;
 using Datatent2.Core.Services.Cache;
@@ -26,25 +27,28 @@ namespace Datatent2.Core.Services.Page
 {
     internal class PageService : IPageService
     {
+        private readonly DatatentSettings _datatentSettings;
         private readonly DiskService _diskService;
         private readonly ILogger _logger;
         private readonly CacheService _cacheService;
+        private HeaderPage? _headerPage;
         private GlobalAllocationMapPage? _globalAllocationMap;
         private AllocationInformationPage? _allocationInformationPage;
         private readonly SemaphoreSlim _semaphoreSlim;
         private readonly Task _backgroundFlushTask;
 
-        public static async Task<PageService> Create(DiskService diskService, CacheService cacheService, ILogger logger)
+        public static async Task<PageService> Create(DatatentSettings datatentSettings, DiskService diskService, CacheService cacheService, ILogger logger)
         {
-            var service = new PageService(diskService, cacheService, logger);
+            var service = new PageService(datatentSettings, diskService, cacheService, logger);
             await service.Init().ConfigureAwait(false);
             return service;
         }
 
-        public PageService(DiskService diskService, CacheService cacheService, ILogger logger)
+        public PageService(DatatentSettings datatentSettings, DiskService diskService, CacheService cacheService, ILogger logger)
         {
             _backgroundFlushTask = Task.Factory.StartNew(FlushBackgroundTaskMethodAsync, TaskCreationOptions.LongRunning);
             _semaphoreSlim = new SemaphoreSlim(1, 1);
+            _datatentSettings = datatentSettings;
             _diskService = diskService;
             _logger = logger;
             _cacheService = cacheService;
@@ -69,7 +73,6 @@ namespace Datatent2.Core.Services.Page
         /// <summary>
         /// Creates needed pages if this is a new database or load the needed pages from disk
         /// </summary>
-        /// <returns></returns>
         private async Task Init()
         {
             using var scope = _logger.BeginScope($"Init {nameof(PageService)}");
@@ -81,7 +84,12 @@ namespace Datatent2.Core.Services.Page
             if (header.PageId == 0)
             {
                 _logger.LogInformation($"New database, create first GAM and AIM page");
+
                 // new database
+                var headerPageBuffer = await _diskService.GetBuffer(new ReadRequest(0)).ConfigureAwait(false);
+                _headerPage = HeaderPage.CreateHeaderPage(headerPageBuffer.BufferSegment);
+                _cacheService.Add(_headerPage);
+
                 _globalAllocationMap = new GlobalAllocationMapPage(firstGamBuffer.BufferSegment, 1);
                 _cacheService.Add(_globalAllocationMap);
 
@@ -94,6 +102,9 @@ namespace Datatent2.Core.Services.Page
             else
             {
                 _logger.LogInformation($"Existing database found");
+                _headerPage = HeaderPage.CreateHeaderPage((await _diskService.GetBuffer(new ReadRequest(0))).BufferSegment);
+                _cacheService.Add(_headerPage);
+
                 // existing database, search last GAM page in database
                 while (header.NextPageId != uint.MaxValue)
                 {
@@ -124,6 +135,13 @@ namespace Datatent2.Core.Services.Page
                 _logger.LogDebug($"Last AIM found at id {_allocationInformationPage.Id}");
                 _cacheService.Add(_allocationInformationPage);
             }
+        }
+
+        public void SetHeaderPageData(HeaderPageData headerPageData)
+        {
+            var bytes = Utf8Json.JsonSerializer.Serialize(headerPageData, Utf8Json.Resolvers.StandardResolver.AllowPrivate);
+
+
         }
 
         public async ValueTask<T?> GetPage<T>(uint id) where T : BasePage

@@ -27,7 +27,7 @@ namespace Datatent2.Core.IO
             _spinLock = new SpinLock();
             _datatentSettings = datatentSettings;
             _logger = logger;
-            _cache = new Dictionary<uint, IBufferSegment>(_datatentSettings.IOSettings.MaxPageReadAheadCacheSize, new Comparer());
+            _cache = new Dictionary<uint, IBufferSegment>(_datatentSettings.IO.MaxPageReadAheadCacheSize, new Comparer());
         }
 
         public IBufferSegment? GetIfExists(uint pageId)
@@ -46,7 +46,7 @@ namespace Datatent2.Core.IO
             {
                 if (!_cache.ContainsKey(pageId))
                 {
-                    if (_cache.Count == _datatentSettings.IOSettings.MaxPageReadAheadCacheSize)
+                    if (_cache.Count == _datatentSettings.IO.MaxPageReadAheadCacheSize)
                     {
                         Vacuum();
                     }
@@ -63,7 +63,7 @@ namespace Datatent2.Core.IO
         private void Vacuum()
         {
             // free 1/8 of all pages
-            var numberToFree = _datatentSettings.EngineSettings.MaxPageCacheSize / 8;
+            var numberToFree = _datatentSettings.Engine.MaxPageCacheSize / 8;
             _logger.LogInformation($"Vacuum needed in {nameof(DiskReadAheadPageCache)} remove {numberToFree} items from cache.");
 
             var random = new Random();

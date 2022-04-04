@@ -300,9 +300,9 @@ namespace Datatent2.Core.Services.Index.SkipList
             Dictionary<PageAddress, int> dictionary = new();
 
             var graph = new DotGraph(nameof(SkipListIndexService), directed: true);
-            graph.Attributes.EdgeShape = DotEdgeShape.Line;
-            graph.Attributes.Layout.Direction = DotLayoutDirection.LeftToRight;
-            graph.Attributes.Layout.NodeSeparation = 0;
+            //graph.Attributes. = DotEdgeShape.Line;
+            //graph.Attributes.Layout.Direction = DotLayoutDirection.LeftToRight;
+            //graph.Attributes.Layout.NodeSeparation = 0;
 
             // header
 

@@ -31,12 +31,12 @@
     <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
     <PackageReference Include="Crc32.NET" Version="1.2.0" />
     <PackageReference Include="Cryptisk.Utf8Json" Version="1.4.0" />
-    <PackageReference Include="CsvHelper" Version="27.1.1" />
+    <PackageReference Include="CsvHelper" Version="27.2.1" />
     <PackageReference Include="Jil" Version="3.0.0-alpha2" />
-    <PackageReference Include="Jint" Version="3.0.0-beta-2032" />
-    <PackageReference Include="K4os.Compression.LZ4" Version="1.2.12" />
-    <PackageReference Include="MessagePack" Version="2.3.75" />
-    <PackageReference Include="Moq" Version="4.16.1" />
+    <PackageReference Include="Jint" Version="3.0.0-beta-2037" />
+    <PackageReference Include="K4os.Compression.LZ4" Version="1.2.16" />
+    <PackageReference Include="MessagePack" Version="2.4.14-alpha" />
+    <PackageReference Include="Moq" Version="4.17.2" />
     <PackageReference Include="NReco.Text.AhoCorasickDoubleArrayTrie" Version="1.0.2" />
     <PackageReference Include="Spreads" Version="2019.0.412" />
     <PackageReference Include="Spreads.Collections" Version="2019.0.412" />

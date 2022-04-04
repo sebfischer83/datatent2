@@ -18,47 +18,46 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Bogus" Version="33.1.1" />
-    <PackageReference Include="Bogus.Text" Version="33.1.1" />
-    <PackageReference Include="Collections.Pooled" Version="1.0.82" />
+    <PackageReference Include="Bogus" Version="34.0.1" />
+    <PackageReference Include="Bogus.Text" Version="34.0.1" />
+    <PackageReference Include="Collections.Pooled" Version="2.0.0-preview.27" />
     <PackageReference Include="ConsoleTableExt" Version="3.1.9" />
     <PackageReference Include="Crc32.NET" Version="1.2.0" />
-    <PackageReference Include="Cryptisk.Utf8Json" Version="1.4.0" />
     <PackageReference Include="Dawn.Guard" Version="1.12.0" />
-    <PackageReference Include="DotNext" Version="3.3.1" />
-    <PackageReference Include="DotNext.Reflection" Version="3.3.0" />
-    <PackageReference Include="DotNext.Unsafe" Version="3.3.0" />
-    <PackageReference Include="ErrorProne.NET.CoreAnalyzers" Version="0.3.0-beta.0">
+    <PackageReference Include="DotNext" Version="4.3.0" />
+    <PackageReference Include="DotNext.Reflection" Version="4.3.0" />
+    <PackageReference Include="DotNext.Unsafe" Version="4.3.0" />
+    <PackageReference Include="ErrorProne.NET.CoreAnalyzers" Version="0.4.0-beta.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="ErrorProne.NET.Structs" Version="0.3.0-beta.0">
+    <PackageReference Include="ErrorProne.NET.Structs" Version="0.4.0-beta.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="fasterflect.reflect" Version="3.1.0" />
     <PackageReference Include="Figgle" Version="0.4.0" />
-    <PackageReference Include="GiGraph.Dot" Version="1.7.0" />
-    <PackageReference Include="HardwareInformation" Version="5.0.0" />
+    <PackageReference Include="GiGraph.Dot" Version="2.0.0" />
+    <PackageReference Include="HardwareInformation" Version="5.0.2" />
     <PackageReference Include="HPCsharp" Version="3.16.1" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.11.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.1.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
-    <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="2.1.3" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.1" />
+    <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="2.2.0" />
     <PackageReference Include="ObjectLayoutInspector" Version="0.1.2" />
-    <PackageReference Include="Prise" Version="2.1.2" />
-    <PackageReference Include="ReusableTasks" Version="2.0.0" />
-    <PackageReference Include="Roslynator.Analyzers" Version="3.2.2">
+    <PackageReference Include="Prise" Version="6.0.0" />
+    <PackageReference Include="ReusableTasks" Version="2.0.1" />
+    <PackageReference Include="Roslynator.Analyzers" Version="4.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="SecurityCodeScan.VS2019" Version="5.2.1">
+    <PackageReference Include="SecurityCodeScan.VS2019" Version="5.6.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -74,6 +73,7 @@
     <PackageReference Include="System.Runtime.Handles" Version="4.3.0" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
     <PackageReference Include="TrieNet.Core" Version="1.0.4" />
+    <PackageReference Include="ZCS.Utf8Json" Version="1.4.2" />
   </ItemGroup>
 
   <ItemGroup>

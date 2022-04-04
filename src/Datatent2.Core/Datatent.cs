@@ -11,6 +11,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using ConsoleTableExt;
 using Datatent2.Contracts;
+using Datatent2.Contracts.Scripting;
 using Datatent2.Core.Memory;
 using Datatent2.Core.Page;
 using Datatent2.Core.Services.Cache;
@@ -35,7 +36,7 @@ namespace Datatent2.Core
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger<Datatent> _logger;
         private IPluginLoader? _loader;
-        private IList<AssemblyScanResult>? _availablePlugins;
+        private List<AssemblyScanResult>? _availablePlugins;
         private PageService? _pageService;
         private DataService? _dataService;
         private CacheService _cacheService;
@@ -50,9 +51,18 @@ namespace Datatent2.Core
             _logger = loggerFactory.CreateLogger<Datatent>();
             _logger.LogInformation(Environment.NewLine + Figgle.FiggleFonts.Epic.Render("Datatent2"));
 
+            LogEnvironment();
 
+            _cacheService = new CacheService();
+        }
+
+        private void LogEnvironment()
+        {
             var infVersion = typeof(Datatent).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                 ?.InformationalVersion;
+
+            var infos = HardwareInformation.MachineInformationGatherer.GatherInformation(true);
+
             var tableData = new List<List<object>>()
             {
                 new List<object>{"Assembly", typeof(Datatent).Assembly.GetName().Version!.ToString()},
@@ -60,18 +70,17 @@ namespace Datatent2.Core
                 new List<object>{".Net Runtime", RuntimeInformation.FrameworkDescription },
                 new List<object>{ "Operating System", RuntimeInformation.OSDescription },
                 new List<object>{ "Architecture", RuntimeInformation.ProcessArchitecture.ToString()  },
-            };
 
-            var infos = HardwareInformation.MachineInformationGatherer.GatherInformation(false);
-            
+                new List<object>{ "CPU", infos.Cpu.Name },
+                new List<object>{ "CPU Features 1", infos.Cpu.FeatureFlagsOne },
+                new List<object>{ "CPU Features 2", infos.Cpu.FeatureFlagsTwo },
+            };
 
             var table = ConsoleTableBuilder
                 .From(tableData)
                 .WithColumn("Property", "Value").Export().ToString();
 
             _logger.LogInformation(table);
-         
-            _cacheService = new CacheService();
         }
 
         private async Task Init()
@@ -93,15 +102,20 @@ namespace Datatent2.Core
 
                     return null;
                 })).ConfigureAwait(false);
-
-            var nopCompressionService =
-                compressionPlugins.First(service => service?.Id == Constants.NopCompressionPluginId);
-
+            
             _transactionManager = new TransactionManager(_loggerFactory.CreateLogger("Transactions"));
 
             _pageService = await
-                PageService.Create(DiskService.Create(_datatentSettings, _loggerFactory.CreateLogger("DiskService")), _cacheService,
+                PageService.Create(_datatentSettings, DiskService.Create(_datatentSettings, _loggerFactory.CreateLogger("DiskService")), _cacheService,
                     _loggerFactory.CreateLogger<PageService>()).ConfigureAwait(false);
+
+            var nopCompressionService =
+              compressionPlugins.FirstOrDefault(service => service?.Id == _datatentSettings.Plugins.CompressionAlgorithm);
+
+            if (nopCompressionService == null)
+            {
+
+            }
 
             _dataService = new DataService(nopCompressionService!, _pageService, _transactionManager, _loggerFactory.CreateLogger<DataService>());
         }
@@ -121,8 +135,10 @@ namespace Datatent2.Core
             _logger.LogInformation($"Search plugins at {pathToDist}");
 
             _loader = serviceProvider.GetRequiredService<IPluginLoader>();
-
+            
             _availablePlugins = (await _loader.FindPlugins<ICompressionService>(pathToDist).ConfigureAwait(false)).ToList();
+            _availablePlugins.AddRange((await _loader.FindPlugins<IScriptingEngine>(pathToDist).ConfigureAwait(false)).ToList());
+            _availablePlugins.AddRange((await _loader.FindPlugins<IMultithreadedScriptingEngine>(pathToDist).ConfigureAwait(false)).ToList());
             _logger.LogInformation($"Found {_availablePlugins.Count} plugins");
         }
 

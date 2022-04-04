@@ -143,6 +143,6 @@ namespace Datatent2.Core.Memory
         /// The maximum size of the buffer pool for renting
         /// </summary>
         public sealed override int MaxBufferSize =>
-            (Constants.PAGE_SIZE * _datatentSettings!.EngineSettings.MaxPageCacheSize) + (Constants.PAGE_SIZE * _datatentSettings.IOSettings.MaxPageReadAheadCacheSize) + (Constants.PAGE_SIZE * 100);
+            (Constants.PAGE_SIZE * _datatentSettings!.Engine.MaxPageCacheSize) + (Constants.PAGE_SIZE * _datatentSettings.IO.MaxPageReadAheadCacheSize) + (Constants.PAGE_SIZE * 100);
     }
 }

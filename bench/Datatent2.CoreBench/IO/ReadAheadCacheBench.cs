@@ -85,11 +85,11 @@ namespace Datatent2.CoreBench.IO
             var settings = new DatatentSettings()
             {
                 BufferPoolImplementation = BufferPoolImplementation.Unmanaged,
-                IOSettings = new DatatentSettings.IO()
+                IOSettings = new DatatentSettings.IOSettings()
                 {                    
                     MaxPageReadAheadCacheSize = 8192
                 },
-                EngineSettings = new DatatentSettings.Engine()
+                EngineSettings = new DatatentSettings.EngineSettings()
                 {
                     MaxPageCacheSize = 64000
                 }

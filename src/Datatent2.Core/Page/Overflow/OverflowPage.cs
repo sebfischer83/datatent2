@@ -1,4 +1,5 @@
-﻿using Datatent2.Core.Memory;
+﻿using Datatent2.Contracts;
+using Datatent2.Core.Memory;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,8 @@ namespace Datatent2.Core.Page.Overflow
 {
     internal sealed class OverflowPage : BasePage
     {
+        public override ushort MaxFreeUsableBytes => FreeContinuousBytes;
+
         public OverflowPage(IBufferSegment buffer) : base(buffer)
         {
         }

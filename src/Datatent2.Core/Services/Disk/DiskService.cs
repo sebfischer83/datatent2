@@ -79,20 +79,20 @@ namespace Datatent2.Core.Services.Disk
         /// <returns></returns>
         public static DiskService Create(DatatentSettings settings, ILogger logger)
         {
-            if (settings.IOSettings.IOSystem == DatatentSettings.IOSystem.InMemory)
+            if (settings.IO.IOSystem == DatatentSettings.IOSystem.InMemory)
             {
                 return new InMemoryDiskService(new DatatentSettings());
             }
-            if (settings.IOSettings.IOSystem == DatatentSettings.IOSystem.FileStream)
+            if (settings.IO.IOSystem == DatatentSettings.IOSystem.FileStream)
             {
                 return (FileDiskService)(new(settings));
             }
-            if (settings.IOSettings.IOSystem == DatatentSettings.IOSystem.MemoryMappedFile)
+            if (settings.IO.IOSystem == DatatentSettings.IOSystem.MemoryMappedFile)
             {
                 return (MemoryMappedDiskService)(new(settings, logger));
             }
 
-            throw new ArgumentException(nameof(settings.IOSettings.IOSystem));
+            throw new ArgumentException(nameof(settings.IO.IOSystem));
         }
 
         /// <summary>
@@ -112,12 +112,12 @@ namespace Datatent2.Core.Services.Disk
             Stream = Stream.Null;
             Settings = settings;
             Logger = logger;
-            if (Settings.IOSettings.UseReadAheadCache)
+            if (Settings.IO.UseReadAheadCache)
             {
                 DiskPageCache = new DiskReadAheadPageCache(settings, logger);
             }
             _cacheSize = Constants.PAGE_SIZE * Constants.MAX_AMOUNT_OF_READ_AHEAD_PAGES;
-            _cacheBytes = new byte[Settings.IOSettings.UseReadAheadCache ? _cacheSize : 1];
+            _cacheBytes = new byte[Settings.IO.UseReadAheadCache ? _cacheSize : 1];
             ReadChannel = Channel.CreateBounded<ValueTuple<ReadRequest, TaskCompletionSource<ReadResponse>>>(
                 new BoundedChannelOptions(100)
                 {
@@ -151,7 +151,7 @@ namespace Datatent2.Core.Services.Disk
             {
                 while (reader.TryRead(out var item))
                 {
-                    var segment = Settings.IOSettings.UseReadAheadCache ? ReadPageBufferReadAheadCache(item.Item1.PageId) : ReadPageBuffer(item.Item1.PageId);
+                    var segment = Settings.IO.UseReadAheadCache ? ReadPageBufferReadAheadCache(item.Item1.PageId) : ReadPageBuffer(item.Item1.PageId);
                     ConcurrentDictionaryRead.TryRemove(item.Item1.PageId, out _);
                     item.Item2.SetResult(new ReadResponse(item.Item1.Id, segment, item.Item1.PageId));
                 }
