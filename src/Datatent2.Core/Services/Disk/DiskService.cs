@@ -81,7 +81,7 @@ namespace Datatent2.Core.Services.Disk
         {
             if (settings.IO.IOSystem == DatatentSettings.IOSystem.InMemory)
             {
-                return new InMemoryDiskService(new DatatentSettings());
+                return new InMemoryDiskService(settings);
             }
             if (settings.IO.IOSystem == DatatentSettings.IOSystem.FileStream)
             {

@@ -18,6 +18,6 @@ namespace Datatent2.Contracts.Scripting
         /// <typeparam name="T"></typeparam>
         /// <param name="objects"></param>
         /// <returns></returns>
-        List<ValueTuple<object, T>> Execute<T>(List<object> objects);
+        List<ValueTuple<object, object>> Execute(string script, List<object> objects);
     }
 }

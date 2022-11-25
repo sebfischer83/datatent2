@@ -8,7 +8,10 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Collections.Pooled;
+using Datatent2.Contracts;
 using Datatent2.Contracts.Exceptions;
+using Datatent2.Core.Block;
 using Datatent2.Core.Memory;
 using Datatent2.Core.Page;
 using Datatent2.Core.Page.AllocationInformation;
@@ -16,6 +19,7 @@ using Datatent2.Core.Page.Data;
 using Datatent2.Core.Page.GlobalAllocationMap;
 using Datatent2.Core.Page.Header;
 using Datatent2.Core.Page.Index;
+using Datatent2.Core.Page.Overflow;
 using Datatent2.Core.Page.Table;
 using Datatent2.Core.Services.Cache;
 using Datatent2.Core.Services.Disk;
@@ -46,7 +50,7 @@ namespace Datatent2.Core.Services.Page
 
         public PageService(DatatentSettings datatentSettings, DiskService diskService, CacheService cacheService, ILogger logger)
         {
-            _backgroundFlushTask = Task.Factory.StartNew(FlushBackgroundTaskMethodAsync, TaskCreationOptions.LongRunning);
+            _backgroundFlushTask = Task.Factory.StartNew(FlushBackgroundTaskMethodAsync, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
             _semaphoreSlim = new SemaphoreSlim(1, 1);
             _datatentSettings = datatentSettings;
             _diskService = diskService;
@@ -70,6 +74,97 @@ namespace Datatent2.Core.Services.Page
             }
         }
 
+        public async Task RefreshSettingsFromHeader(DatatentSettings datatentSettings)
+        {
+            if (_headerPage == null)
+                throw new InvalidEngineStateException($"{nameof(_headerPage)} can't be null!");
+
+            var content = await LoadHeaderContent();
+
+            datatentSettings.Plugins.CompressionAlgorithm = content.CompressionAlgo;
+
+        }
+
+        private async Task<HeaderContent> LoadHeaderContent()
+        {
+            if (_headerPage == null)
+                throw new InvalidEngineStateException($"{nameof(_headerPage)} can't be null!");
+
+            // buffer hat immer ein HeaderBlock als Inhalt
+            using (PooledList<byte> bytes = new(Constants.PAGE_SIZE, ClearMode.Never))
+            {
+                BasePage? page;
+                PageAddress address = new PageAddress(_headerPage.Id, 1);
+
+                page = _headerPage;
+                HeaderBlock headerBlock = new HeaderBlock(_headerPage, 1);
+                bytes.AddRange(headerBlock.GetData());
+                BlockHeader blockHeader = headerBlock.Header;
+
+                while (!blockHeader.NextBlockAddress.IsEmpty())
+                {
+                    var overflowPage = await GetPage<OverflowPage>(blockHeader.NextBlockAddress);
+                    if (overflowPage == null)
+                    {
+                        throw new InvalidPageException("GET", address.PageId);
+                    }
+
+                    OverflowBlock overflowBlock = new OverflowBlock(overflowPage, blockHeader.NextBlockAddress.SlotId);
+                    bytes.AddRange(overflowBlock.GetData());
+
+                    blockHeader = overflowBlock.Header;
+                }
+
+                return Utf8Json.JsonSerializer.Deserialize<HeaderContent>(bytes.ToArray());
+            }
+        }
+
+        public async Task UpdateHeaderFromSettings(DatatentSettings datatentSettings)
+        {
+            if (_headerPage == null)
+                throw new InvalidEngineStateException($"{nameof(_headerPage)} can't be null!");
+
+            var content = await LoadHeaderContent();
+
+            content.EncryptionAlgo = datatentSettings.Plugins.CompressionAlgorithm;
+
+
+        }
+
+        public async Task SaveHeaderContentAsync(HeaderContent headerContent)
+        {
+            if (_headerPage == null)
+                throw new InvalidEngineStateException($"{nameof(_headerPage)} can't be null!");
+
+            // get all addresses from the header and delete the old data
+            BasePage? page;
+            PageAddress address = new PageAddress(_headerPage.Id, 1);
+
+            page = _headerPage;
+            HeaderBlock headerBlock = new HeaderBlock(_headerPage, 1);
+            bytes.AddRange(headerBlock.GetData());
+            BlockHeader blockHeader = headerBlock.Header;
+            page.Delete(1);
+
+            while (!blockHeader.NextBlockAddress.IsEmpty())
+            {
+                var overflowPage = await GetPage<OverflowPage>(blockHeader.NextBlockAddress);
+                if (overflowPage == null)
+                {
+                    throw new InvalidPageException("GET", address.PageId);
+                }
+
+                OverflowBlock overflowBlock = new OverflowBlock(overflowPage, blockHeader.NextBlockAddress.SlotId);
+                overflowPage.Delete(overflowBlock.Position.SlotId);
+                await UpdatePageStatistics(overflowPage).ConfigureAwait(false);
+
+                blockHeader = overflowBlock.Header;
+            }
+
+            // now save the new data
+
+        }
+
         /// <summary>
         /// Creates needed pages if this is a new database or load the needed pages from disk
         /// </summary>
@@ -78,10 +173,10 @@ namespace Datatent2.Core.Services.Page
             using var scope = _logger.BeginScope($"Init {nameof(PageService)}");
             // create the first GAM page => only when new database
             var firstGamBuffer = await _diskService.GetBuffer(new ReadRequest(1)).ConfigureAwait(false);
-            var header = PageHeader.FromBuffer(firstGamBuffer.BufferSegment.Span);
-            _logger.LogDebug($"First GAM has id of {header.PageId}");
+            var gamHeader = PageHeader.FromBuffer(firstGamBuffer.BufferSegment.Span);
+            _logger.LogDebug($"First GAM has id of {gamHeader.PageId}");
 
-            if (header.PageId == 0)
+            if (gamHeader.PageId == 0)
             {
                 _logger.LogInformation($"New database, create first GAM and AIM page");
 
@@ -89,6 +184,7 @@ namespace Datatent2.Core.Services.Page
                 var headerPageBuffer = await _diskService.GetBuffer(new ReadRequest(0)).ConfigureAwait(false);
                 _headerPage = HeaderPage.CreateHeaderPage(headerPageBuffer.BufferSegment);
                 _cacheService.Add(_headerPage);
+                await UpdateHeaderFromSettings(_datatentSettings);
 
                 _globalAllocationMap = new GlobalAllocationMapPage(firstGamBuffer.BufferSegment, 1);
                 _cacheService.Add(_globalAllocationMap);
@@ -97,25 +193,26 @@ namespace Datatent2.Core.Services.Page
                 var newInfo = await _diskService.GetBuffer(new ReadRequest(nextId)).ConfigureAwait(false);
                 _allocationInformationPage = new AllocationInformationPage(newInfo.BufferSegment, nextId);
                 _cacheService.Add(_allocationInformationPage);
-
             }
             else
             {
                 _logger.LogInformation($"Existing database found");
                 _headerPage = HeaderPage.CreateHeaderPage((await _diskService.GetBuffer(new ReadRequest(0))).BufferSegment);
+                // read header data
+                await RefreshSettingsFromHeader(_datatentSettings);
+
                 _cacheService.Add(_headerPage);
 
                 // existing database, search last GAM page in database
-                while (header.NextPageId != uint.MaxValue)
+                while (gamHeader.NextPageId != uint.MaxValue)
                 {
-                    var res = await _diskService.GetBuffer(new ReadRequest(header.NextPageId)).ConfigureAwait(false);
-                    header = PageHeader.FromBuffer(res.BufferSegment.Span);
+                    var res = await _diskService.GetBuffer(new ReadRequest(gamHeader.NextPageId)).ConfigureAwait(false);
+                    gamHeader = PageHeader.FromBuffer(res.BufferSegment.Span);
                 }
-                _logger.LogDebug($"Last GAM found at id {header.PageId}");
-                var gamBuffer = await _diskService.GetBuffer(new ReadRequest(header.PageId)).ConfigureAwait(false);
+                _logger.LogDebug($"Last GAM found at id {gamHeader.PageId}");
+                var gamBuffer = await _diskService.GetBuffer(new ReadRequest(gamHeader.PageId)).ConfigureAwait(false);
                 _globalAllocationMap = new GlobalAllocationMapPage(gamBuffer.BufferSegment);
                 _cacheService.Add(_globalAllocationMap);
-
 
                 // get all possible indexes for the aim pages
                 var possibleIndexes =
@@ -142,6 +239,11 @@ namespace Datatent2.Core.Services.Page
             var bytes = Utf8Json.JsonSerializer.Serialize(headerPageData, Utf8Json.Resolvers.StandardResolver.AllowPrivate);
 
 
+        }
+
+        public async ValueTask<T?> GetPage<T>(PageAddress address) where T : BasePage
+        {
+            return await GetPage<T>(address.PageId).ConfigureAwait(false);
         }
 
         public async ValueTask<T?> GetPage<T>(uint id) where T : BasePage

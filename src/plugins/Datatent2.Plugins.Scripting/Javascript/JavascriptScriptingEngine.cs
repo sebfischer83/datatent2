@@ -20,38 +20,28 @@ namespace Datatent2.Plugins.Scripting.Javascript
     [Plugin(PluginType = typeof(IScriptingEngine))]
     public class JavascriptScriptingEngine : IScriptingEngine
     {
-        private readonly string _script;
         private readonly Engine _engine;
 
         /// <summary>
         /// Ctor
         /// </summary>
         /// <param name="script"></param>
-        public JavascriptScriptingEngine(string script)
+        public JavascriptScriptingEngine()
         {
-            _script = script;
             _engine = new Engine();
         }
 
         /// <inheritdoc />
         public string Name => "Jint";
 
-        private static readonly Guid ID = Guid.Parse("4cdf32fc-eee4-48b6-bfab-4ab0b26bfe40");
+        /// <inheritdoc />
+        public Guid Id => Guid.Parse("4cdf32fc-eee4-48b6-bfab-4ab0b26bfe40");
 
         /// <inheritdoc />
-        public Guid Id => ID;
-
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            // engine need no dispose
-        }
-
-        /// <inheritdoc />
-        public T Execute<T>(object obj)
+        public object Execute(string script, object obj)
         {
             _engine.SetValue("dataObject", obj);
-            return (T)_engine.Execute(_script).GetValue("res").ToObject();
+            return _engine.Execute(script).GetValue("res").ToObject();
         }
     }
 }

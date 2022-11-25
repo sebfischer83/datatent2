@@ -14,7 +14,6 @@ using Datatent2.Core.Page.AllocationInformation;
 using Datatent2.Core.Services.Data;
 using Datatent2.Core.Services.Disk;
 using Datatent2.Core.Services.Page;
-using Datatent2.Plugins.Compression;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Serilog;

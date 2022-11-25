@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31004.235
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32317.152
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Datatent2.Core", "src\Datatent2.Core\Datatent2.Core.csproj", "{274A0E92-50BE-42D4-A957-E7FDAF3A7FE9}"
 EndProject
@@ -21,6 +21,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "build\_build.cspr
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9D4B3B79-B07E-4F70-89F4-E911ABF68836}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		CHANGELOG.md = CHANGELOG.md
 		GitVersion.yml = GitVersion.yml
 		LICENSE.txt = LICENSE.txt

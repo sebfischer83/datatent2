@@ -7,7 +7,6 @@ using Advanced.Algorithms.Distributed;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Engines;
 using BenchmarkDotNet.Order;
-using HPCsharp;
 
 namespace Datatent2.AlgoBench.Sort
 {
@@ -67,81 +66,81 @@ namespace Datatent2.AlgoBench.Sort
             return _array.Length;
         }
 
-        [Benchmark(Baseline = false)]
-        public int CountingSort()
-        {
-            var sorted = _array.SortCounting();
-            return sorted.Length;
-        }
+        //[Benchmark(Baseline = false)]
+        //public int CountingSort()
+        //{
+        //    var sorted = _array.SortCounting();
+        //    return sorted.Length;
+        //}
 
-        [Benchmark(Baseline = false)]
-        public int CountingSortInPlace()
-        {
-            _array.SortCountingInPlace();
-            return _array.Length;
-        }
+        //[Benchmark(Baseline = false)]
+        //public int CountingSortInPlace()
+        //{
+        //    _array.SortCountingInPlace();
+        //    return _array.Length;
+        //}
 
-        [Benchmark(Baseline = false)]
-        public int MergeSort()
-        {
-            var sorted = _array.SortMerge();
-            return sorted.Length;
-        }
+        //[Benchmark(Baseline = false)]
+        //public int MergeSort()
+        //{
+        //    var sorted = _array.SortMerge();
+        //    return sorted.Length;
+        //}
 
-        [Benchmark(Baseline = false)]
-        public int SortMergeHybridWithRadixPar()
-        {
-            _array.SortMergeHybridWithRadixPar(s => (uint)s);
-            return _array.Length;
-        }
+        //[Benchmark(Baseline = false)]
+        //public int SortMergeHybridWithRadixPar()
+        //{
+        //    _array.SortMergeHybridWithRadixPar(s => (uint)s);
+        //    return _array.Length;
+        //}
 
-        [Benchmark(Baseline = false)]
-        public int SortMergeInPlace()
-        {
-            _array.SortMergeInPlace();
-            return _array.Length;
-        }
+        //[Benchmark(Baseline = false)]
+        //public int SortMergeInPlace()
+        //{
+        //    _array.SortMergeInPlace();
+        //    return _array.Length;
+        //}
 
-        [Benchmark(Baseline = false)]
-        public int SortMergeInPlacePar()
-        {
-            _array.SortMergeInPlacePar();
-            return _array.Length;
-        }
+        //[Benchmark(Baseline = false)]
+        //public int SortMergeInPlacePar()
+        //{
+        //    _array.SortMergeInPlacePar();
+        //    return _array.Length;
+        //}
 
-        [Benchmark(Baseline = false)]
-        public int SortMergeInPlacePurePar()
-        {
-            _array.SortMergeInPlacePurePar();
-            return _array.Length;
-        }
+        //[Benchmark(Baseline = false)]
+        //public int SortMergeInPlacePurePar()
+        //{
+        //    _array.SortMergeInPlacePurePar();
+        //    return _array.Length;
+        //}
 
-        [Benchmark(Baseline = false)]
-        public int SortMergeInPlaceStablePar()
-        {
-            _array.SortMergeInPlaceStablePar();
-            return _array.Length;
-        }
+        //[Benchmark(Baseline = false)]
+        //public int SortMergeInPlaceStablePar()
+        //{
+        //    _array.SortMergeInPlaceStablePar();
+        //    return _array.Length;
+        //}
 
-        [Benchmark(Baseline = false)]
-        public int SortMergeStablePar()
-        {
-            var sorted = _array.SortMergeStablePar();
-            return sorted.Length;
-        }
+        //[Benchmark(Baseline = false)]
+        //public int SortMergeStablePar()
+        //{
+        //    var sorted = _array.SortMergeStablePar();
+        //    return sorted.Length;
+        //}
 
-        [Benchmark(Baseline = false)]
-        public int SortRadixFasterNew()
-        {
-            var sorted = _array.SortRadixFasterNew(s => (uint) s);
-            return sorted.Length;
-        }
+        //[Benchmark(Baseline = false)]
+        //public int SortRadixFasterNew()
+        //{
+        //    var sorted = _array.SortRadixFasterNew(s => (uint) s);
+        //    return sorted.Length;
+        //}
 
-        [Benchmark(Baseline = false)]
-        public int SortRadixMsd()
-        {
-            _array.SortRadixMsd();
-            return _array.Length;
-        }
+        //[Benchmark(Baseline = false)]
+        //public int SortRadixMsd()
+        //{
+        //    _array.SortRadixMsd();
+        //    return _array.Length;
+        //}
     }
 }

@@ -24,12 +24,12 @@ namespace Datatent2.Plugins.Tests.Scripting
             testClass.BoolProp = true;
             string luaScript = "res = dataObject.BoolProp";
 
-            LuaScriptingEngine luaScriptingEngine = new LuaScriptingEngine(luaScript);
+            LuaScriptingEngine luaScriptingEngine = new LuaScriptingEngine();
 
-            luaScriptingEngine.Execute<bool>(testClass).ShouldBeTrue();
+            ((bool)luaScriptingEngine.Execute(luaScript, testClass)).ShouldBeTrue();
 
             testClass.BoolProp = false;
-            luaScriptingEngine.Execute<bool>(testClass).ShouldBeFalse();
+            ((bool)luaScriptingEngine.Execute(luaScript, testClass)).ShouldBeFalse();
         }
     }
 }

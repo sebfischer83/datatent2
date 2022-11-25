@@ -64,32 +64,34 @@ namespace Datatent2.Core.Services.Data
 #if DEBUG
             _logger.LogInformation($"Get object {typeof(T)} at {pageAddress}");
 #endif
-            Collections.Pooled.PooledList<byte> bytes = new PooledList<byte>(Constants.PAGE_SIZE, ClearMode.Never);
-            DataPage? page;
-            DataBlock block;
-            PageAddress address = pageAddress;
-            uint checksum = 0;
-
-            do
+            using (PooledList<byte> bytes = new PooledList<byte>(Constants.PAGE_SIZE, ClearMode.Never))
             {
-                page = await _pageService.GetPage<DataPage>(address.PageId).ConfigureAwait(false);
-                if (page == null)
-                {
-                    throw new InvalidPageException("GET", address.PageId);
-                }
-                block = new DataBlock(page, address.SlotId);
-                bytes.AddRange(block.GetData());
-                address = block.Header.NextBlockAddress;
-            } while (!block.Header.NextBlockAddress.IsEmpty());
+                DataPage? page;
+                DataBlock block;
+                PageAddress address = pageAddress;
+                uint checksum = 0;
 
-            var array = bytes.Take(bytes.Count - sizeof(uint)).ToArray();
-            var check = bytes.Skip(bytes.Count - sizeof(uint)).ToArray();
-            checksum = BitConverter.ToUInt32(check);
+                do
+                {
+                    page = await _pageService.GetPage<DataPage>(address.PageId).ConfigureAwait(false);
+                    if (page == null)
+                    {
+                        throw new InvalidPageException("GET", address.PageId);
+                    }
+                    block = new DataBlock(page, address.SlotId);
+                    bytes.AddRange(block.GetData());
+                    address = block.Header.NextBlockAddress;
+                } while (!block.Header.NextBlockAddress.IsEmpty());
+
+                var array = bytes.Take(bytes.Count - sizeof(uint)).ToArray();
+                var check = bytes.Skip(bytes.Count - sizeof(uint)).ToArray();
+                checksum = BitConverter.ToUInt32(check);
 #if DEBUG
-            _logger.LogInformation($"Object at {pageAddress} has length of {array.Length} bytes");
+                _logger.LogInformation($"Object at {pageAddress} has length of {array.Length} bytes");
 #endif
 
-            return RetrieveObject<T>(array, checksum);
+                return RetrieveObject<T>(array, checksum);
+            }
         }
 
         public async Task<List<(object, PageAddress)>> BulkInsert(IList<object> objects)

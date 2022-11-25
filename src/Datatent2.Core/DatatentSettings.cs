@@ -2,6 +2,8 @@
 // # Copyright 2021
 // # Sebastian Fischer sebfischer@gmx.net
 
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -71,6 +73,32 @@ namespace Datatent2.Core
             FileStream,
             RandomAccess,
             MemoryMappedFile
+        }
+    }
+
+    internal class TriggerSettings
+    {
+        private Dictionary<string, Dictionary<TriggerType, TriggerDefinition>> _triggers = new();
+    }
+
+    internal enum TriggerType
+    {
+        Insert = 1
+    }
+
+    internal class TriggerDefinition
+    {
+        public TriggerType Type { get; set; }
+
+        public Guid TriggerEngine { get; set; }
+
+        public string Command { get; set; }
+
+        public TriggerDefinition(TriggerType triggerType, Guid triggerEngine, string command)
+        {
+            Type = triggerType;
+            TriggerEngine = triggerEngine;
+            Command = command;
         }
     }
 }

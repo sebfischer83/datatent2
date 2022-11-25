@@ -9,12 +9,10 @@ using System.Text;
 using Datatent2.Contracts;
 using Datatent2.Core.Memory;
 using Datatent2.Core.Page.Data;
-using Datatent2.Core.Page.Data;
 using Datatent2.Core.Page.Index;
 using Datatent2.Core.Page.Table;
 using Datatent2.Core.Services.Transactions;
 using Dawn;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Datatent2.Core.Page
 {
@@ -111,6 +109,16 @@ namespace Datatent2.Core.Page
             Header = pageHeader;
             IsDirty = true;
         }
+
+        //public virtual void WriteUnslotted(Span<byte> data)
+        //{
+        //    if (data.Length > MaxFreeUsableBytes)
+        //        throw new ArgumentOutOfRangeException(nameof(data));
+
+        //    var span = Buffer.Span;
+        //    span.WriteBytes(Constants.PAGE_HEADER_SIZE, data);
+
+        //}
 
         public bool IsInsertPossible(ushort length)
         {
@@ -566,7 +574,11 @@ namespace Datatent2.Core.Page
 
         public override bool Equals(object? obj)
         {
-            return Equals(obj as BasePage);
+            var page = obj as BasePage;
+            if (page == null)
+                return false;
+
+            return Equals(page);
         }
 
         public bool Equals(BasePage? other)

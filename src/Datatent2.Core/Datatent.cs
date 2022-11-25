@@ -11,6 +11,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using ConsoleTableExt;
 using Datatent2.Contracts;
+using Datatent2.Contracts.Exceptions;
 using Datatent2.Contracts.Scripting;
 using Datatent2.Core.Memory;
 using Datatent2.Core.Page;
@@ -90,9 +91,10 @@ namespace Datatent2.Core
             var compressionPlugins = await Task.WhenAll(
                 _availablePlugins!.Select(async result =>
                 {
-                    _logger.LogInformation($"Plugin {result.PluginType.Name} ({result.ContractType.Name}) found");
                     if (result.ContractType == typeof(ICompressionService))
                     {
+                        _logger.LogInformation($"Plugin {result.PluginType.Name} ({result.ContractType.Name}) found");
+
                         var x = await _loader!.LoadPlugin<ICompressionService>(result, configure: (context) =>
                         {
                             context.IgnorePlatformInconsistencies = true;
@@ -102,22 +104,52 @@ namespace Datatent2.Core
 
                     return null;
                 })).ConfigureAwait(false);
-            
+
+            var scriptingEngines = await Task.WhenAll(
+                _availablePlugins!.Select(async result =>
+                {
+                    if (result.ContractType == typeof(IMultithreadedScriptingEngine))
+                    {
+                        _logger.LogInformation($"Plugin {result.PluginType.Name} ({result.ContractType.Name}) found");
+
+                        var x = await _loader!.LoadPlugin<IMultithreadedScriptingEngine>(result, configure: (context) =>
+                        {
+                            context.IgnorePlatformInconsistencies = true;
+                            
+                        }).ConfigureAwait(false);
+                        return (IScriptingEngine) x;
+                    }
+
+                    if (result.ContractType == typeof(IScriptingEngine))
+                    {
+                        _logger.LogInformation($"Plugin {result.PluginType.Name} ({result.ContractType.Name}) found");
+
+                        var x = await _loader!.LoadPlugin<IScriptingEngine>(result, configure: (context) =>
+                        {
+                            context.IgnorePlatformInconsistencies = true;
+
+                        }).ConfigureAwait(false);
+                        return x;
+                    }
+
+                    return null;
+                })).ConfigureAwait(false);
+
             _transactionManager = new TransactionManager(_loggerFactory.CreateLogger("Transactions"));
 
             _pageService = await
                 PageService.Create(_datatentSettings, DiskService.Create(_datatentSettings, _loggerFactory.CreateLogger("DiskService")), _cacheService,
                     _loggerFactory.CreateLogger<PageService>()).ConfigureAwait(false);
 
-            var nopCompressionService =
+            var compressionService =
               compressionPlugins.FirstOrDefault(service => service?.Id == _datatentSettings.Plugins.CompressionAlgorithm);
 
-            if (nopCompressionService == null)
+            if (compressionService == null)
             {
-
+                throw new InvalidEngineStateException($"Missing plugin with id {_datatentSettings.Plugins.CompressionAlgorithm} as compression service.");
             }
 
-            _dataService = new DataService(nopCompressionService!, _pageService, _transactionManager, _loggerFactory.CreateLogger<DataService>());
+            _dataService = new DataService(compressionService!, _pageService, _transactionManager, _loggerFactory.CreateLogger<DataService>());
         }
 
         private async Task LoadPlugins()
@@ -140,6 +172,15 @@ namespace Datatent2.Core
             _availablePlugins.AddRange((await _loader.FindPlugins<IScriptingEngine>(pathToDist).ConfigureAwait(false)).ToList());
             _availablePlugins.AddRange((await _loader.FindPlugins<IMultithreadedScriptingEngine>(pathToDist).ConfigureAwait(false)).ToList());
             _logger.LogInformation($"Found {_availablePlugins.Count} plugins");
+        }
+
+        public void GetAvailableScriptingEngines()
+        {
+            var scriptingEngines = _availablePlugins?.Where(t => t.ContractType.IsAssignableFrom(typeof(IScriptingEngine))).ToList();
+            if (scriptingEngines != null)
+            {
+                //scriptingEngines[0]
+            }
         }
 
         public static async Task<Datatent> Create(DatatentSettings datatentSettings, ILoggerFactory loggerFactory)

@@ -22,7 +22,6 @@ using GiGraph.Dot.Types.Edges;
 using GiGraph.Dot.Types.Layout;
 using GiGraph.Dot.Types.Nodes;
 using GiGraph.Dot.Types.Records;
-using HPCsharp;
 using Microsoft.Extensions.Logging;
 using Exception = System.Exception;
 

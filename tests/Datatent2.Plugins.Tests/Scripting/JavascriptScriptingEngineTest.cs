@@ -24,12 +24,12 @@ namespace Datatent2.Plugins.Tests.Scripting
             testClass.BoolProp = true;
             string jsScript = "res = dataObject.BoolProp";
 
-            JavascriptScriptingEngine scriptingEngine = new JavascriptScriptingEngine(jsScript);
+            JavascriptScriptingEngine scriptingEngine = new JavascriptScriptingEngine();
 
-            scriptingEngine.Execute<bool>(testClass).ShouldBeTrue();
+            ((bool)scriptingEngine.Execute(jsScript, testClass)).ShouldBeTrue();
 
             testClass.BoolProp = false;
-            scriptingEngine.Execute<bool>(testClass).ShouldBeFalse();
+            ((bool)scriptingEngine.Execute(jsScript, testClass)).ShouldBeFalse();
         }
     }
 }

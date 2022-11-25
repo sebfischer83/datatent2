@@ -8,36 +8,33 @@ using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using Prise.Plugin;
 using System;
+using System.Reflection;
 
 namespace Datatent2.Plugins.Scripting.Csharp
 {
-    [Plugin(PluginType = typeof(IScriptingEngine))]
-    public class CsharpScriptingEngine : IScriptingEngine
-    {
-        private readonly string _script;
-        private readonly Script<object> _engine;
+    //[Plugin(PluginType = typeof(IScriptingEngine))]
+    //public class CsharpScriptingEngine : IScriptingEngine
+    //{
+    //    private Assembly _asm;
+    //    private Assembly _asmCsharp;
+        
+    //    public CsharpScriptingEngine()
+    //    {
+    //        _asm = typeof(Globals).Assembly;
+    //        _asmCsharp = typeof(Microsoft.CSharp.RuntimeBinder.Binder).Assembly;
+    //    }
 
-        public CsharpScriptingEngine(string script)
-        {
-            var asm = typeof(Globals).Assembly;
-            var asmCsharp = typeof(Microsoft.CSharp.RuntimeBinder.Binder).Assembly;
-            _script = script;
-            _engine = CSharpScript.Create(script, ScriptOptions.Default.WithReferences(asm, asmCsharp), globalsType: typeof(Globals));
-        }
+    //    public string Name => "CSharp";
 
-        public string Name => throw new NotImplementedException();
+    //    public Guid Id => Guid.Parse("8d94c4fb-8c75-421d-bb36-5cb6e91dd2f1");
 
-        private static Guid ID = Guid.Parse("8d94c4fb-8c75-421d-bb36-5cb6e91dd2f1");
+    //    public void Dispose()
+    //    {
+    //    }
 
-        public Guid Id => ID;
-
-        public void Dispose()
-        {
-        }
-
-        public T Execute<T>(object obj)
-        {
-            return (T)_engine.RunAsync(new Globals(new DataObjectCSharpScriptWrapper(obj))).Result.ReturnValue;
-        }
-    }
+    //    public object Execute(string script, object obj)
+    //    {
+    //        return CSharpScript.EvaluateAsync(script, ScriptOptions.Default.WithReferences(_asm, _asmCsharp), new Globals(new DataObjectCSharpScriptWrapper(obj))).Result;
+    //    }
+    //}
 }

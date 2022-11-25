@@ -20,61 +20,50 @@ namespace Datatent2.Plugins.Scripting. Lua
     [Plugin(PluginType = typeof(IMultithreadedScriptingEngine))]
     public class LuaScriptingEngine : IMultithreadedScriptingEngine
     {
-        private readonly string _script;
-
         /// <inheritdoc />
         public string Name => "NLua";
 
-        private static readonly Guid ID = Guid.Parse("0e022cd2-3a12-4ae5-9bb4-d45f16d17869");
-
         /// <inheritdoc />
-        public Guid Id => ID;
+        public Guid Id => Guid.Parse("0e022cd2-3a12-4ae5-9bb4-d45f16d17869");
 
         /// <summary>
         /// Ctor
         /// </summary>
         /// <param name="script"></param>
-        public LuaScriptingEngine(string script)
+        public LuaScriptingEngine()
         {
-            _script = script;
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T Execute<T>(object obj)
+        public object Execute(string script, object obj)
         {
             using var lua = new NLua.Lua();
             lua["dataObject"] = obj;
-            lua.DoString(_script);
-            return (T)lua.GetObjectFromPath("res");
+            lua.DoString(script);
+            return lua.GetObjectFromPath("res");
         }
 
         /// <inheritdoc />
-        public List<ValueTuple<object, T>> Execute<T>(List<object> objects)
+        public List<ValueTuple<object, object>> Execute(string script, List<object> objects)
         {
-            var list = new List<ValueTuple<object, T>>(objects.Count);
+            var list = new List<ValueTuple<object, object>>(objects.Count);
             if (objects.Count > 100)
             {
                 Parallel.For(0, objects.Count, i =>
                 {
-                    list.Add((objects[i], Execute<T>(objects[i])));
+                    list.Add((objects[i], Execute(script, objects[i])));
                 });
             }
             else
             {
                 for (int i = 0; i < objects.Count; i++)
                 {
-                    list.Add((objects[i], Execute<T>(objects[i])));
+                    list.Add((objects[i], Execute(script, objects[i])));
                 }
             }
 
             return list;
-        }
-
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            // nothing to do here, lua engine is always created... because otherwise it shows a very poor performance
         }
     }
 }

@@ -10,8 +10,9 @@ namespace Datatent2.Core.Page.Header
     {
         public Guid CompressionAlgo { get; set; }
 
-        public Guid EncryptionAlgo
-        { get; set; }
+        public Guid EncryptionAlgo { get; set; }
+
+
 
         public HeaderContent()
         {

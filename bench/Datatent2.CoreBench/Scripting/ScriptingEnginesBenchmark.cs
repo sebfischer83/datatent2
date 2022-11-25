@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Order;
 using Bogus;
-using Datatent2.Plugins.Scripting.Csharp;
+//using Datatent2.Plugins.Scripting.Csharp;
 using Datatent2.Plugins.Scripting.Javascript;
 using Datatent2.Plugins.Scripting.Lua;
 
@@ -34,14 +34,14 @@ namespace Datatent2.CoreBench.Scripting
 
         private LuaScriptingEngine _luaScriptingEngine;
         private JavascriptScriptingEngine _jsScriptingEngine;
-        private CsharpScriptingEngine _csharpScriptingEngine;
+        //private CsharpScriptingEngine _csharpScriptingEngine;
 
         [GlobalSetup()]
         public void GlobalSetup()
         {
-            _luaScriptingEngine = new LuaScriptingEngine("res = dataObject.BoolProp");
-            _jsScriptingEngine = new JavascriptScriptingEngine("res = dataObject.BoolProp");
-            _csharpScriptingEngine = new CsharpScriptingEngine("return DataObject.BoolProp;");
+            _luaScriptingEngine = new LuaScriptingEngine();
+            _jsScriptingEngine = new JavascriptScriptingEngine();
+            //_csharpScriptingEngine = new CsharpScriptingEngine();
 
             var bogus = new Randomizer();
             _testClasses = new TestClass[Size];
@@ -55,56 +55,56 @@ namespace Datatent2.CoreBench.Scripting
             }
         }
 
-        [Benchmark(OperationsPerInvoke = 256)]
-        public int NLua()
-        {
-            int a = 0;
-            for (int i = 0; i < Size; i++)
-            {
-                var b = _luaScriptingEngine.Execute<bool>(_testClasses[i]);
-                a += b ? 1 : 0;
-            }
+        //[Benchmark(OperationsPerInvoke = 256)]
+        //public int NLua()
+        //{
+        //    int a = 0;
+        //    for (int i = 0; i < Size; i++)
+        //    {
+        //        var b = _luaScriptingEngine.Execute<bool>("res = dataObject.BoolProp", _testClasses[i]);
+        //        a += b ? 1 : 0;
+        //    }
 
-            return a;
-        }
+        //    return a;
+        //}
 
-        [Benchmark(OperationsPerInvoke = 256)]
-        public int NLuaParallel()
-        {
-            int a = 0;
-            var res =_luaScriptingEngine.Execute<bool>(new List<object>(_testClasses));
-            for (int i = 0; i < res.Count; i++)
-            {
-                a += res[i].Item2 ? 1 : 0;
-            }
+        //[Benchmark(OperationsPerInvoke = 256)]
+        //public int NLuaParallel()
+        //{
+        //    int a = 0;
+        //    var res =_luaScriptingEngine.Execute<bool>("res = dataObject.BoolProp", new List<object>(_testClasses));
+        //    for (int i = 0; i < res.Count; i++)
+        //    {
+        //        a += res[i].Item2 ? 1 : 0;
+        //    }
 
-            return a;
-        }
+        //    return a;
+        //}
 
-        [Benchmark(OperationsPerInvoke = 256)]
-        public int Jint()
-        {
-            int a = 0;
-            for (int i = 0; i < Size; i++)
-            {
-                var b = _jsScriptingEngine.Execute<bool>(_testClasses[i]);
-                a += b ? 1 : 0;
-            }
+        //[Benchmark(OperationsPerInvoke = 256)]
+        //public int Jint()
+        //{
+        //    int a = 0;
+        //    for (int i = 0; i < Size; i++)
+        //    {
+        //        var b = _jsScriptingEngine.Execute<bool>("res = dataObject.BoolProp", _testClasses[i]);
+        //        a += b ? 1 : 0;
+        //    }
 
-            return a;
-        }
+        //    return a;
+        //}
 
-        [Benchmark(OperationsPerInvoke = 256)]
-        public int Csharp()
-        {
-            int a = 0;
-            for (int i = 0; i < Size; i++)
-            {
-                var b = _csharpScriptingEngine.Execute<bool>(_testClasses[i]);
-                a += b ? 1 : 0;
-            }
+        //[Benchmark(OperationsPerInvoke = 256)]
+        //public int Csharp()
+        //{
+        //    int a = 0;
+        //    for (int i = 0; i < Size; i++)
+        //    {
+        //        var b = _csharpScriptingEngine.Execute<bool>("return DataObject.BoolProp;", _testClasses[i]);
+        //        a += b ? 1 : 0;
+        //    }
 
-            return a;
-        }
+        //    return a;
+        //}
     }
 }

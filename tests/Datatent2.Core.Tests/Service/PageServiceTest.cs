@@ -27,7 +27,7 @@ namespace Datatent2.Core.Tests.Service
         public async void Subsequent_GetDataPageWithFreeSpace_Call_Test()
         {
             using BufferSegment headerBufferSegment = new BufferSegment(Constants.PAGE_SIZE);
-            var headerPage = HeaderPage.CreateHeaderPage(headerBufferSegment, new DatatentSettings());
+            var headerPage = HeaderPage.CreateHeaderPage(headerBufferSegment);
 
             using BufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
             PageHeader header = new PageHeader(2, PageType.Data);

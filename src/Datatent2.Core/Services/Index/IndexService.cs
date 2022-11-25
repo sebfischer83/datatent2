@@ -14,7 +14,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Datatent2.Core.Services.Index
 {
-    internal abstract class IndexService
+    internal abstract class IndexService : IDisposable
     {
         protected readonly SemaphoreSlim SemaphoreSlim = new SemaphoreSlim(1, 1);
         public uint PageIndex => FirstPageIndex;
@@ -90,6 +90,11 @@ namespace Datatent2.Core.Services.Index
         public override string ToString()
         {
             return $"{Enum.GetName(typeof(IndexType), Type)}:{PageIndex}";
+        }
+
+        public void Dispose()
+        {
+            SemaphoreSlim?.Dispose();
         }
     }
 

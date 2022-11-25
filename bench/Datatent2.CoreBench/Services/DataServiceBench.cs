@@ -31,25 +31,25 @@ namespace Datatent2.CoreBench.Services
         public void Setup()
         {
             var bogus = new Bogus.Randomizer();
-            BufferSegment headerBufferSegment = new BufferSegment(Constants.PAGE_SIZE);
-            var headerPage = HeaderPage.CreateHeaderPage(headerBufferSegment);
-            BufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
-            PageHeader header = new PageHeader(1, PageType.Data);
-            header.ToBuffer(bufferSegment.Span, 0);
-            File.Delete(@"C:\Neuer Ordner\test.db");
-            CacheService cacheService = new CacheService();
-            TransactionManager transactionManager = new TransactionManager(NullLogger.Instance);
-            PageService pageService = new PageService(DiskService.Create(new DatatentSettings() { DatabasePath = @"C:\Neuer Ordner\test.db" }, NullLogger.Instance), cacheService, NullLogger.Instance);
-            _dataService = new DataService(new NopCompressionService(), pageService, transactionManager, NullLogger<DataService>.Instance);
+            //BufferSegment headerBufferSegment = new BufferSegment(Constants.PAGE_SIZE);
+            //var headerPage = HeaderPage.CreateHeaderPage(headerBufferSegment);
+            //BufferSegment bufferSegment = new BufferSegment(Constants.PAGE_SIZE);
+            //PageHeader header = new PageHeader(1, PageType.Data);
+            //header.ToBuffer(bufferSegment.Span, 0);
+            //File.Delete(@"C:\Neuer Ordner\test.db");
+            //CacheService cacheService = new CacheService();
+            //TransactionManager transactionManager = new TransactionManager(NullLogger.Instance);
+            //PageService pageService = new PageService(DiskService.Create(new DatatentSettings() { DatabasePath = @"C:\Neuer Ordner\test.db" }, NullLogger.Instance), DiskService.Create(new DatatentSettings(), NullLogger.Instance), cacheService, NullLogger.Instance);
+            //_dataService = new DataService(new NopCompressionService(), pageService, transactionManager, NullLogger<DataService>.Instance);
 
-            _objects = new List<TestObject>(50);
-            foreach (var i in Enumerable.Range(0, 50))
-            {
-                TestObject testObject = new TestObject();
-                testObject.IntProp = bogus.Int();
-                testObject.StringProp = bogus.String2(1000);
-                _objects.Add(testObject);
-            }
+            //_objects = new List<TestObject>(50);
+            //foreach (var i in Enumerable.Range(0, 50))
+            //{
+            //    TestObject testObject = new TestObject();
+            //    testObject.IntProp = bogus.Int();
+            //    testObject.StringProp = bogus.String2(1000);
+            //    _objects.Add(testObject);
+            //}
         }
 
         [GlobalCleanup]

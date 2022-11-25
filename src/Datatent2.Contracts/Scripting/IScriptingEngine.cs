@@ -12,7 +12,7 @@ namespace Datatent2.Contracts.Scripting
     /// <summary>
     /// Interface for scripting engines
     /// </summary>
-    public interface IScriptingEngine : IService, IDisposable
+    public interface IScriptingEngine : IService
     {
         /// <summary>
         /// Executes the specified script
@@ -20,6 +20,6 @@ namespace Datatent2.Contracts.Scripting
         /// <typeparam name="T"></typeparam>
         /// <param name="obj"></param>
         /// <returns></returns>
-        T Execute<T>(object obj);
+        object Execute(string script, object obj);
     }
 }

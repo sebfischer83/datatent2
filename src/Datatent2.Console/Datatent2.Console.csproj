@@ -19,7 +19,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Datatent2.Core\Datatent2.Core.csproj" />
-    <ProjectReference Include="..\plugins\Datatent2.Plugins.Compression\Datatent2.Plugins.Compression.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Datatent2.Plugins.Scripting">
+      <HintPath>..\..\plugins\_extracted\Datatent2.Plugins.Scripting\1.0.0\lib\net6.0\Datatent2.Plugins.Scripting.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
